@@ -1,0 +1,52 @@
+# v2.9: patrón generado en la ficha de la Biblioteca → escuchar, otro, adjuntar, quitar; en bloque. Equipo SIMULADO.
+import sys, os, re, threading, http.server, functools
+from playwright.sync_api import sync_playwright
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+FAKE_MIDI = re.search(r'FAKE_MIDI = """(.*?)"""', open(os.path.join(ROOT, 'tests', 'browser_test.py')).read(), re.S).group(1)
+FILE = sys.argv[1] if len(sys.argv) > 1 else 'Circuit_Tracks_Patch_Library_Editor.html'
+class Q(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *a): pass
+srv = http.server.ThreadingHTTPServer(('127.0.0.1', 8773), functools.partial(Q, directory=os.path.join(ROOT, 'dist'))); threading.Thread(target=srv.serve_forever, daemon=True).start()
+res = []; errors = []
+def ok(name, cond, extra=''): res.append(bool(cond)); print(('PASS ' if cond else 'FAIL ') + name + (' · ' + str(extra) if extra != '' else ''))
+with sync_playwright() as p:
+    b = p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
+    ctx = b.new_context(viewport={'width': 1500, 'height': 1000}); ctx.add_init_script(FAKE_MIDI)
+    pg = ctx.new_page(); pg.on('pageerror', lambda e: errors.append(str(e)))
+    pg.goto('http://127.0.0.1:8773/' + FILE); pg.wait_for_selector('.top .brand')
+    pg.set_input_files('#dirIn', os.path.join(ROOT, 'tests', 'out')); pg.wait_for_selector('.modal', timeout=60000); pg.click('.modal .btn'); pg.wait_for_timeout(300)
+    pg.click('.tabs-main button[data-v="device"]'); pg.click('button[data-act="midiConnect"]'); pg.wait_for_timeout(300)
+    pid = pg.evaluate("window.__ctpl.lib.patches.find(p => p.name === 'Rolling Bass 2').id")
+    pg.evaluate(f"window.__ctpl.S.sel = '{pid}'"); pg.click('.tabs-main button[data-v="library"]'); pg.wait_for_selector('.mroll-w')
+    ok('La ficha muestra el patrón generado sin adjuntar', pg.locator('.mroll rect').count() > 0 and pg.locator('button[data-act="autoAttach"]').count() == 1)
+    ac = pg.evaluate(f"window.__ctpl.S.autoCache.pat"); ok('El estilo sale de la subcarpeta (Rolling → bajo rodante)', ac['style'] == 'rolling', ac['style'])
+    pg.evaluate('window.__midiSent.length = 0'); pg.keyboard.press('Space'); pg.wait_for_timeout(600)
+    sent = pg.evaluate('window.__midiSent'); ons = sorted({a[1] for a in sent if (a[0] & 0xF0) == 0x90 and a[2] > 0})
+    ok('Escuchar toca las notas del patrón generado', set(ons) <= {x['n'] for x in ac['notes']} and len(ons) > 0, ons)
+    pg.evaluate('window.__ctpl.S.dev.session.stopAll()')
+    n0 = pg.evaluate("JSON.stringify(window.__ctpl.S.autoCache.pat.notes)"); pg.click('button[data-act="autoNext"]'); pg.wait_for_timeout(200)
+    ok('«Otro» genera otra variación', pg.evaluate("JSON.stringify(window.__ctpl.S.autoCache.pat.notes)") != n0)
+    notes = pg.evaluate("window.__ctpl.S.autoCache.pat.notes")
+    pg.click('button[data-act="autoAttach"]'); pg.wait_for_timeout(300)
+    meta = pg.evaluate(f"window.__ctpl.lib.byId('{pid}').meta.patternId"); pats = pg.evaluate("window.__ctpl.lib.settings.patterns || []")
+    att = next((x for x in pats if x['id'] == meta), None)
+    ok('Adjuntar guarda el patrón que sonaba y lo enlaza al patch', att is not None and att['notes'] == notes and 'Rolling Bass 2' in att['name'], meta)
+    ok('La ficha pasa a «adjuntado» con Quitar y Editar', pg.locator('.mroll-w.att').count() == 1 and pg.locator('button[data-act="autoDetach"]').count() == 1)
+    pg.click('button[data-act="patOpenFor"]'); pg.wait_for_timeout(300)
+    ok('Editar abre el patrón adjuntado en Patrones', pg.evaluate("window.__ctpl.S.view") == 'patterns' and pg.evaluate("window.__ctpl.S.patId") == meta)
+    pg.click('.tabs-main button[data-v="library"]'); pg.wait_for_selector('.mroll-w.att')
+    pg.click('button[data-act="autoDetach"]'); pg.wait_for_timeout(200)
+    ok('Quitar desenlaza el patrón (sigue en tus patrones)', pg.evaluate(f"window.__ctpl.lib.byId('{pid}').meta.patternId") is None and len(pg.evaluate("window.__ctpl.lib.settings.patterns")) == len(pats))
+    pg.keyboard.press('a'); pg.wait_for_timeout(300)
+    ok('Tecla A adjunta', pg.evaluate(f"!!window.__ctpl.lib.byId('{pid}').meta.patternId"))
+    pg.locator('.insp').screenshot(path=os.path.join(ROOT, 'tests', 'shots', '22_patron_ficha.png'))
+    # en bloque
+    pg.evaluate("(() => { const S = window.__ctpl.S, L = window.__ctpl.lib; S.multi = new Set(L.patches.filter(p => /^Pad B/.test(p.name)).slice(0, 5).map(p => p.id)); })()")
+    pg.evaluate("window.__ctpl.A.view({dataset:{v:'library'}})"); pg.wait_for_timeout(200)
+    pg.click('button[data-act="bulkAutoAttach"]'); pg.wait_for_selector('.modal'); pg.click('.modal .btn.primary'); pg.wait_for_timeout(600)
+    ok('En bloque: 5 patrones generados adjuntados', pg.evaluate("[...window.__ctpl.S.multi].every(id => !!window.__ctpl.lib.byId(id).meta.patternId)"))
+    pg.reload(); pg.wait_for_selector('.top .brand')
+    ok('Se conservan al recargar', pg.evaluate(f"!!window.__ctpl.lib.byId('{pid}').meta.patternId"))
+    ok('Sin errores JavaScript', not errors, errors[:3])
+    b.close()
+print(f'{sum(res)}/{len(res)} comprobaciones superadas'); srv.shutdown(); sys.exit(0 if all(res) else 1)

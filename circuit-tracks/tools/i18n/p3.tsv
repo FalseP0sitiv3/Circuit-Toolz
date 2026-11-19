@@ -1,0 +1,320 @@
+940	In Components, assign a patch macro to a known parameter and export the .syx.
+941	Import it here: the Macros tab shows the saved code.
+942	With the device connected, use «Sweep» to hear the effect of each macro.
+943	Packs · 128 slots
+944	Virtual map
+945	The native Pack (.circuittrackspack) isn't a published format. 128 numbered .syx files + a CSV map are exported so you can build it in Components.
+946	New
+947	Rename
+948	Duplicate
+949	Build automatically
+950	Reserve block
+951	Export ZIP
+952	gaps ·
+953	synthesis duplicates ·
+954	outside their block
+955	Search patch…
+956	Drag to a slot, or select and click the slot. Drag between slots to swap.
+957	Slot
+958	Empty
+959	MIDI connection
+960	=
+961	Output
+962	Input (responses, notes, CC and clock)
+963	Listening track
+964	Synth 1 channel
+965	Synth 2 channel
+966	MIDI 1 channel
+967	MIDI 2 channel
+968	Drums channel (Drum 1–4)
+969	Factory values: Synth 1 = 1, Synth 2 = 2, MIDI 1 = 3, MIDI 2 = 4 and the four drums = 10 (notes 60, 62, 64 and 65). If you changed them in the device's Setup View, set them here: the test phrases and «Record on the Circuit» use them.
+970	Active session with
+971	Choose the Circuit Tracks output
+972	Asks for MIDI permission with SysEx. Nothing is sent without an action from you; listening uses «Replace Current Patch» (track RAM) and
+973	never writes to memory
+974	Connect
+975	Tempo and phrases
+976	Own tempo
+977	Transpose phrases
+978	Delay after sending (ms)
+979	Time between sending the patch and playing the first note. Raise it if the first note plays with the previous patch.
+980	follow the device clock
+981	Clock received:
+982	not arriving (turn on Clock Tx in Setup View or start the device)
+983	■ Stop and save phrase
+984	● Capture phrase from the pads
+985	Play in the device's Note View (Note Tx on). It's quantised to 16ths.
+986	Device macros
+987	With CC Tx on, turning the Circuit Tracks macros sends their positions (CC 80–87). You can save them into a variant of the selected patch without saving them on the device.
+988	Save positions into a variant of «
+989	Circuit Tracks audio output → interface → choose the input. A test note is recorded with the browser's processing turned off.
+990	Choose input
+991	— none —
+992	Input
+993	Saved input
+994	Test level 3 s
+995	Measurement note
+996	Thresholds: percussive if sustain &lt;
+997	% and attack &lt;
+998	ms; low if f0 &lt;
+999	Hz; dark if centroid &lt;
+1000	× f0, bright if &gt;
+1001	Read from the device
+1002	Program Change 0–63 → ~10 ms → dump request. When finished, the track gets back the sound it had (via SysEx to RAM); the selected patch number does stay changed. It doesn't modify memory. Requires PGM Rx on (it is by default).
+1003	Read active patch
+1004	Read patches 1–64
+1005	The guide only documents Program Change 0–63 for the synths: slots 65–128 aren't read.
+1006	Send
+1007	Only «Replace Current Patch». The tool never uses «Replace Patch» (flash write).
+1008	Send and listen to the selected one
+1009	Stop all
+1010	Protocol and parameter map
+1011	Message
+1012	Evidence
+1013	=
+1014	F0 00 20 29 01 64 00 loc(0–1) 00 · 340 data · F7 (350 B)
+1015	=
+1016	… 01 no.(0–63) 00 · 340 · F7 — flash write, not used
+1017	=
+1018	F0 00 20 29 01 64 40 loc F7 · response over USB only
+1019	Channels
+1020	Synth 1 = 1, Synth 2 = 2 · macros CC 80–87 · PGM 0–63 · ≥ 20 ms between SysEx
+1021	Product 0x60, same 340-byte structure
+1022	Macro destinations 0–70
+1023	Meaning not published by Novation
+1024	Time scale
+1025	Exponential inferred from «Env 3 Delay 85 ≈ 1 s, 127 ≈ 10 s»
+1026	=
+1027	Parameter
+1028	Range
+1029	=
+1030	Matrix 20 × (source1, source2, depth, destination)
+1031	8 macros × (position + 4 × destination, start, end, depth)
+1032	Matrix sources:
+1033	. Destinations:
+1034	Start a new library
+1035	Deletes from this browser the
+1036	pack(s), manual collections, measurements and history.
+1037	The files on your disk aren't touched
+1038	: you can import them again whenever you like.
+1039	Keep macro templates
+1040	Keep patterns and phrases
+1041	Keep learned classification rules
+1042	Keep device settings
+1043	Download a backup first
+1044	Start from scratch…
+1045	Backup
+1046	last:
+1047	· there are unsaved changes
+1048	· up to date
+1049	JSON with original files, cards, variants, measurements, collections, packs, rules, templates, phrases and history. The library only lives in this browser: if you clear its data or change computer, this backup is what you have left.
+1050	Download backup
+1051	Restore / migrate v5…
+1052	Organise on disk
+1053	Writes your sorted collection to a folder you choose (or to a ZIP): by category, architecture or source folder, with the current version of each patch and its .mid patterns. Preview before writing.
+1054	Go to Sort on disk
+1055	Reports
+1056	CSV · all
+1057	CSV · filter
+1058	JSON · analysis
+1059	CSV with «;» and BOM; cells starting with = + - @ neutralised.
+1060	.syx of the filter
+1061	Original files
+1062	Storage
+1063	This browser's IndexedDB
+1064	Temporary memory
+1065	· persistence:
+1066	not requested
+1067	Request persistence
+1068	This browser doesn't offer Web MIDI (use Chrome or Edge)
+1069	MIDI permission denied:
+1070	Circuit Tracks not found; choose the output in Device
+1071	=
+1072	Measuring… (3 s)
+1073	No signal arrived: check the audio input
+1074	Measurement saved
+1075	Measurement error:
+1076	Too large:
+1077	non-patch file(s) (audio, PDF, AppleDouble…) were ignored without reading them
+1078	compressed file(s) the tool doesn't open (.rar / .7z):
+1079	. Unpack them and import the folder.
+1080	Couldn't save the import:
+1081	the browser has no more space. Free some space or export and empty the library.
+1082	Components samples / sessions / packs
+1083	MiniNova / UltraNova patches
+1084	Controller templates
+1085	Circuit Tracks MIDI templates
+1086	Import report
+1087	New patches
+1088	Already there (copies)
+1089	Files with patches
+1090	Recovered
+1091	patches recovered
+1092	from files written by another editor (patch number 0xFF and/or no final F7). Their 340-byte payload is intact; a valid header is written on export.
+1093	Pack «
+1094	slots read,
+1095	new patches
+1096	. The pack's samples and projects aren't imported.
+1097	Not Circuit patches — left out
+1098	See names (
+1099	No recognisable patch
+1100	Warnings
+1101	Skipped
+1102	Errors
+1103	file(s) were byte-for-byte identical to others already read and weren't saved again.
+1104	Classifications stay as
+1105	. Recommended next steps:
+1106	Organise → Octave and pitch
+1107	: invalid JSON
+1108	Restore backup
+1109	«Merge» adds what's missing. «Replace» deletes the current library.
+1110	Replace
+1111	Merge
+1112	Replace library
+1113	The current library will be deleted. Do you have a backup?
+1114	v5 migration
+1115	Restore
+1116	Restore error:
+1117	The operation changes nothing: no variant is created
+1118	Variant created
+1119	New collection
+1120	«Smart» saves the current filter; «Manual» saves the selection.
+1121	=
+1122	Smart
+1123	Removed from favourites
+1124	: starting position
+1125	Saved in «
+1126	): when the patch loads, macro
+1127	will start at
+1128	Editable copy
+1129	Editable variant created
+1130	CircuitTracks_Library_
+1131	Backup downloaded
+1132	Set a category first
+1133	Exception recorded
+1134	Rule saved
+1135	Nothing to accept
+1136	Delete
+1137	patch(es)? Their variants are kept.
+1138	Delete «
+1139	Undone
+1140	Rebuild macros
+1141	The variant will discard all macro routes and apply one per macro according to the profile. The original doesn't change.
+1142	empty ones filled
+1143	according to the profile «
+1144	No patch needed changes
+1145	added to «
+1146	Rename pack
+1147	At least one pack must remain
+1148	Delete pack
+1149	Only the map is deleted.
+1150	Label
+1151	Delete blocks
+1152	Block
+1153	Your browser can't write folders (use Chrome or Edge)
+1154	=
+1155	files written to «
+1156	Persistence granted
+1157	The browser didn't grant it
+1158	This will delete
+1159	patches and variants
+1160	, packs, manual collections, measurements and history from this browser.
+1161	Kept:
+1162	patterns and phrases
+1163	learned rules
+1164	device settings
+1165	smart collections
+1166	There are changes without a backup.
+1167	You haven't made any backup.
+1168	If you want to be able to recover this library, cancel and click «Download a backup first».
+1169	The files on your disk aren't touched. To confirm, type
+1170	Delete and start
+1171	Nothing was deleted: you have to type DELETE to confirm
+1172	New library: deleted
+1173	patches. Import your files to start.
+1174	Empty library
+1175	Everything saved in this browser will be deleted. Download a backup first.
+1176	Connect the device in «Device»
+1177	Sweep M
+1178	Listened
+1179	Pitch
+1180	st (to
+1181	Variant accepted: «
+1182	» will be exported already corrected
+1183	Variant created as draft: accept it in Changes or on its card
+1184	Correct octave and pitch
+1185	This will create
+1186	variants moved to
+1187	octaves only
+1188	oscillator semitones
+1189	keyboard octave + oscillators
+1190	). The originals don't change.
+1191	The clear-confidence ones will be accepted; doubtful ones stay as drafts.
+1192	They'll be accepted: they'll replace the original on export.
+1193	They'll stay as drafts until you accept them in Changes.
+1194	You've moved
+1195	patches of
+1196	The doubtful-confidence ones
+1197	or with clipped values
+1198	stay as drafts so you can listen to them first.
+1199	Keep at least one drum track
+1200	Variation created: save it as a new pattern to record it into the Circuit's next pattern
+1201	Pattern «
+1202	» saved to your library
+1203	Saved as «
+1204	» attached to
+1205	Attached: Audition will use «
+1206	» with
+1207	, and sorting on disk will put a .mid next to its .syx
+1208	Delete pattern
+1209	This deletes «
+1210	» from your library
+1211	and detaches it from
+1212	Pattern detached
+1213	Replace the accepted version
+1214	» already has an accepted version (
+1215	). There can only be one per original: the previous one will go back to draft. If you want to combine both changes, edit the accepted version instead of the original.
+1216	Accept this one
+1217	Accepted: it will replace the original on export
+1218	Back to draft: the original will be exported
+1219	This deletes the variant «
+1220	» from the library. The original doesn't change. It can't be undone.
+1221	Accept variants
+1222	variants will replace their originals on export. You can put them back to draft whenever you like.
+1223	Discard drafts
+1224	This deletes
+1225	draft variants. The originals don't change.
+1226	No patches to test
+1227	Couldn't measure the pitch (no signal or no clear pitch). Check the audio input or try with another selected patch.
+1228	Verified: the keyboard octave transposes external MIDI (
+1229	=
+1230	Verified: the keyboard octave does NOT affect external MIDI (
+1231	Inconclusive result (
+1232	st). Try with a selected patch that has a clear pitch.
+1233	Check error:
+1234	Discard duplicates
+1235	patches will go to «Discard» status. Nothing is deleted and it can be undone.
+1236	Mark
+1237	duplicates discarded
+1238	Your browser can't write to folders: use «Download as ZIP»
+1239	Circuit Tracks sorted
+1240	.mid patterns
+1241	written to «
+1242	Circuit Tracks sorted/_manifest.csv
+1243	Save template
+1244	Template saved
+1245	Template applied to the variant
+1246	Template «
+1247	Template warnings
+1248	» applied.
+1249	warning(s): some macro points to an empty matrix route in the patch.
+1250	Cluster «
+1251	No synthesis duplicates in the library
+1252	duplicate(s). Open them and use «Compare with the original».
+1253	patch(es). This creates
+1254	; the originals don't change. A variant is only created if the operation changes something.
+1255	Operation
+1256	Reorder whole macros (without losing routes)
+1257	Fill only empty macros
+1258	Macros normalised with the profile «
+1259	patches were already fine).

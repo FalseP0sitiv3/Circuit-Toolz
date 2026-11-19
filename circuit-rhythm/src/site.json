@@ -1,0 +1,13 @@
+{
+  "brand": "Circuit Tools",
+  "author": "FalsePositive",
+  "siteUrl": "",
+  "kofiUrl": "https://ko-fi.com/falsepositive",
+  "githubUrl": "",
+  "issuesUrl": "",
+  "license": "GPL-3.0",
+  "langFiles": {
+    "es": "Circuit_Rhythm_Sample_Library.html",
+    "en": "Circuit_Rhythm_Sample_Library_EN.html"
+  }
+}

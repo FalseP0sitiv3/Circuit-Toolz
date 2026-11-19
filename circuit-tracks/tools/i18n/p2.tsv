@@ -1,0 +1,320 @@
+620	accept it
+621	so it replaces the original on export.
+622	more change(s) · Compare tab
+623	No differences from the original yet.
+624	Back to draft
+625	✓ Accept
+626	Discard variant
+627	of «
+628	To draft
+629	Here are all the corrected versions you've created (octaves, macros, templates…). Review, compare and accept: only what's accepted replaces the originals when you export.
+630	drafts to review
+631	replaced versions
+632	Drafts
+633	Accepted
+634	All
+635	All origins
+636	✓ Accept the
+637	in the list
+638	Discard drafts in the list
+639	What changes
+640	Showing 400 of
+641	Nothing in this list.
+642	You haven't created any variants yet. They're created when you correct octaves (Organise), edit macros, apply templates or edit parameters.
+643	Next step
+644	When you're happy with what's accepted, export it. Accepted variants take their original's name and place; drafts are left out.
+645	Sort on disk
+646	Build a pack
+647	variant created
+648	variants created
+649	Already accepted:
+650	on export (Sort on disk, packs, .syx) they're used instead of their originals, with the same name.
+651	In draft:
+652	listen to them and accept them in
+653	; until then they don't replace anything.
+654	already replace their original on export.
+655	in draft
+656	: listen to them and accept (or discard) them in
+657	; until then the original is exported.
+658	Your original files haven't been touched and nothing has been sent to the Circuit Tracks. Everything is saved in this browser's library; make a backup in Data.
+659	View in Changes
+660	Stay here
+661	A: original → B: variant
+662	Nothing to organise
+663	Import your patch folder first.
+664	Same synth, other settings
+665	Octave and pitch
+666	Tools to bring order to a large collection: group patches that are the same synth with other settings, correct the octave of basses, clean up duplicates and write everything out sorted to a folder.
+667	An
+668	is what defines which synth it is: voice mode, waveforms of the audible oscillators, filter type and routing, whether it uses drive/distortion/chorus, the matrix connections and the macro destinations. Here are the groups with the same architecture and different values (cutoff, times, depths…). Open one to see what changes between them.
+669	Precision
+670	groups ·
+671	patches. Less precision = bigger groups that are more alike «by recipe».
+672	different settings
+673	Listen to the group
+674	Orange = group maximum; violet = minimum.
+675	parameters vary in total.
+676	No groups
+677	There are no patches with the same architecture and different settings.
+678	In
+679	% of these patches (
+680	) the transposition comes from this byte.
+681	=
+682	octave and pitch
+683	Choose
+684	category and target (by default, what's usual in your collection).
+685	«▶ corrected» plays it on the Circuit without saving anything (RAM only).
+686	Create
+687	corrected variants: saved in this browser's library, linked to the original.
+688	Export
+689	in Sort on disk, the accepted version takes the original's place and name. Your files aren't touched.
+690	Note heard when playing a C:
+691	keyboard octave × 12 + semitones of the leading oscillator
+692	(the loudest; if they sound similar, the lowest). That way an added fifth doesn't count as «another pitch». If a patch has been measured with the audio input, the measurement wins. The default target is what's most usual in
+693	collection.
+694	Keyboard octave (byte 35) and external MIDI notes
+695	Verified with your device:
+696	the patch's keyboard octave also transposes notes arriving over MIDI. It's included in the calculation.
+697	the keyboard octave only affects the pads; external MIDI notes aren't transposed. It's ignored in the calculation and the correction uses the oscillators.
+698	Not verified, though likely.
+699	The Novation guide documents it as a voice parameter (CC 13), not as the pad octave, which suggests it transposes the sound.
+700	If it doesn't affect the notes you send from Ableton, they'll sound higher than the table says. Check it once with your Circuit and the audio input.
+701	Connect the device and choose an audio input in Device
+702	Measuring…
+703	Check with the device
+704	Check again
+705	Not verified (counted)
+706	Affects external MIDI
+707	Only affects the pads
+708	Target
+709	What's usual in your collection (
+710	What to correct
+711	Octave and pitch (to the exact target)
+712	Octave only (keeps the pitch)
+713	Method
+714	Oscillator semitones
+715	Octaves in the keyboard octave, the rest in the oscillators
+716	Fine tuning
+717	Don't touch the cents
+718	Centre the root oscillator's cents
+719	Show
+720	Only those that don't fit
+721	All
+722	Other octave
+723	Other pitch
+724	Doubtful: measure
+725	Detuned ≥10 ct
+726	Where each
+727	patches · playing a C
+728	Relative note and octave (C0 = not transposed). Green = target; light grey = most usual in your collection.
+729	Off target
+730	Problem
+731	Sounds at
+732	Root
+733	Confidence
+734	Correction
+735	st · kbd.
+736	· tuning macro
+737	draft created
+738	▶ corrected
+739	Showing 400 of
+740	Create
+741	corrected variants
+742	Each one is a copy of the patch moved to
+743	. The originals don't change.
+744	When creating them
+745	Accept the clear-confidence ones; doubtful ones stay as drafts
+746	Accept them all now
+747	Leave them all as drafts to review
+748	Create variants
+749	octave draft(s) awaiting review:
+750	view in Changes
+751	All patches in this category sound at
+752	Duplicate = same synthesis (bytes 32–339 identical); only the name may differ. The first of each family is kept (or the best rated when cleaning).
+753	Mark duplicates as «Discard»
+754	It deletes nothing: it only changes their status (and they're left out of Packs and the disk sort).
+755	Kept
+756	No duplicates
+757	Generates a sorted copy of your collection. Inside the folder you choose, a new dated subfolder is always created, so nothing is ever overwritten. The original files on disk aren't touched. Each patch is written as a Circuit Tracks .syx and a CSV manifest with the old and new path is included.
+758	Structure
+759	Category / subtype
+760	Architecture (same synth together)
+761	Source folders
+762	File name
+763	Category - Name
+764	=
+765	Number Name
+766	Separately in _Duplicates
+767	Don't copy them
+768	Variants of a family
+769	Together in a subfolder
+770	No subfolder
+771	What to include
+772	The whole library
+773	The current library filter
+774	Patches with «Discard» status are never copied.
+775	originals replaced by their corrected version
+776	draft variants
+777	patches to write
+778	in their corrected version
+779	with a .mid pattern
+780	not written
+781	The
+782	current version
+783	of each patch is written: the original if you haven't changed it, or its accepted variant (with the same name and in the same place).
+784	Not written:
+785	Review the drafts
+786	Preview
+787	first folders
+788	more
+789	Choose folder and write
+790	Download as ZIP
+791	CSV manifest
+792	Writing to a folder requires Chrome or Edge.
+793	Edit a patch's 8 macros route by route, save them as a template and apply them to other patches. Everything works on variants: the originals don't change.
+794	Select it in the Library and come back here.
+795	Go to the library
+796	accepted version: what you change here saves automatically and is what will be exported.
+797	draft variant: what you change saves automatically; accept it in Changes so it replaces the original.
+798	original replaced. Editing works on its accepted version «
+799	original. Turning the knobs saves nothing; saving a position or editing a destination creates a draft variant.
+800	Send every change to the device
+801	Correct structure
+802	No out-of-range codes or destinations repeated across macros.
+803	Destinations use the
+804	table 0–70 (Novation only publishes the range). «Sweep» holds a note and moves the macro on the device: it's the way to check by ear what each one does.
+805	Templates
+806	yours · 24 built-in
+807	Save the macros of «
+808	» as a template
+809	Apply all 8 macros
+810	Only to empty macros
+811	Only macro
+812	Apply to «
+813	Apply to the selection (
+814	Choose a template to apply it.
+815	Built-in
+816	Yours ·
+817	· of
+818	At least 3 patches are needed.
+819	Collection analysis
+820	What you have, how it's distributed and where it's worth listening. Everything is clickable and filters the library.
+821	of the collection
+822	Circuit Tracks / original Circuit
+823	Parameter groups
+824	Duration (amp env)
+825	from parameters
+826	mono ·
+827	Macro consistency
+828	Questions
+829	Nothing to listen to
+830	Import patches in Library or read them from Device.
+831	Not measured
+832	Library filter
+833	Selection (
+834	Collection ·
+835	queued · one per family
+836	Empty queue
+837	Choose another queue source.
+838	Listen and decide
+839	Connected to
+840	=
+841	(device clock)
+842	· measurement on
+843	Settings
+844	No device connected: you can still decide, but listening on the Circuit Tracks is the reliable way to classify.
+845	Connect Circuit Tracks
+846	Your category
+847	Voice · amp env
+848	=
+849	=
+850	♥ favourite
+851	Set up an audio input in Device
+852	Automatic (
+853	attached pattern:
+854	advance when deciding
+855	Macros on the device
+856	holds a note and sweeps 0→127→0 · Shift+1…8
+857	no effect
+858	Decide
+859	key = category · Enter = accept proposal · 1–5 rating · F favourite · Del discard · ← → navigate
+860	Accept proposal
+861	Keep
+862	Discard
+863	♥ Favourite
+864	♡ Favourite
+865	Next ▶
+866	Open card
+867	Map
+868	Groups and technical map
+869	k-means on the synthesis parameters · label = dominant category
+870	Technical groups, not sonic ones. A mixed group means patches with similar parameters but classified differently: a good place to listen and correct.
+871	Each dot is a patch, placed by projection (PCA) of its synthesis parameters: nearby dots have similar settings. It's a technical map, not an audible one. Click a dot to select it.
+872	Colour
+873	Measured
+874	▶ Listen
+875	Neighbours to the queue
+876	Similar to what you use
+877	reference
+878	Reference: favourites, rated ≥ 4 stars and patches placed in packs.
+879	Send to the queue
+880	Mark favourites, rate with 4–5 stars or place patches in a pack to get recommendations.
+881	uncategorised
+882	No data
+883	Import patches to audit the collection.
+884	Patches (
+885	Duplicate / variant families
+886	Classified by you
+887	Acoustically measured
+888	Binary duplicate groups
+889	click to filter Library
+890	How many basses do I have? (yours + proposals)
+891	Monophonic
+892	Long envelopes
+893	With distortion or drive
+894	With LFO modulation
+895	For short sequences
+896	With an inactive macro
+897	With anomalous parameters
+898	Measured as low
+899	By category
+900	saved or proposed
+901	Ambiguous
+902	No evidence
+903	Proposal certainty
+904	Calibration
+905	proposal vs your decision
+906	Corrected
+907	Hit rate
+908	No decisions yet.
+909	Families
+910	duplicates and variants grouped; one listen per family
+911	identical
+912	same synthesis
+913	params
+914	more.
+915	No families.
+916	Learned rules
+917	weight 4 (Novation code: 2)
+918	Active
+919	Word
+920	Novation code
+921	They're proposed when you correct a classification.
+922	pattern
+923	Add
+924	Frequent words not interpreted
+925	Notes on the collection
+926	= out-of-range codes.
+927	Notes
+928	= macros without effect or shared destinations: not errors.
+929	Active
+930	Inactive
+931	Shared
+932	24 profiles
+933	optional layouts
+934	Bulk variants
+935	selected in Library
+936	Reorder
+937	Fill empty
+938	A variant is only created if something changes. Originals intact.
+939	Verify the destination table

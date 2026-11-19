@@ -1,0 +1,320 @@
+1260	Selection
+1261	Current filter
+1262	with a proposal and no saved category.
+1263	Apply proposals with minimum certainty
+1264	Corroborated (
+1265	One source or more (
+1266	Include technical hypotheses (
+1267	Only changes your cards (category, use, descriptors). Never the SysEx. It's recorded as a decision and can be reverted from the history.
+1268	Apply
+1269	Nothing to apply
+1270	patches tagged
+1271	Build 128 pack
+1272	Circuit Tracks shows patches in 4 pages of 32. Each page is dedicated to a group; inside, sorted by subtype and rating. Only one version per family (the best rated) and no discarded ones.
+1273	Page
+1274	Current filter (
+1275	Use unconfirmed proposals
+1276	No: saved categories only
+1277	Yes, if corroborated
+1278	Yes, from one source
+1279	Fill gaps with leftovers from other categories
+1280	Build
+1281	Auto pack
+1282	Pack built
+1283	of 128 slots filled.
+1284	don't fit
+1285	by proposal
+1286	Excluded:
+1287	by family ·
+1288	discarded ·
+1289	uncategorised ·
+1290	with low certainty.
+1291	Capturing: play the phrase on the device
+1292	My phrase
+1293	No notes arrived (turn on Note Tx in Setup View)
+1294	Phrase saved:
+1295	No positions have arrived yet: turn the device macros (CC Tx on)
+1296	Macro positions captured from the device
+1297	Patches 1–64 will be selected one by one on Synth
+1298	and their dump will be requested (about 10 s). It changes the track's active patch; it doesn't modify the device memory.
+1299	Read
+1300	Reading
+1301	Reading finished: the track has the sound it had before
+1302	No audio access:
+1303	Level test finished
+1304	Audio error:
+1305	Editing the accepted version «
+1306	): that way changes add up in a single version
+1307	Macro editing
+1308	Variant created as draft: your changes save automatically to it. The original doesn't change.
+1309	MIDI dumps/
+1310	no response
+1311	Nothing to export
+1312	Learn from this correction?
+1313	They'd apply to future imports; you can turn them off in Audit.
+1314	rule(s) saved
+1315	=
+1316	=
+1317	Slot
+1318	contains «
+1319	». Replace?
+1320	Status:
+1321	Notes
+1322	New manual collection
+1323	Added to «
+1324	=
+1325	=
+1326	=
+1327	=
+1328	=
+1329	=
+1330	Startup error:
+1331	No signal in the recording
+1332	Percussive (measured)
+1333	% of peak, attack
+1334	Sustained (measured)
+1335	Slow attack (measured)
+1336	ms to 90 %
+1337	Long tail (measured)
+1338	after release
+1339	Low register (measured)
+1340	Dark / round (measured)
+1341	=
+1342	Bright (measured)
+1343	Noisy / inharmonic (measured)
+1344	Spectral flatness
+1345	, no clear pitch
+1346	Audible movement (measured)
+1347	Amp. mod.
+1348	%, centroid variation
+1349	Falling brightness sweep (measured)
+1350	Circuit Tracks header (0x64)
+1351	Original Circuit header (0x60): Components accepts it; it's exported with a Circuit Tracks header. Sonic equivalence not verified.
+1352	value(s) outside the documented range
+1353	Parameters within the documented range
+1354	reserved byte(s) other than 0
+1355	Reserved bytes at 0
+1356	macro destination(s) outside 0–70
+1357	Macro destinations within 0–70
+1358	Some macro uses code 70 (unknown meaning)
+1359	No unknown macro codes
+1360	Recovered from a file with a non-standard header (
+1361	patch number 0xFF
+1362	no final F7
+1363	). The patch's 340 bytes are intact; a valid header is written on export.
+1364	Name with non-printable characters
+1365	Readable ASCII name
+1366	Duplicate of «
+1367	Belongs to a family, no exact duplicate
+1368	=
+1369	There are out-of-range values
+1370	Parameters and macros within range
+1371	Duplicate of another patch
+1372	No exact duplicate
+1373	/8 macros with effect ·
+1374	/8 fit your profile
+1375	Saved category
+1376	No saved category (proposal only)
+1377	Consistency
+1378	contradiction(s)
+1379	No contradictions
+1380	Not listened
+1381	Measurement without signal
+1382	Acoustically measured
+1383	Not measured (optional)
+1384	=
+1385	=
+1386	=
+1387	=
+1388	=
+1389	=
+1390	=
+1391	=
+1392	your tag
+1393	parameter hint
+1394	=
+1395	=
+1396	=
+1397	=
+1398	Env 2 · filter
+1399	=
+1400	=
+1401	=
+1402	Env 2 → frequency
+1403	Polyphonic (up to 6 voices)
+1404	Monophonic with glide only in legato
+1405	Monophonic
+1406	, portamento
+1407	=
+1408	, keyboard octave
+1409	with detune
+1410	index
+1411	noise at
+1412	ring mod 1×2 at
+1413	Sources
+1414	No audible sources (levels at 0)
+1415	, frequency
+1416	, resonance
+1417	=
+1418	. Envelope 2
+1419	opens it
+1420	closes it
+1421	=
+1422	=
+1423	. OSC 1 bypasses the filter
+1424	. The oscillators bypass the filter (only the noise goes through)
+1425	. Keyboard tracking
+1426	slow-onset
+1427	Amplitude
+1428	Envelope
+1429	: attack
+1430	=
+1431	, velocity
+1432	. Approximate times (inferred scale).
+1433	=
+1434	Modulation
+1435	No active routes in the matrix: the timbre only moves with the envelopes and macros.
+1436	distortion
+1437	=
+1438	No active patch effects.
+1439	No macro has any effect.
+1440	=
+1441	=
+1442	=
+1443	=
+1444	=
+1445	=
+1446	=
+1447	=
+1448	=
+1449	=
+1450	=
+1451	=
+1452	=
+1453	=
+1454	=
+1455	=
+1456	=
+1457	=
+1458	=
+1459	=
+1460	=
+1461	=
+1462	=
+1463	=
+1464	=
+1465	=
+1466	=
+1467	=
+1468	=
+1469	=
+1470	=
+1471	=
+1472	=
+1473	=
+1474	=
+1475	=
+1476	=
+1477	=
+1478	=
+1479	=
+1480	=
+1481	=
+1482	=
+1483	=
+1484	=
+1485	=
+1486	=
+1487	=
+1488	=
+1489	=
+1490	=
+1491	=
+1492	=
+1493	=
+1494	SysEx internal name
+1495	Parent folder
+1496	Bank / ZIP
+1497	» in «
+1498	rule: word «
+1499	rule: folder «
+1500	rule: Novation category code
+1501	Learned rule
+1502	Rule
+1503	Transposed two or more octaves down
+1504	Transposed one octave down (also common in leads and arps)
+1505	Simple waveforms in a low register
+1506	Resonance + short filter envelope in a mono voice
+1507	Rhythmic LFO to the filter in a low register
+1508	Detuned oscillators in a low register
+1509	Polyphonic, slow attack and long release
+1510	Sustained polyphonic with long release
+1511	Percussive amplitude envelope
+1512	Very short envelope
+1513	+ pitch env
+1514	+ noise
+1515	Sustained, long release and modulation
+1516	Mono, not low register, glide/vibrato
+1517	Modulated noise
+1518	measured f0
+1519	Hz with the test note
+1520	Slow attack and long tail measured
+1521	Sustained with movement and long tail
+1522	Percussive envelope measured
+1523	No clear pitch and noisy spectrum
+1524	Similar hints of
+1525	from parameters: listen to decide
+1526	Pad is proposed but the amplitude envelope is percussive
+1527	Bass is proposed but the patch is transposed up
+1528	Bass is proposed but it's polyphonic with a slow attack
+1529	Sub Bass with resonance, distortion or digital waveforms: check whether it's really a sub
+1530	Pluck is proposed but the envelope is slow or sustained
+1531	Lead is proposed but the register is low (Lead Bass?)
+1532	Proposed:
+1533	but the attack is slow
+1534	Drone is proposed but the envelope is percussive
+1535	The name says «Dark» but the LP filter is open (that doesn't prove it doesn't sound dark)
+1536	The name says «Bright» but the LP cutoff is low
+1537	The name says distortion but no high drive/distortion is set (it may come from the macros)
+1538	Bass is proposed but the measured f0 is
+1539	Pad is proposed but the measurement is percussive
+1540	The name says «Dark» and the measurement shows high brightness
+1541	The name says «Bright» and the measurement shows a dark sound
+1542	Real timbre: no listening or measurement recorded
+1543	The measurement captured no signal: check the audio input
+1544	active macro(s) may change the character a lot depending on their position
+1545	Check whether the LFO modulation is audible and at what speed
+1546	The descriptors (
+1547	) come from the name, not from listening
+1548	Effective register depends on the pattern's notes
+1549	You set or accepted the category.
+1550	Confirmed
+1551	Two different clues say the same thing (for example, the name and the folder, or the name and the measurement) and nothing contradicts it.
+1552	One clue
+1553	Only one clue points to it (usually the name or the folder). It's usually right, but it's worth listening.
+1554	Neither the name nor the folder says anything; it's deduced from how it's programmed (for example, transposed two octaves down → bass). Listen to confirm it.
+1555	There are clues of two kinds with similar strength. Decide when you listen to it.
+1556	Nothing indicates what it is (a single weak hint from its settings isn't enough). Listen and classify it.
+1557	your rule
+1558	measurement
+1559	The word «
+1560	» isn't in the lexicon
+1561	The folder «
+1562	» doesn't indicate a category
+1563	Binary duplicate (identical payload)
+1564	Synthesis duplicate (only name/metadata change)
+1565	Macro position variant
+1566	Macro variant
+1567	Parameter variant (
+1568	in the core)
+1569	Different patches
+1570	More open filter: probably brighter
+1571	More closed filter: probably less bright
+1572	More resonance: more pronounced peak
+1573	Less resonance
+1574	Slower onset
+1575	More immediate attack
+1576	Notes with a longer tail
+1577	Shorter notes
+1578	More sustained
+1579	More percussive

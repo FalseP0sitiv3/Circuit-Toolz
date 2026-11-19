@@ -1,0 +1,9 @@
+# Circuit Tools · 2026-11-19
+# circuit-rhythm/Circuit_Rhythm_Sample_Library.html · v2.2.0 · huella c2256cb1637547f3
+# circuit-rhythm/Circuit_Rhythm_Sample_Library_EN.html · v2.2.0 · huella c2256cb1637547f3
+# circuit-tracks/Circuit_Tracks_Patch_Library_Editor.html · v3.7.0 · huella f79c8ec9d81b8dd7
+# circuit-tracks/Circuit_Tracks_Patch_Library_Editor_EN.html · v3.7.0 · huella f79c8ec9d81b8dd7
+016cd8bbda01602e896f82fc55e0cb3470b03e447d2266d44f13bdc090fd8a23  circuit-rhythm/dist/Circuit_Rhythm_Sample_Library.html
+85042517decb07a48641bfe1aee057ae6029b4b2bc5bcba7b13c713738f4c2e4  circuit-rhythm/dist/Circuit_Rhythm_Sample_Library_EN.html
+88473fad17d887fde6fc5aec56e9e119f3c82bdfe43a570ad00a6f664112d17c  circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html
+d64e494cfc9fbe10f83c30e10bc8497525ed906553a222b11da877d9fbc830a2  circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html

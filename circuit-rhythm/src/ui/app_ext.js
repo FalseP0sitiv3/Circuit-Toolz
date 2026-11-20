@@ -171,8 +171,9 @@ function packKit() {
   return S.pack.kit;
 }
 function sampleMidiOf(slot) {
-  const id = slot != null && S.pack ? S.pack.slots[slot] : null; const a = id && S.byId[id]?.analysis;
-  return a && a.f0conf > 0.6 && a.midi != null ? Math.round(a.midi) : null;
+  // v2.3: la nota con la que suena en la Rhythm (medida + afinación de la receta)
+  const id = slot != null && S.pack ? S.pack.slots[slot] : null, m = id && S.byId[id] ? effectiveMidi(S.byId[id]) : null;
+  return m == null ? null : Math.round(m);
 }
 function curPat() {
   if (!S.pat) S.pat = { name: '', ...generate({ style: 'techno', seed: 1, steps: 16, root: 33, scale: 'minor' }), opts: { style: 'techno', seed: 1, steps: 16, density: 0.5, velVar: 0.3, fill: true, root: 33, scale: 'minor', bassStyle: 'auto' }, swing: 50, mute: [] };

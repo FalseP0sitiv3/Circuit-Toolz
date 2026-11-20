@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Circuit Tracks · Patch Library / Editor 3.7.0 · © 2026 FalsePositive · GPL-3.0 · https://ko-fi.com/falsepositive · fingerprint f79c8ec9d81b8dd7 -->
+<!-- Circuit Tracks · Patch Library / Editor 3.9.0 · © 2026 FalsePositive · GPL-3.0 · https://ko-fi.com/falsepositive · fingerprint 9f2f294c8d0586d5 -->
 <html lang="es">
 <head>
 <meta charset="utf-8">
@@ -981,6 +981,28 @@ button.stat.w strong{color:var(--warn)}
 .empty.welcome{text-align:left;max-width:520px;margin:0 auto}
 .empty.welcome .steps{margin:10px 0 8px 18px;padding:0;display:grid;gap:8px;font-size:13.5px;color:var(--dim)}
 .empty.welcome .steps b{color:var(--tx)}
+
+.labo .labopts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 4px}
+.labo .labopts .mlabel{margin:0 4px 0 8px}
+.labo .labopts .mlabel:first-child{margin-left:0}
+.labo .labopts select{max-width:320px}
+.labgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-top:10px}
+.labcard{border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--raise)}
+.labcard.saved{border-color:var(--ok)}
+.labcard-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.labch{font-size:12.5px;line-height:1.35;margin-top:4px}
+.labmorph{display:flex;align-items:center;gap:10px;margin-top:10px}
+.labmorph input[type=range]{flex:1;accent-color:var(--o)}
+.labkids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px}
+
+.octq{display:inline-flex;align-items:center;gap:4px}
+.octq b{min-width:58px;text-align:center;font-size:12px;color:var(--mute)}
+.octq b.on{color:var(--o)}
+.tclip{margin-top:10px;padding:8px;border:1px dashed var(--line2);border-radius:6px}
+.tclip .kbdh{font:11px var(--fm);color:var(--mute)}
+.tclip .kbdh kbd{font:11px var(--fm);border:1px solid var(--line2);border-radius:3px;padding:0 4px}
+.tagp.clip{border-color:var(--o)}
+.tgrp{display:inline-flex;align-items:center;gap:1px}
 </style>
 </head>
 <body>
@@ -989,8 +1011,8 @@ button.stat.w strong{color:var(--warn)}
 <script>(() => {
 'use strict';
 const __SITE__ = {"brand":"Circuit Tools","author":"FalsePositive","siteUrl":"","kofiUrl":"https://ko-fi.com/falsepositive","githubUrl":"","issuesUrl":"","license":"GPL-3.0","langFiles":{"es":"Circuit_Tracks_Patch_Library_Editor.html","en":"Circuit_Tracks_Patch_Library_Editor_EN.html"}};
-const __ORIGIN__ = {"tool":"Circuit Tracks · Patch Library / Editor","version":"3.7.0","author":"FalsePositive","year":2026,"url":"https://ko-fi.com/falsepositive","license":"GPL-3.0","fp":"f79c8ec9d81b8dd7"};
-const __WM__ = "⁠​‌​​​​‌‌​‌​‌​‌​​​​‌‌​​​‌​‌‌‌‌‌​​​‌‌​​‌‌​​​‌‌​‌‌‌​​‌‌‌​​‌​‌‌​​​‌‌​​‌‌‌​​​​‌‌​​‌​‌​‌‌​​​‌‌​​‌‌‌​​‌​‌‌​​‌​​​​‌‌‌​​​​​‌‌​​​‌​‌‌​​​‌​​​‌‌‌​​​​‌‌​​‌​​​‌‌​​‌​​​​‌‌​‌‌‌​‌‌‌‌‌​​​‌​​​‌‌​​‌‌​​​​‌​‌‌​‌‌​​​‌‌‌​​‌‌​‌‌​​‌​‌​‌​‌​​​​​‌‌​‌‌‌‌​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​‌​‌‌‌​‌‌​​‌‌​​‌​‌​‌‌‌‌‌​​​‌​​​​‌‌​‌‌​‌​​‌​‌‌‌​​‌​​‌‌​​​‌‌​‌‌‌​‌​‌​‌‌​‌​​‌​‌‌‌​‌​​​​‌​​​​​​‌​‌​‌​​​‌‌‌​​‌​​‌‌​​​​‌​‌‌​​​‌‌​‌‌​‌​‌‌​‌‌‌​​‌‌​​‌​​​​​‌‌​​​​‌​‌​‌‌​‌‌‌​​‌​​​​​​‌​‌​​​​​‌‌​​​​‌​‌‌‌​‌​​​‌‌​​​‌‌​‌‌​‌​​​​​‌​​​​​​‌​​‌‌​​​‌‌​‌​​‌​‌‌​​​‌​​‌‌‌​​‌​​‌‌​​​​‌​‌‌‌​​‌​​‌‌‌‌​​‌​​‌​​​​​​​‌​‌‌‌‌​​‌​​​​​​‌​​​‌​‌​‌‌​​‌​​​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌‌‌‌​‌‌‌​​‌​⁠";
+const __ORIGIN__ = {"tool":"Circuit Tracks · Patch Library / Editor","version":"3.9.0","author":"FalsePositive","year":2026,"url":"https://ko-fi.com/falsepositive","license":"GPL-3.0","fp":"9f2f294c8d0586d5"};
+const __WM__ = "⁠​‌​​​​‌‌​‌​‌​‌​​​​‌‌​​​‌​‌‌‌‌‌​​​​‌‌‌​​‌​‌‌​​‌‌​​​‌‌​​‌​​‌‌​​‌‌​​​‌‌​​‌​​​‌‌‌​​‌​​‌‌​‌​​​‌‌​​​‌‌​​‌‌‌​​​​‌‌​​‌​​​​‌‌​​​​​​‌‌​‌​‌​​‌‌‌​​​​​‌‌​‌‌​​‌‌​​‌​​​​‌‌​‌​‌​‌‌‌‌‌​​​‌​​​‌‌​​‌‌​​​​‌​‌‌​‌‌​​​‌‌‌​​‌‌​‌‌​​‌​‌​‌​‌​​​​​‌‌​‌‌‌‌​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​‌​‌‌‌​‌‌​​‌‌​​‌​‌​‌‌‌‌‌​​​‌​​​​‌‌​‌‌​‌​​‌​‌‌‌​​‌​​‌‌​​​‌‌​‌‌‌​‌​‌​‌‌​‌​​‌​‌‌‌​‌​​​​‌​​​​​​‌​‌​‌​​​‌‌‌​​‌​​‌‌​​​​‌​‌‌​​​‌‌​‌‌​‌​‌‌​‌‌‌​​‌‌​​‌​​​​​‌‌​​​​‌​‌​‌‌​‌‌‌​​‌​​​​​​‌​‌​​​​​‌‌​​​​‌​‌‌‌​‌​​​‌‌​​​‌‌​‌‌​‌​​​​​‌​​​​​​‌​​‌‌​​​‌‌​‌​​‌​‌‌​​​‌​​‌‌‌​​‌​​‌‌​​​​‌​‌‌‌​​‌​​‌‌‌‌​​‌​​‌​​​​​​​‌​‌‌‌‌​​‌​​​​​​‌​​​‌​‌​‌‌​​‌​​​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌‌‌‌​‌‌‌​​‌​⁠";
 // ---- core/params.js ----
 // Mapa técnico del formato de patch de Circuit Tracks (340 bytes).
 // Cada entrada lleva su nivel de evidencia:
@@ -2734,7 +2756,7 @@ function findCircuitPorts(access) {
 
 
 
-const APP_VERSION = '3.7.0';
+const APP_VERSION = '3.9.0';
 const STORES = ['files', 'patches', 'collections', 'banks', 'rules', 'history', 'settings'];
 const MAX_SYX = 2 * 1024 * 1024;
 
@@ -4698,6 +4720,100 @@ function rectIds(points, x0, y0, x1, y1) {
   return points.filter((p) => p.X >= a && p.X <= b && p.Y >= c && p.Y <= d).map((p) => p.id);
 }
 
+// ---- core/lab.js ----
+// core/lab.js — v3.8: laboratorio de sonido. Patches nuevos a partir de los que ya tienes:
+//  · mutar:   variaciones de un patch, con la intensidad y las partes que elijas
+//  · cruzar:  hijos de dos (o más) patches, bloque a bloque (osciladores, filtro, envolventes, LFO, efectos, matriz)
+//  · mezclar: un punto intermedio entre A y B (los valores continuos se interpolan; los de tipo cambian a mitad)
+// Nunca se tocan el nombre, la categoría ni los bytes reservados. Las macros son siempre las del patch de partida,
+// para que los knobs sigan haciendo lo mismo. Los resultados pasan por un saneado que evita patches mudos.
+
+const LAB_GROUPS = { osc: ['osc1', 'osc2', 'mixer'], filter: ['filter'], env: ['env1', 'env2', 'env3'], mod: ['lfo1', 'lfo2'], fx: ['fx', 'eq'] };
+const LAB_GROUP_IDS = Object.keys(LAB_GROUPS);
+// sd: desviación típica como fracción del rango; flip: probabilidad de cambiar un parámetro de tipo (onda, filtro…)
+const LAB_AMOUNTS = { subtle: { sd: 0.06, flip: 0 }, medium: { sd: 0.14, flip: 0.1 }, wild: { sd: 0.3, flip: 0.35 } };
+const LAB_BLOCKS = ['osc1', 'osc2', 'mixer', 'filter', 'env1', 'env2', 'env3', 'lfo1', 'lfo2', 'fx', 'eq', 'matrix'];
+const MATRIX = [124, 204];                       // 20 ranuras × 4 bytes: fuente 1, fuente 2, profundidad, destino
+// Se conservan siempre: la afinación (semitonos, bend), la voz y los bits de las LFO
+const KEEP = new Set(['osc1.semi', 'osc2.semi', 'osc1.bend', 'osc2.bend', 'lfo1.flags', 'lfo2.flags']);
+const SYNC = new Set(['lfo1.delaysync', 'lfo1.ratesync', 'lfo2.delaysync', 'lfo2.ratesync', 'fx.chorussync']);
+const discrete = (p) => !!p.enum || !!p.flags || SYNC.has(p.key);
+const clampP = (p, v) => Math.max(p.min, Math.min(p.max, Math.round(v)));
+
+function labRng(seed) {
+  let s = (seed >>> 0) || 1;
+  return () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function gauss(r) { let u = 0; while (!u) u = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * r()); }
+const groupsFor = (ids) => new Set(ids.flatMap((g) => LAB_GROUPS[g] || []));
+
+// Que el resultado suene: algún oscilador audible, una envolvente de amplitud que deje oír la frase y un filtro
+// paso bajo que no quede cerrado del todo. Lo que estaba así en el patch de partida se respeta.
+function labSanitize(out, ref) {
+  const lv = (b) => Math.max(b[54], b[55], b[56], b[57]);
+  if (lv(out) < 40 && lv(ref) >= 40) { for (const o of [54, 55, 56, 57]) out[o] = Math.max(out[o], ref[o]); }
+  if (out[70] > 110 && ref[70] <= 110) out[70] = Math.max(ref[70], 100);                  // ataque de amplitud eterno
+  if (out[71] < 12 && out[72] < 12 && !(ref[71] < 12 && ref[72] < 12)) out[71] = Math.max(ref[71], 30); // un clic sin cuerpo
+  const lp = out[63] <= 1, closed = out[64] < 18 && out[68] <= 66;
+  if (lp && closed && !(ref[63] <= 1 && ref[64] < 18 && ref[68] <= 66)) out[64] = Math.max(18, ref[64]);
+  for (const p of PARAMS) out[p.off] = clampP(p, out[p.off]);
+  return out;
+}
+
+// Variación de un patch
+function labMutate(payload, { amount = 'medium', groups = ['filter', 'env', 'mod', 'fx'], seed = 1 } = {}) {
+  const A = LAB_AMOUNTS[amount] || LAB_AMOUNTS.medium, r = labRng(seed), gs = groupsFor(groups), out = new Uint8Array(payload);
+  for (const p of PARAMS) {
+    if (!gs.has(p.group) || KEEP.has(p.key)) continue;
+    if (discrete(p)) { if (A.flip && r() < A.flip) out[p.off] = p.min + Math.floor(r() * (p.max - p.min + 1)); continue; }
+    const span = p.key.endsWith('.cents') ? 24 : p.max - p.min;   // los cents, poco: desafinar no es variar
+    out[p.off] = clampP(p, payload[p.off] + gauss(r) * A.sd * span);
+  }
+  return labSanitize(out, payload);
+}
+
+// Hijo de varios padres, bloque a bloque. El primero es el patch de partida (nombre, categoría, voz y macros).
+// Devuelve { payload, from: {bloque: índice del padre} }.
+function labCross(parents, { seed = 1, mutate = 'subtle' } = {}) {
+  const r = labRng(seed), base = parents[0], out = new Uint8Array(base), from = {};
+  for (const bl of LAB_BLOCKS) from[bl] = Math.floor(r() * parents.length);
+  // con dos padres, que haya algo de cada uno
+  const used = new Set(Object.values(from));
+  if (parents.length > 1 && used.size === 1) { const bl = LAB_BLOCKS[Math.floor(r() * LAB_BLOCKS.length)]; from[bl] = (from[bl] + 1) % parents.length; }
+  for (const p of PARAMS) { if (from[p.group] != null) out[p.off] = parents[from[p.group]][p.off]; }
+  out.set(parents[from.matrix].subarray(MATRIX[0], MATRIX[1]), MATRIX[0]);
+  const child = mutate ? labMutate(out, { amount: mutate, groups: LAB_GROUP_IDS.filter((g) => g !== 'osc'), seed: seed * 7 + 3 }) : labSanitize(out, base);
+  return { payload: child, from };
+}
+
+// Punto intermedio entre A (t = 0) y B (t = 1)
+function labMorph(a, b, t) {
+  const out = new Uint8Array(a), k = Math.max(0, Math.min(1, t));
+  for (const p of PARAMS) out[p.off] = discrete(p) || KEEP.has(p.key) ? (k < 0.5 ? a[p.off] : b[p.off]) : clampP(p, a[p.off] + (b[p.off] - a[p.off]) * k);
+  // matriz: la profundidad se interpola si la ranura hace lo mismo en los dos; si no, cambia a mitad
+  for (let o = MATRIX[0]; o < MATRIX[1]; o += 4) {
+    const same = a[o] === b[o] && a[o + 1] === b[o + 1] && a[o + 3] === b[o + 3];
+    if (same) out[o + 2] = Math.round(a[o + 2] + (b[o + 2] - a[o + 2]) * k);
+    else if (k >= 0.5) out.set(b.subarray(o, o + 4), o);
+  }
+  return labSanitize(out, k < 0.5 ? a : b);
+}
+
+// Lo que más cambia entre dos patches (fracción del rango), para describir un resultado en una línea
+function labChanges(a, b, n = 3) {
+  const out = [];
+  for (const p of PARAMS) {
+    const d = b[p.off] - a[p.off]; if (!d) continue;
+    out.push({ key: p.key, label: p.label, group: p.group, d, rel: discrete(p) ? 0.5 : Math.abs(d) / Math.max(1, p.max - p.min), discrete: discrete(p), to: b[p.off], p });
+  }
+  return out.sort((x, y) => y.rel - x.rel).slice(0, n);
+}
+// Cuánto se parece a A, de 0 a 1 (media de las diferencias relativas de todos los parámetros)
+function labCloseness(a, b) {
+  let s = 0; for (const p of PARAMS) s += discrete(p) ? (a[p.off] === b[p.off] ? 0 : 1) : Math.abs(a[p.off] - b[p.off]) / Math.max(1, p.max - p.min);
+  return 1 - s / PARAMS.length;
+}
+
 // ---- ui/app.js ----
 // Circuit Tracks · Patch Library / Editor — interfaz.
 // Archivo de interfaz: se empaqueta con el núcleo en un único ámbito (build.mjs).
@@ -4764,7 +4880,7 @@ const toast = (msg, ms = 3200) => { document.querySelectorAll('.toast').forEach(
 const toastAct = (msg, label, fn, ms = 8000) => { document.querySelectorAll('.toast').forEach((x) => x.remove()); const t = document.createElement('div'); t.className = 'toast act'; const sp = document.createElement('span'); sp.textContent = msg; const b = document.createElement('button'); b.textContent = label; b.addEventListener('click', () => { t.remove(); fn(); }); t.append(sp, b); document.body.append(t); setTimeout(() => t.remove(), ms); };
 // Atajos (la tecla ? los muestra)
 const KEYS_HELP = [
-  ['Siempre', [['Ctrl K', 'paleta: ir a, hacer o buscar un patch'], ['.', 'abrir o cerrar «Patch actual»'], ['/', 'buscar'], ['Ctrl Z', 'deshacer lo último (también una eliminación)'], ['?', 'esta ayuda']]],
+  ['Siempre', [['Ctrl K', 'paleta: ir a, hacer o buscar un patch'], ['Alt ↓ / Alt ↑', 'bajar / subir una octava el patch (Escucha y Biblioteca)'], ['V', 'pegar las etiquetas del portapapeles'], ['Mayús V', 'copiar las etiquetas del patch'], ['.', 'abrir o cerrar «Patch actual»'], ['/', 'buscar'], ['Ctrl Z', 'deshacer lo último (también una eliminación)'], ['?', 'esta ayuda']]],
   ['Escucha', [['Espacio', 'escuchar'], ['Esc', 'parar'], ['← →', 'anterior / siguiente'], ['B L P K C U S A Q X D T R W G E', 'categoría'], ['Intro', 'aceptar la propuesta'], ['1–5', 'valorar'], ['F', 'favorito'], ['M', 'medir'], ['Supr', 'eliminar (a la papelera) y pasar al siguiente'], ['Mayús Supr', 'marcar «Descartar» sin eliminar'], ['Alt 1–9', 'poner o quitar una etiqueta rápida'], ['Mayús 1–8', 'barrer una macro']]],
   ['Biblioteca', [['↑ ↓', 'moverse por la lista'], ['Espacio', 'escuchar'], ['Supr', 'eliminar el patch o la selección (a la papelera)'], ['Alt 1–9', 'etiqueta rápida'], ['G', 'patrón generado: otro'], ['A', 'adjuntar el patrón generado']]],
   ['Organizar · octava', [['Esc', 'volver al plan'], ['1 / 2', 'original / corregido'], ['Intro', 'aceptar'], ['Supr', 'descartar la corrección'], ['K', 'estaba bien'], ['← →', 'anterior / siguiente']]],
@@ -5047,14 +5163,14 @@ const pbar = (label, v, min = 0, max = 127, opts = {}) => {
 };
 const pp = (p, key, opts = {}) => { const d = PARAMS.find((x) => x.key === key); return pbar(opts.label || d.label, p.payload[d.off], d.min, d.max, { center: d.center, text: formatValue(d, p.payload[d.off]), ...opts }); };
 const pt = (p, key, label) => { const d = PARAMS.find((x) => x.key === key), v = p.payload[d.off]; return pbar(label, v, 0, 127, { text: v + ' · ' + fmtSeconds(approxSeconds(v)) }); };
-const CTABS = [['anatomy', 'Anatomía'], ['params', 'Parámetros'], ['macros', 'Macros'], ['compare', 'Comparar'], ['history', 'Historial']];
+const CTABS = [['anatomy', 'Anatomía'], ['params', 'Parámetros'], ['macros', 'Macros'], ['compare', 'Comparar'], ['lab', 'Laboratorio'], ['history', 'Historial']];
 function renderCenter() {
   const p = S.sel && lib.byId(S.sel);
   if (!p) return html`<section class="pane center"><div class="empty"><h3>Elige un patch</h3><p>Verás cómo está construido: fuentes, filtro, envolventes, modulación y macros, explicado en un diagrama y en una receta legible.</p></div></section>`;
   const inf = lib.info(p);
   return html`<section class="pane center"><div class="pane-h"><button class="btn small mobile-back" data-act="closeDetail">${raw(IC.back)}Lista</button><div class="ctabs" style="border:0;padding:0">${CTABS.map(([k, l]) => html`<button class="${S.ctab === k ? 'on' : ''}" data-act="ctab" data-t="${k}">${l}</button>`)}</div><span class="sp"></span>
-      <button class="btn small" data-act="listenSel" ${S.dev.session ? '' : 'disabled'} title="Enviar a la RAM del equipo y tocar la frase de prueba (Espacio)">${raw(IC.play)}Escuchar</button>${p.kind === 'variant' ? '' : html`<button class="btn small" data-act="duplicate" title="Crear una copia editable">${raw(IC.dup)}Variante</button>`}</div>
-    <div class="pane-b">${{ anatomy: centerAnatomy, params: tabSynth, macros: tabMacros, compare: tabCompare, history: centerHistory }[S.ctab](p, inf)}</div></section>`;
+      <button class="btn small" data-act="listenSel" ${S.dev.session ? '' : 'disabled'} title="Enviar a la RAM del equipo y tocar la frase de prueba (Espacio)">${raw(IC.play)}Escuchar</button>${octBtnsHTML(p)}${p.kind === 'variant' ? '' : html`<button class="btn small" data-act="duplicate" title="Crear una copia editable">${raw(IC.dup)}Variante</button>`}</div>
+    <div class="pane-b">${{ anatomy: centerAnatomy, params: tabSynth, macros: tabMacros, compare: tabCompare, lab: centerLab, history: centerHistory }[S.ctab](p, inf)}</div></section>`;
 }
 function centerHistory(p) {
   const hist = lib.history.filter((h) => h.ids?.includes(p.id)).slice(-20).reverse();
@@ -5171,7 +5287,7 @@ function openPalette() {
   draw(); inp.focus();
 }
 // ---------- Patch actual: la ficha completa en cualquier sección ----------
-const EDIT_TABS = [['anatomy', 'Anatomía'], ['params', 'Parámetros'], ['macros', 'Macros'], ['compare', 'Comparar'], ['history', 'Historial']];
+const EDIT_TABS = [['anatomy', 'Anatomía'], ['params', 'Parámetros'], ['macros', 'Macros'], ['compare', 'Comparar'], ['lab', 'Laboratorio'], ['history', 'Historial']];
 function renderDock() {
   const p = cur();
   return html`<div class="dock"><div class="dock-h"><span class="mlabel">Patch actual</span><span class="sp"></span><button class="lk" data-act="dockLib" title="Abrirlo en la Biblioteca">Biblioteca</button><button class="lk" data-act="dockToggle" aria-label="Cerrar">✕</button></div>
@@ -5228,7 +5344,7 @@ function inspTags(p, inf) {
     <datalist id="tagList">${[...new Set([...lib.allTags().map(([t]) => t), ...inPal, ...DESCRIPTORS])].map((t) => html`<option value="${t}">`)}</datalist>
     <div class="tagpal">${pal.map((g) => html`<div class="tpg"><span class="tpn">${g.name}</span><span class="tpc">${g.tags.map((t) => { const on = tags.includes(t), hint = sugMap.get(t); const qn = quickTags().indexOf(t); return html`<button class="tq ${on ? 'on' : ''} ${!on && hint ? 'hint' : ''}" data-act="tagToggle" data-t="${t}" aria-pressed="${on}" title="${hint ? hint.why || ({ name: 'Del nombre', meas: 'Medido', par: 'De los ajustes', pdesc: 'Carácter leído en los ajustes', use: 'Uso' }[hint.k] || '') : qn >= 0 ? 'Alt+' + (qn + 1) : ''}">${t}${qn >= 0 ? html`<sup>${qn + 1}</sup>` : ''}</button>`; })}</span></div>`)}</div>
     ${sug.length ? html`<div class="chips" style="margin-top:6px">${sug.map((x) => html`<button class="tagc ${x.k}" data-act="addTag" data-t="${x.t}" title="${x.why || { use: 'Uso', name: 'Del nombre', meas: 'Medido', par: 'De los ajustes', pdesc: 'Carácter leído en los ajustes' }[x.k] || ''}">+ ${x.t}</button>`)}</div>` : ''}
-    <p class="note" style="margin-top:4px"><a href="#" data-act="orgFolders" data-c="">Editar las etiquetas rápidas</a> · con borde discontinuo, las que sugiere el nombre o el patch.</p></div>`;
+    ${tagClipHTML()}<p class="note" style="margin-top:4px"><a href="#" data-act="orgFolders" data-c="">Editar las etiquetas rápidas</a> · con borde discontinuo, las que sugiere el nombre o el patch.</p></div>`;
 }
 async function acceptSubs(ids) {
   if (!ids.length) return;
@@ -6163,6 +6279,7 @@ function viewAudition() {
     <div class="box"><h3>Decidir <small>tecla = categoría · Intro = aceptar propuesta · 1–5 valoración · F favorito · Supr eliminar · ← → navegar · ? todos los atajos</small></h3>
       <div class="keys">${CATEGORIES.filter((x) => KEY_OF[x.id]).map((x) => html`<button class="btn ${m.category === x.id ? 'cur' : c.category === x.id ? 'prop' : ''}" data-act="audCat" data-c="${x.id}">${x.label}<kbd>${KEY_OF[x.id]}</kbd></button>`)}</div>
       <div class="row2" style="margin-top:8px"><button class="btn primary" data-act="audAccept" ${c.category ? '' : 'disabled'}>Aceptar propuesta <span class="kbd">INTRO</span></button><button class="btn" data-act="audReview" data-r="keep">Conservar</button><button class="btn" data-act="audReview" data-r="discard" title="Se queda en la biblioteca, pero no se exporta">Descartar <span class="kbd">MAYÚS SUPR</span></button><button class="btn danger" data-act="audDelete" title="Fuera de la biblioteca (a la papelera; Ctrl+Z deshace)">Eliminar <span class="kbd">SUPR</span></button><button class="btn" data-act="audFav">${m.fav ? '♥ Favorito' : '♡ Favorito'} <span class="kbd">F</span></button><span style="flex:1"></span><button class="btn" data-act="qstep" data-d="-1">◀</button><button class="btn" data-act="qstep" data-d="1">Siguiente ▶</button><button class="btn" data-act="openSel">Abrir ficha</button></div>
+      <div class="row2" style="margin-top:8px">${octBtnsHTML(p)}</div>${tagClipHTML()}
       <div class="qtags"><span class="mlabel">Etiquetas rápidas</span>${quickTags().map((t, i) => html`<button class="tq ${(m.tags || []).includes(t) ? 'on' : ''}" data-act="audTag" data-t="${t}" title="Alt+${i + 1}">${t}<sup>${i + 1}</sup></button>`)}</div></div>
   </div></div>`;
 }
@@ -6170,7 +6287,7 @@ async function audPlay(p = lib.byId(S.queue[S.qi])) {
   const s = S.dev.session; if (!s || !p) return;
   s.stopAll();
   const inf = lib.info(p), ph = S.phrase === 'auto' ? (S.view === 'library' && !patternOf(p) ? 'gen:' + p.id : phraseKeyFor(p)) : S.phrase;
-  const t = s.sendPatch(p.payload, S.dev.synth);
+  const t = s.sendPatch(lib.currentVersion(p).payload, S.dev.synth);
   const r = s.playPhrase(phraseObj(ph), S.dev.synth, { tempo: tempoNow(), root: phraseObj(ph).custom ? 0 : S.dev.root, start: t + (S.dev.patchDelay ?? 80) });
   S.playing = true; $('[data-act="audPlay"]')?.classList.add('on');
   clearTimeout(S.playTimer); S.playTimer = setTimeout(() => { S.playing = false; $('[data-act="audPlay"]')?.classList.remove('on'); }, r.end - performance.now());
@@ -7585,6 +7702,277 @@ Object.assign(A, {
   mapNearSel: () => { const near = nearestByZ(mapZ(), new Set(S.multi), S.mapN || 25); near.forEach((x) => S.multi.add(x.id)); toast(`Añadidos ${near.length} parecidos`); rerender(); },
   mapClear: () => { S.multi.clear(); rerender(); },
   mapToLib: () => { S.q = { ...blankQ(), ids: [...S.multi] }; S.view = 'library'; rerender(); },
+});
+
+// ---- ui/lab_ui.js ----
+// ui/lab_ui.js — v3.8: pestaña «Laboratorio» de la ficha. Sonidos nuevos a partir de los tuyos:
+//  · Mutar: 8 variaciones de este patch, con la intensidad y las partes que elijas
+//  · Cruzar: 8 hijos de este patch y otro (o de varios de la misma categoría), bloque a bloque
+//  · Mezclar: un punto entre este patch y otro, que se oye en el equipo mientras mueves el control
+// Lo que guardas entra como patch nuevo (en «Laboratorio/<patch>»), no como variante: un sonido nuevo no
+// sustituye a su origen al exportar. Guarda de dónde viene (meta.lab).
+
+
+const LAB_GROUP_LABEL = { osc: 'Osciladores', filter: 'Filtro', env: 'Envolventes', mod: 'LFO', fx: 'Efectos' };
+const LAB_BLOCK_LABEL = { osc1: 'oscilador 1', osc2: 'oscilador 2', mixer: 'mezcla', filter: 'filtro', env1: 'env. 1', env2: 'env. 2', env3: 'env. 3', lfo1: 'LFO 1', lfo2: 'LFO 2', fx: 'efectos', eq: 'EQ', matrix: 'matriz' };
+const LB = { forId: null, mode: 'mutate', amount: 'medium', groups: ['filter', 'env', 'mod', 'fx'], seed: 1, cands: null, bId: null, multi: false, t: 50, saved: {} };
+
+function labPartners(p) {
+  const v = lib.vecOf(p), out = [];
+  for (const q of lib.patches) {
+    if (q.id === p.id || q.kind === 'variant' || q.rootId === p.id) continue;
+    const w = lib.vecOf(q); let d = 0; for (let i = 0; i < v.length; i++) d += (v[i] - w[i]) ** 2;
+    out.push({ q, d });
+  }
+  out.sort((a, b) => a.d - b.d);
+  const list = out.slice(0, 40).map((x) => x.q);
+  const cmp = S.cmpB && lib.byId(S.cmpB);
+  if (cmp && cmp.id !== p.id && !list.includes(cmp)) list.unshift(cmp);
+  return list;
+}
+function labB(p) { const b = LB.bId && lib.byId(LB.bId); return b && b.id !== p.id ? b : null; }
+function labSameCat(p, n = 3) {
+  const c = effCat(p); if (!c) return [];
+  const pool = lib.patches.filter((q) => q.id !== p.id && q.kind !== 'variant' && effCat(q) === c);
+  const r = labRngUI(LB.seed * 13 + pool.length), out = [];
+  while (out.length < n && pool.length) out.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
+  return out;
+}
+function labRngUI(seed) { let s = seed >>> 0 || 1; return () => ((s = (Math.imul(s, 1103515245) + 12345) >>> 0) / 4294967296); }
+
+function labGenerate(p) {
+  LB.forId = p.id; LB.saved = {};
+  if (LB.mode === 'mutate') {
+    LB.cands = Array.from({ length: 8 }, (_, i) => ({ payload: labMutate(p.payload, { amount: LB.amount, groups: LB.groups, seed: LB.seed * 100 + i + 1 }) }));
+  } else if (LB.mode === 'cross') {
+    const b = labB(p), others = LB.multi ? labSameCat(p) : b ? [b] : [];
+    if (!others.length) { LB.cands = null; return; }
+    const parents = [p, ...others];
+    LB.cands = Array.from({ length: 8 }, (_, i) => { const c = labCross(parents.map((x) => x.payload), { seed: LB.seed * 100 + i + 1 }); return { payload: c.payload, from: c.from, parents: parents.map((x) => x.id) }; });
+  }
+  for (const c of LB.cands || []) { c.changes = labChanges(p.payload, c.payload, 3); c.close = labCloseness(p.payload, c.payload); }
+}
+// «Decay» o «Delay» no dicen de dónde son: se antepone el bloque (Env 1, LFO 2, OSC 1…)
+const LAB_GROUP_SHORT = { osc1: 'OSC 1', osc2: 'OSC 2', env1: 'Env 1', env2: 'Env 2', env3: 'Env 3', lfo1: 'LFO 1', lfo2: 'LFO 2' };
+function labChangeText(c) {
+  const lbl = (LAB_GROUP_SHORT[c.group] ? LAB_GROUP_SHORT[c.group] + ' ' : '') + c.label;
+  return c.discrete ? `${lbl}: ${formatValue(c.p, c.to)}` : `${lbl} ${c.d > 0 ? '+' : '−'}${Math.abs(c.d)}`;
+}
+function labFromText(cand) {
+  if (!cand.from) return '';
+  if (cand.parents.length > 2) return `de ${new Set(Object.values(cand.from)).size} patches`;
+  const bl = Object.entries(cand.from).filter(([, i]) => i === 1).map(([k]) => LAB_BLOCK_LABEL[k]);
+  return bl.length ? `de B: ${bl.join(', ')}` : '';
+}
+
+function centerLab(p) {
+  if (LB.forId !== p.id) { LB.cands = null; LB.saved = {}; LB.forId = p.id; if (LB.bId === p.id) LB.bId = null; }
+  const dev = !!S.dev.session, b = labB(p);
+  const born = p.meta.lab, kids = lib.patches.filter((q) => q.meta.lab?.from?.includes(p.id));
+  const modes = [['mutate', 'Mutar'], ['cross', 'Cruzar'], ['morph', 'Mezclar']];
+  const partnerSel = (withCat) => html`<select id="labB"><option value="">Elige el otro patch…</option>${withCat ? html`<option value="__cat" ${LB.multi ? 'selected' : ''}>Varios de su categoría (3 al azar)</option>` : ''}${labPartners(p).map((q) => html`<option value="${q.id}" ${!LB.multi && LB.bId === q.id ? 'selected' : ''}>${q.name}${q.id === S.cmpB ? ' · el de Comparar' : ''}</option>`)}</select>`;
+  let body = '';
+  if (LB.mode === 'mutate') {
+    body = html`<div class="labopts"><span class="mlabel">Intensidad</span>${[['subtle', 'Sutil'], ['medium', 'Media'], ['wild', 'Salvaje']].map(([k, l]) => html`<button class="tq ${LB.amount === k ? 'on' : ''}" data-act="labAmt" data-v="${k}">${l}</button>`)}
+      <span class="mlabel">Qué variar</span>${LAB_GROUP_IDS.map((g) => html`<button class="tq ${LB.groups.includes(g) ? 'on' : ''}" data-act="labGrp" data-v="${g}">${LAB_GROUP_LABEL[g]}</button>`)}</div>
+      <p class="note">Las ondas y los tipos (filtro, distorsión…) solo cambian en «Media» y «Salvaje». Nunca cambian el nombre, la afinación, la voz ni las macros, y ningún resultado queda mudo.</p>`;
+  } else if (LB.mode === 'cross') {
+    body = html`<div class="labopts"><span class="mlabel">Con</span>${partnerSel(true)}</div>
+      <p class="note">Cada hijo toma cada bloque entero (osciladores, filtro, envolventes, LFO, efectos, matriz) de uno de los padres, con una variación sutil. Las macros son las de este patch, así los knobs siguen haciendo lo mismo.</p>`;
+  } else {
+    const m = b ? labMorph(p.payload, b.payload, LB.t / 100) : null, ch = m ? labChanges(p.payload, m, 4) : [];
+    body = html`<div class="labopts"><span class="mlabel">Hacia</span>${partnerSel(false)}</div>
+      ${b ? html`<div class="labmorph"><span class="mono">A</span><input type="range" id="labT" min="0" max="100" step="1" value="${LB.t}"><span class="mono">B</span><b class="mono" id="labTv">${LB.t} %</b></div>
+        <div class="labch" id="labMorphCh">${ch.length ? ch.map((c) => labChangeText(c)).join(' · ') : 'igual que A'}</div>
+        <div class="row2" style="gap:8px;margin-top:8px"><button class="btn small" data-act="labPlayMorph" ${dev ? '' : 'disabled'}>${raw(IC.play)}Escuchar</button><button class="btn small primary" data-act="labSaveMorph">Guardar este punto</button></div>
+        <p class="note">Los valores continuos van de A a B; las ondas, los tipos y las rutas distintas de la matriz cambian a mitad. Con el equipo conectado, cada movimiento se envía a su RAM: suena mientras mueves el control.</p>` : html`<p class="note">Elige el otro patch. Puedes elegirlo también en «Comparar».</p>`}`;
+  }
+  const cards = LB.mode !== 'morph' && LB.cands ? html`<div class="labgrid">${LB.cands.map((c, i) => html`<div class="labcard ${LB.saved[i] ? 'saved' : ''}">
+      <div class="labcard-h"><b class="mono">${i + 1}</b><span class="dim">${Math.round(c.close * 100)} % como este</span></div>
+      <div class="labch">${c.changes.length ? c.changes.map((x) => labChangeText(x)).join(' · ') : 'casi igual'}</div>
+      ${c.from ? html`<div class="labch dim">${labFromText(c)}</div>` : ''}
+      <div class="row2" style="gap:6px;margin-top:6px"><button class="btn small" data-act="labPlay" data-i="${i}" ${dev ? '' : 'disabled'} title="Enviarlo a la RAM y tocar la frase de prueba">${raw(IC.play)}</button>
+        <button class="btn small ${LB.saved[i] ? '' : 'primary'}" data-act="labSave" data-i="${i}" ${LB.saved[i] ? 'disabled' : ''}>${LB.saved[i] ? '✓ Guardado' : 'Guardar'}</button></div></div>`)}</div>` : '';
+  return html`<div class="labo">
+    <div class="row2" style="gap:8px;align-items:center;flex-wrap:wrap"><div class="ctabs" style="border:0;padding:0">${modes.map(([k, l]) => html`<button class="${LB.mode === k ? 'on' : ''}" data-act="labMode" data-v="${k}">${l}</button>`)}</div>
+      <span class="sp"></span>${LB.mode !== 'morph' ? html`<button class="btn small primary" data-act="labGen" ${LB.mode === 'cross' && !b && !LB.multi ? 'disabled' : ''}>${LB.cands ? 'Otros 8' : 'Generar 8'}</button>` : ''}</div>
+    ${born ? html`<p class="note">Nació en el Laboratorio: ${born.text}${born.from?.length ? html` · ${born.from.map((id) => lib.byId(id)).filter(Boolean).map((q) => html`<button class="lk" data-act="labGo" data-id="${q.id}">${q.name}</button>`)}` : ''}</p>` : ''}
+    ${!dev ? html`<p class="note">Conecta el Circuit Tracks en Equipo para escuchar los resultados. Sin equipo se pueden generar y guardar igual.</p>` : ''}
+    ${body}${cards}
+    ${kids.length ? html`<div class="labkids"><span class="mlabel">Nacidos de este patch (${kids.length})</span>${kids.slice(-12).map((q) => html`<button class="lk" data-act="labGo" data-id="${q.id}">${q.name}</button>`)}</div>` : ''}
+  </div>`;
+}
+
+function labPlayPayload(p, payload) {
+  const s = S.dev.session; if (!s) return;
+  s.stopAll();
+  const ph = S.phrase === 'auto' ? phraseKeyFor(p) : S.phrase, t = s.sendPatch(payload, S.dev.synth);
+  s.playPhrase(phraseObj(ph), S.dev.synth, { tempo: tempoNow(), root: phraseObj(ph).custom ? 0 : S.dev.root, start: t + (S.dev.patchDelay ?? 80) });
+}
+let labLiveAt = 0, labLiveTimer = 0;
+function labLiveSend(payload) {
+  const s = S.dev.session; if (!s) return;
+  const go = () => { labLiveAt = performance.now(); s.sendPatch(payload, S.dev.synth); };
+  clearTimeout(labLiveTimer);
+  if (performance.now() - labLiveAt > 80) go(); else labLiveTimer = setTimeout(go, 80);
+}
+function labName(p, suffix) {
+  const base = (p.name || readName(p.payload).name || 'Patch').trim();
+  return (base.slice(0, Math.max(1, 16 - suffix.length)).trimEnd() + suffix).slice(0, 16);
+}
+// Guardar como patch nuevo: entra por la importación (huella, clasificación, duplicados) en «Laboratorio/<patch>»
+async function labSavePayload(p, payload, name, lab) {
+  const pl = new Uint8Array(payload); pl.set(encodeName(name), 0);
+  const before = new Set(lib.patches.map((x) => x.id));
+  const rep = await lib.importInputs([{ name: name.replace(/[\\/:*?"<>|]/g, '_') + '.syx', path: 'Laboratorio/' + (p.name || 'Patch').replace(/[\\/:*?"<>|]/g, '_'), bytes: lib.exportSyx({ payload: pl }) }]);
+  const np = lib.patches.find((x) => !before.has(x.id));
+  if (!np) { toast(rep.duplicatesPatch?.length ? 'Ya está en tu biblioteca: es idéntico a otro patch' : 'No se pudo guardar', 5000); return null; }
+  await lib.updateMeta([np.id], { lab }, 'Laboratorio: ' + lab.text);
+  S.rowsKey = ''; buildQueue();
+  toastAct(`Guardado como patch nuevo «${np.name}» en Laboratorio/${p.name}`, 'Abrirlo', () => { S.sel = np.id; S.view = 'library'; S.ctab = 'lab'; rerender(); });
+  return np;
+}
+const LAB_AMOUNT_TEXT = { subtle: 'sutil', medium: 'media', wild: 'salvaje' };
+
+document.addEventListener('change', (e) => {
+  const el = e.target;
+  if (el.id === 'labB') { LB.multi = el.value === '__cat'; LB.bId = LB.multi ? null : el.value || null; LB.cands = null; rerender(); }
+  else if (el.id === 'labT') { LB.t = +el.value; rerender(); }
+});
+document.addEventListener('input', (e) => {
+  const el = e.target; if (el.id !== 'labT') return;
+  const p = cur(), b = p && labB(p); if (!b) return;
+  LB.t = +el.value; const m = labMorph(p.payload, b.payload, LB.t / 100);
+  const v = document.getElementById('labTv'); if (v) v.textContent = LB.t + ' %';
+  const ch = document.getElementById('labMorphCh'); if (ch) { const c = labChanges(p.payload, m, 4); ch.textContent = c.length ? c.map((x) => labChangeText(x)).join(' · ') : 'igual que A'; }
+  labLiveSend(m);
+});
+Object.assign(A, {
+  labMode: (el) => { LB.mode = el.dataset.v; LB.cands = null; rerender(); },
+  labAmt: (el) => { LB.amount = el.dataset.v; LB.cands = null; rerender(); },
+  labGrp: (el) => { const g = el.dataset.v; LB.groups = LB.groups.includes(g) ? LB.groups.filter((x) => x !== g) : [...LB.groups, g]; if (!LB.groups.length) LB.groups = [g]; LB.cands = null; rerender(); },
+  labGen: () => { const p = cur(); if (!p) return; if (LB.cands) LB.seed++; labGenerate(p); rerender(); },
+  labPlay: (el) => { const p = cur(), c = LB.cands?.[+el.dataset.i]; if (p && c) labPlayPayload(p, c.payload); },
+  labSave: async (el) => {
+    const p = cur(), i = +el.dataset.i, c = LB.cands?.[i]; if (!p || !c) return;
+    const lab = LB.mode === 'mutate'
+      ? { op: 'mutate', from: [p.id], text: `variación ${LAB_AMOUNT_TEXT[LB.amount]} (${LB.groups.map((g) => LAB_GROUP_LABEL[g].toLowerCase()).join(', ')}) de «${p.name}»` }
+      : { op: 'cross', from: c.parents, text: c.parents.length > 2 ? `cruce de «${p.name}» con ${c.parents.length - 1} patches de su categoría` : `cruce de «${p.name}» y «${lib.byId(c.parents[1])?.name || '?'}»` };
+    const np = await labSavePayload(p, c.payload, labName(p, LB.mode === 'mutate' ? ` M${i + 1}` : ` X${i + 1}`), lab);
+    if (np) { LB.saved[i] = np.id; rerender(); }
+  },
+  labPlayMorph: () => { const p = cur(), b = p && labB(p); if (b) labPlayPayload(p, labMorph(p.payload, b.payload, LB.t / 100)); },
+  labSaveMorph: async () => {
+    const p = cur(), b = p && labB(p); if (!b) return;
+    await labSavePayload(p, labMorph(p.payload, b.payload, LB.t / 100), labName(p, ` ${LB.t}%`), { op: 'morph', from: [p.id, b.id], text: `mezcla de «${p.name}» y «${b.name}» al ${LB.t} %` });
+    rerender();
+  },
+  labGo: (el) => { S.sel = el.dataset.id; S.view = 'library'; rerender(); },
+});
+
+// ---- ui/quick_ui.js ----
+// ui/quick_ui.js — v3.9: lo que se hace mientras se escucha, sin ir a otra sección.
+//  · Octava rápida: −8va / +8va (Alt ↓ / Alt ↑) en Escucha, en la ficha y en el patch acoplado. Crea una versión
+//    aceptada (la que se exporta y la que suena en el equipo) y las pulsaciones siguientes se suman en esa misma
+//    versión. Si vuelve a quedar como el original, la versión se quita. Suena otra vez al momento.
+//  · Portapapeles de etiquetas: copiar las de un patch (Mayús V), pegarlas en el que escuchas (V) o en la
+//    selección, y guardar conjuntos como grupos («Wobble + Dark») para cargarlos con un clic.
+
+// ---------- octava rápida ----------
+function quickOctOf(p) { const v = p && lib.currentVersion(p); return v && v.kind === 'variant' && v.meta.quickOct ? v.meta.quickOct : 0; }
+function octBtnsHTML(p) {
+  if (!p) return '';
+  const n = quickOctOf(p), lbl = n ? `${n > 0 ? '+' : '−'}${Math.abs(n / 12)} oct` : 'Octava';
+  return html`<span class="octq" title="Bajar o subir una octava este patch (Alt ↓ / Alt ↑). Queda como versión aceptada: se exporta así.">
+    <button class="btn small" data-act="qOct" data-n="-12" data-id="${p.id}">−8va</button><b class="mono ${n ? 'on' : ''}">${lbl}</b><button class="btn small" data-act="qOct" data-n="12" data-id="${p.id}">+8va</button></span>`;
+}
+async function quickOctave(p0, n) {
+  if (!p0) return;
+  const base = p0.kind === 'variant' && p0.meta.quickOct ? lib.byId(p0.parentId) || p0 : p0;
+  const cv = lib.currentVersion(base);
+  const t = transposeSemitones(cv.payload, n, regMethod(), {});
+  if (!t || !t.payload) { toast('No se puede transponer este patch', 5000); return; }
+  const quick = cv.kind === 'variant' && cv.meta.quickOct;
+  const total = (quick ? cv.meta.quickOct : 0) + n;
+  let now = cv;
+  if (quick) {
+    if (!total) {
+      // vuelve a ser el original: la versión rápida sobra
+      await lib.adoptVariants([cv.id], false); await lib.deletePatches([cv.id], true); now = lib.currentVersion(base);
+    } else {
+      const edits = []; for (let i = 0; i < 340; i++) if (t.payload[i] !== cv.payload[i]) edits.push([i, t.payload[i]]);
+      await lib.editVariantBytes(cv.id, edits, `Altura ${fmtSemis(n)} st (a mano)`);
+      await lib.updateMeta([cv.id], { quickOct: total }, `Octava a mano: ${fmtSemis(total / 12)} oct`);
+      cv.originText = `Octava ${fmtSemis(total / 12)} (a mano)`;
+    }
+  } else {
+    const v = await lib.createVariant(cv.id, t.payload, 'register', `Octava ${fmtSemis(total / 12)} (a mano)`, '');
+    await lib.updateMeta([v.id], { quickOct: total }, `Octava a mano: ${fmtSemis(total / 12)} oct`);
+    await lib.adoptVariants([v.id], true); now = v;
+  }
+  if (S.sel && !lib.byId(S.sel)) S.sel = base.id;
+  if (S.sel && lib.byId(S.sel)?.kind === 'variant' && lib.byId(S.sel).meta.quickOct) S.sel = now.id;
+  S.rowsKey = ''; rerender();
+  const s = S.dev.session;
+  if (s) quickPlay(base, lib.currentVersion(base).payload);
+  toast(total ? `«${base.name}»: ${fmtSemis(total / 12)} oct respecto al original${t.problems?.length ? ' · ' + t.problems[0] : ''}` : `«${base.name}» vuelve a su octava original`, 4000);
+}
+function quickPlay(p, payload) {
+  const s = S.dev.session; if (!s) return;
+  s.stopAll();
+  const ph = S.phrase === 'auto' ? phraseKeyFor(p) : S.phrase, t = s.sendPatch(payload, S.dev.synth);
+  s.playPhrase(phraseObj(ph), S.dev.synth, { tempo: tempoNow(), root: phraseObj(ph).custom ? 0 : S.dev.root, start: t + (S.dev.patchDelay ?? 80) });
+}
+
+// ---------- portapapeles de etiquetas ----------
+const clipTags = () => lib.settings.tagClip || [];
+const tagGroups = () => lib.settings.tagGroups || [];
+async function setClip(tags) { await lib.setSetting('tagClip', [...new Set(tags.map((x) => String(x).trim()).filter(Boolean))].slice(0, 12)); }
+function clipTargets() {
+  if (S.view === 'library' && S.multi.size > 1) return [...S.multi];
+  const p = cur(); return p ? [p.id] : [];
+}
+function tagClipHTML() {
+  const c = clipTags(), g = tagGroups(), p = cur(), has = p ? (p.meta.tags || []) : [], multi = S.view === 'library' && S.multi.size > 1;
+  const pending = c.filter((x) => !has.includes(x)).length;
+  return html`<div class="tclip"><div class="mlabel"><span>Portapapeles de etiquetas</span><span class="kbdh"><kbd>V</kbd> pegar · <kbd>Mayús</kbd><kbd>V</kbd> copiar</span></div>
+    <div class="tagbox">${c.map((t) => html`<span class="tagp clip">${t}<button data-act="clipDel" data-t="${t}" aria-label="Quitar ${t}">×</button></span>`)}<input class="tagin" id="clipIn" list="tagList" placeholder="${c.length ? 'Añadir…' : 'Escribe una etiqueta, o copia las de un patch'}"></div>
+    <div class="row2" style="gap:5px;flex-wrap:wrap;margin-top:5px">
+      <button class="btn small" data-act="clipCopy" ${p && has.length ? '' : 'disabled'} title="Las etiquetas de este patch al portapapeles (Mayús V)">Copiar de este</button>
+      <button class="btn small ${c.length && (pending || multi) ? 'primary' : ''}" data-act="clipPaste" ${c.length && p ? '' : 'disabled'} title="Añadir las del portapapeles (V)">${multi ? `Pegar en ${S.multi.size}` : pending || !c.length ? 'Pegar en este' : '✓ Ya las tiene'}</button>
+      ${c.length ? html`<button class="btn small" data-act="clipGroup" title="Guardar este conjunto para cargarlo con un clic">Guardar como grupo</button><button class="btn small" data-act="clipClear">Vaciar</button>` : ''}</div>
+    ${g.length ? html`<div class="chips" style="margin-top:6px">${g.map((x, i) => html`<span class="tgrp"><button class="tq" data-act="clipLoad" data-i="${i}" title="Cargar en el portapapeles: ${x.join(', ')}">${x.join(' + ')}</button><button class="lk" data-act="clipGroupDel" data-i="${i}" aria-label="Quitar el grupo">×</button></span>`)}</div>` : ''}</div>`;
+}
+async function clipPaste() {
+  const c = clipTags(), ids = clipTargets(); if (!c.length || !ids.length) return;
+  await lib.addTags(ids, c);
+  rerender(); toast(`${c.join(', ')} → ${ids.length === 1 ? '«' + lib.byId(ids[0]).name + '»' : ids.length + ' patches'}`, 2500);
+}
+async function clipCopy() {
+  const p = cur(), t = p ? p.meta.tags || [] : []; if (!t.length) { toast('Este patch no tiene etiquetas'); return; }
+  await setClip(t); rerender(); toast('Copiadas: ' + t.join(', '), 2500);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.matches('input,textarea,select') || document.querySelector('.modal') || e.ctrlKey || e.metaKey) return;
+  if (!['audition', 'library'].includes(S.view)) return;
+  if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); e.stopImmediatePropagation(); quickOctave(cur(), e.key === 'ArrowUp' ? 12 : -12); return; }
+  if (!e.altKey && e.key.toLowerCase() === 'v') { e.preventDefault(); e.stopImmediatePropagation(); if (e.shiftKey) clipCopy(); else clipPaste(); }
+}, true);
+document.addEventListener('keydown', async (e) => {
+  if (e.target.id !== 'clipIn' || e.key !== 'Enter') return;
+  e.preventDefault(); const v = e.target.value.trim(); if (!v) return;
+  await setClip([...clipTags(), ...v.split(',')]); rerender(); setTimeout(() => document.getElementById('clipIn')?.focus(), 0);
+});
+Object.assign(A, {
+  qOct: (el) => quickOctave(lib.byId(el.dataset.id) || cur(), +el.dataset.n),
+  clipCopy: () => clipCopy(),
+  clipPaste: () => clipPaste(),
+  clipDel: async (el) => { await setClip(clipTags().filter((x) => x !== el.dataset.t)); rerender(); },
+  clipClear: async () => { await setClip([]); rerender(); },
+  clipGroup: async () => { const c = clipTags(); if (!c.length) return; const g = tagGroups().filter((x) => x.join('|') !== c.join('|')); await lib.setSetting('tagGroups', [c, ...g].slice(0, 12)); rerender(); },
+  clipLoad: async (el) => { const g = tagGroups()[+el.dataset.i]; if (g) { await setClip(g); rerender(); } },
+  clipGroupDel: async (el) => { const g = tagGroups().slice(); g.splice(+el.dataset.i, 1); await lib.setSetting('tagGroups', g); rerender(); },
 });
 
 })();</script>

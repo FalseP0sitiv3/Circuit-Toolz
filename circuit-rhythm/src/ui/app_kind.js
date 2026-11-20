@@ -49,7 +49,7 @@ function keepOnDecide(s, oldCat, newCat) {
 // ---------- reanalizar y exportar un sample ----------
 function sampleToolsHTML(s) {
   return `<span class="stools"><button class="btn small ghost" data-act="s-reanalyze" data-id="${s.id}" title="${t('Vuelve a medir el audio y a proponer categoría, subcarpeta y etiquetas')}">↻ ${t('Reanalizar')}</button>
-    <button class="btn small ghost" data-act="s-exp" data-id="${s.id}" title="${t('Entero o en slices, para la Rhythm o con las propiedades del original')}">⤓ ${t('Exportar…')}</button></span>`;
+    <button class="btn small ghost" data-act="s-exp" data-id="${s.id}" title="${t('Entero o en slices, para la Rhythm o con las propiedades del original')}">⤓ ${t('Exportar…')}</button>${hitsButtonHTML(s)}</span>`;
 }
 async function reanalyze(s) {
   if (!s) return;

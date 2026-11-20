@@ -1,2 +1,2 @@
-{ "name": "circuit-tracks-patch-library-editor", "version": "3.7.0", "type": "module", "private": true,
-  "scripts": { "test": "node --test tests/core.test.js tests/new.test.js tests/analyzer.test.js tests/organize.test.js tests/patterns.test.js tests/record.test.js tests/song.test.js tests/taxonomy.test.js tests/mapsel.test.js", "build": "node build.mjs && node tools/i18n_check.mjs && node tools/build_en.mjs" } }
+{ "name": "circuit-tracks-patch-library-editor", "version": "3.9.0", "type": "module", "private": true,
+  "scripts": { "test": "node --test tests/core.test.js tests/new.test.js tests/analyzer.test.js tests/organize.test.js tests/patterns.test.js tests/record.test.js tests/song.test.js tests/taxonomy.test.js tests/mapsel.test.js tests/lab.test.js", "build": "node build.mjs && node tools/i18n_check.mjs && node tools/build_en.mjs" } }

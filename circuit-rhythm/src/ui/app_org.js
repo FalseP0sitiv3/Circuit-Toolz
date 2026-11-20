@@ -72,6 +72,7 @@ function orgDetailHTML(s, { compact = false } = {}) {
     <div class="orow"><span class="lbl">${t('Etiquetas')}</span><div><span class="chips">${mine}</span>${det}
       ${compact ? quick : `<div class="pal">${palHTML}</div>`}
       <input type="text" class="otag" data-id="${s.id}" placeholder="${t('Otra etiqueta y Intro')}" maxlength="24" list="o-taglist"><datalist id="o-taglist">${allTags().slice(0, 60).map(([x]) => `<option value="${esc(x)}">`).join('')}</datalist></div></div>
+    ${tagClipHTML(s)}
   </div>`;
 }
 function orgPanelHTML(s) { return `<div class="panel" style="margin-top:12px"><h2>${t('Carpeta y etiquetas')}</h2>${orgDetailHTML(s)}</div>`; }

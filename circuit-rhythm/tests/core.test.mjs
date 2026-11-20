@@ -16,6 +16,9 @@ import { readFileSync } from 'node:fs';
 import { zoneOf, sliceBounds, slicesOriginal, slicesRhythm, originalFormat, encodeOriginal, encodeRhythm, sliceName } from '../src/core/slices.js';
 import { repetition, applyKeep, parseSel, selText, validKeep, keepIsIdentity, REPEAT_HIGH } from '../src/core/shorten.js';
 import { rawSeconds, kindOf, autoKindOf, isLoopSample, autoTrimOf } from '../src/core/pack.js';
+import { tunePlan, shiftToPc, shiftToSemitone, effectiveMidi, pitchLabel, tuneRatio } from '../src/core/tune.js';
+import { loudnessMax, kCoefficients, matchGroup } from '../src/core/loud.js';
+import { hitOnsets, findHits, describeHits, groupHits, hitAudio, hitBaseName } from '../src/core/hits.js';
 let pass = 0, fail = 0;
 const results = [];
 async function test(name, fn) {
@@ -657,6 +660,85 @@ await test('mapa: grupos de sonidos parecidos (k-means determinista sobre lo med
   ok(a.groups.every((g) => new Set(g.ids.map((x) => x[0])).size === 1), 'cada grupo, de un solo tipo: ' + a.groups.map((g) => g.ids.join('')).join(' | '));
   ok(a.of.get('k0') === a.of.get('k5') && a.of.get('k0') !== a.of.get('h0'));
   ok(groupCount(10) === 2 && groupCount(200) === 10 && groupCount(5000) === 12 && kmeansGroups(new Map(), 3).k === 0);
+});
+
+// ---------- v2.3: afinar, volumen percibido y golpes ----------
+await test('afinar: el camino más corto a la tónica, cents y propuesta por categoría', () => {
+  near(shiftToPc(29.3, 5), -0.3, 1e-9, 'F1 +30 ct → F1');
+  near(shiftToPc(31, 5), -2, 1e-9, 'G1 → F1 baja 2');
+  near(shiftToPc(27, 5), 2, 1e-9, 'D#1 → F1 sube 2');
+  near(shiftToPc(35, 5), -6, 1e-9, 'el tritono baja');
+  near(shiftToSemitone(45.62), 0.38, 1e-9, 'al semitono');
+  const it = [{ id: 'k', cat: 'kick', midi: 31.2 }, { id: 's', cat: 'synth', midi: 62.2 }, { id: 'l', cat: 'bass', midi: 36, loop: true }, { id: 'h', cat: 'hat', midi: null }, { id: 'b', cat: 'bass', midi: 29, tune: 0 }];
+  const p = Object.fromEntries(tunePlan(it, { root: 5, mode: 'root' }).map((x) => [x.id, x]));
+  ok(p.k.status === 'change' && near(p.k.shift, -2.2, 1e-9) === undefined && p.k.toRoot, 'el bombo, a la tónica');
+  ok(p.s.status === 'change' && !p.s.toRoot && Math.abs(p.s.shift + 0.2) < 1e-9, 'el synth solo corrige cents');
+  ok(p.l.status === 'loop' && p.h.status === 'nopitch' && p.b.status === 'ok', 'loops y sin tono no se tocan; lo afinado queda «ok»');
+  const q = Object.fromEntries(tunePlan(it, { root: 5, mode: 'allroot' }).map((x) => [x.id, x]));
+  ok(q.s.toRoot && Math.abs(q.s.shift - 2.8) < 1e-9, 'todo a la tónica: el synth sube a F');
+  ok(effectiveMidi({ analysis: { f0conf: 0.9, midi: 31.2 }, recipe: { tune: -2.2 } }) === 29, 'nota efectiva = medida + afinación');
+  ok(pitchLabel(29.3).endsWith('+30 ct'), pitchLabel(29.3));
+});
+await test('afinar: la receta cambia la nota y la duración como un sampler', () => {
+  const sr = 44100, x = S.sine(110, 1, sr, 0.6);
+  const d = { channels: [x], sampleRate: sr };
+  const up = render(d, { tune: 12, autoTrim: false }), dn = render(d, { tune: -3, autoTrim: false });
+  near(up.data.length / 48000, 0.5, 0.002, 'una octava arriba dura la mitad');
+  near(zeroCrossFreq(up.data, 48000), 220, 2, 'y suena una octava arriba');
+  near(dn.data.length / 48000, 1 / tuneRatio(-3), 0.003, 'tres semitonos abajo dura más');
+  near(zeroCrossFreq(dn.data, 48000), 110 * tuneRatio(-3), 1.5, 'y suena tres semitonos abajo');
+  const smp = { analysis: { dur: 1, activeDur: 1, leadMs: 0 }, recipe: { tune: 12 } };
+  near(rawSeconds(smp), 0.5, 1e-9, 'el presupuesto del pack cuenta la duración afinada');
+  const fit = render(d, { tune: 12, autoTrim: false, fitSec: 0.8 });
+  near(fit.data.length / 48000, 0.4, 0.002, 'el ajuste al compás también se afina');
+});
+await test('volumen percibido: ponderación K de la norma, LUFS y nivel «loud» con tope de pico', () => {
+  const [s1, s2] = kCoefficients(48000);
+  near(s1.b[0], 1.53512485958697, 1e-9); near(s1.a[1], -1.69065929318241, 1e-9); near(s1.a[2], 0.73248077421585, 1e-9);
+  near(s2.b[1], -2, 1e-6); near(s2.a[1], -1.99004745483398, 1e-9); near(s2.a[2], 0.99007225036621, 1e-9);
+  // un seno de 1 kHz a −20 dBFS (amplitud 0,1) da −23 LUFS en un canal (−20 − 3,01 + 0,69 − 0,69 ≈ −23,0)
+  const sr = 48000, x = new Float32Array(sr * 2); for (let i = 0; i < x.length; i++) x[i] = 0.1 * Math.sin((2 * Math.PI * 1000 * i) / sr);
+  near(loudnessMax(x, sr), -23.0, 0.15, 'seno 1 kHz −20 dBFS');
+  ok(loudnessMax(new Float32Array(1000), sr) === -Infinity, 'silencio');
+  // un golpe corto suena menos que uno largo con el mismo pico
+  const short = new Float32Array(sr * 0.05), long = new Float32Array(sr * 0.4);
+  for (let i = 0; i < short.length; i++) short[i] = 0.5 * Math.sin((2 * Math.PI * 200 * i) / sr);
+  for (let i = 0; i < long.length; i++) long[i] = 0.5 * Math.sin((2 * Math.PI * 200 * i) / sr);
+  ok(loudnessMax(long, sr) - loudnessMax(short, sr) > 8, 'la ventana de 400 ms pesa la duración');
+  const d = { channels: [x], sampleRate: sr };
+  const r = render(d, { normalize: 'loud', targetLufs: -18, autoTrim: false });
+  near(loudnessMax(r.data, 48000), -18, 0.2, 'normalizado a −18 LUFS');
+  const r2 = render(d, { normalize: 'loud', targetLufs: 0, autoTrim: false });
+  ok(r2.report.loudLimited && Math.abs(db(peakOf(r2.data)) + 0.5) < 0.05, 'si no llega sin saturar, se queda en el pico');
+  const m = matchGroup([{ id: 'a', lufs: -8 }, { id: 'b', lufs: -11 }, { id: 'c', lufs: -10 }, { id: 'd', lufs: -25 }]);
+  ok(m.target === -11, 'objetivo: el más flojo de los normales ' + m.target);
+  const by = Object.fromEntries(m.items.map((x) => [x.id, x]));
+  ok(by.a.cut === 3 && by.b.cut === 0 && by.d.low === 14 && by.d.to === -25, 'los fuertes bajan; el raro se avisa');
+});
+await test('golpes: ataques precisos, cortes limpios, categorías y grupos de un loop', () => {
+  const sr = 44100, beat = 60 / 128, x = new Float32Array(Math.round(8 * beat * sr));
+  // el bombo decae entero (como en un loop real): su cola suena debajo del charles y de la caja siguientes
+  const K = S.kick(sr, 0.9), H = S.hat(sr, 0.08), SN = S.snare(sr, 0.3);
+  const put = (smp, t, g = 1) => { const o = Math.round(t * sr); for (let i = 0; i < smp.length && o + i < x.length; i++) x[o + i] += smp[i] * g; };
+  const want = [];
+  for (let bar = 0; bar < 2; bar++) for (let q = 0; q < 4; q++) {
+    const t0 = (bar * 4 + q) * beat;
+    if (q % 2 === 0) put(K, t0); else put(SN, t0, 0.8);
+    want.push(t0); put(H, t0 + beat / 2, 0.5); want.push(t0 + beat / 2);
+  }
+  const d = { channels: [x, x.slice()], sampleRate: sr, bits: 24 };
+  const hits = findHits(d);
+  ok(hits.length === 16, `16 golpes (${hits.length})`);
+  for (let i = 0; i < Math.min(16, hits.length); i++) ok(Math.abs(hits[i].t - want[i]) < 0.004, `ataque ${i}: ${hits[i].t.toFixed(4)} ≉ ${want[i].toFixed(4)}`);
+  ok(hits.every((h, i) => i === hits.length - 1 || h.b <= hits[i + 1].a), 'sin solaparse');
+  const a = hitAudio(d, hits[0]);
+  ok(a.channels.length === 2 && a.sampleRate === sr && Math.abs(a.channels[0][0]) < 1e-3, 'todos los canales, empieza en silencio');
+  const g = groupHits(describeHits(d, hits));
+  const sum = Object.fromEntries(g.map((x) => [x.cat, x.members.length]));
+  ok(g.length === 3 && sum.kick === 4 && sum.hat === 8 && (sum.snare === 4 || sum.clap === 4 || sum.perc === 4), 'tres grupos: ' + JSON.stringify(sum));
+  ok(g.every((x) => x.rep && x.members.includes(x.rep)), 'cada grupo tiene su golpe elegido');
+  ok(hitOnsets(new Float32Array(sr), sr).length === 0, 'el silencio no tiene golpes');
+  ok(hitBaseName('Amen_Break_170bpm Loop 02.wav') === 'Amen 02' && hitBaseName('Top Loop 128bpm.wav') === 'Top', hitBaseName('Amen_Break_170bpm Loop 02.wav') + ' · ' + hitBaseName('Top Loop 128bpm.wav'));
 });
 
 console.log(results.join('\n'));

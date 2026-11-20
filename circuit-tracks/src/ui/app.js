@@ -64,7 +64,7 @@ const toast = (msg, ms = 3200) => { document.querySelectorAll('.toast').forEach(
 const toastAct = (msg, label, fn, ms = 8000) => { document.querySelectorAll('.toast').forEach((x) => x.remove()); const t = document.createElement('div'); t.className = 'toast act'; const sp = document.createElement('span'); sp.textContent = msg; const b = document.createElement('button'); b.textContent = label; b.addEventListener('click', () => { t.remove(); fn(); }); t.append(sp, b); document.body.append(t); setTimeout(() => t.remove(), ms); };
 // Atajos (la tecla ? los muestra)
 const KEYS_HELP = [
-  ['Siempre', [['Ctrl K', 'paleta: ir a, hacer o buscar un patch'], ['.', 'abrir o cerrar «Patch actual»'], ['/', 'buscar'], ['Ctrl Z', 'deshacer lo último (también una eliminación)'], ['?', 'esta ayuda']]],
+  ['Siempre', [['Ctrl K', 'paleta: ir a, hacer o buscar un patch'], ['Alt ↓ / Alt ↑', 'bajar / subir una octava el patch (Escucha y Biblioteca)'], ['V', 'pegar las etiquetas del portapapeles'], ['Mayús V', 'copiar las etiquetas del patch'], ['.', 'abrir o cerrar «Patch actual»'], ['/', 'buscar'], ['Ctrl Z', 'deshacer lo último (también una eliminación)'], ['?', 'esta ayuda']]],
   ['Escucha', [['Espacio', 'escuchar'], ['Esc', 'parar'], ['← →', 'anterior / siguiente'], ['B L P K C U S A Q X D T R W G E', 'categoría'], ['Intro', 'aceptar la propuesta'], ['1–5', 'valorar'], ['F', 'favorito'], ['M', 'medir'], ['Supr', 'eliminar (a la papelera) y pasar al siguiente'], ['Mayús Supr', 'marcar «Descartar» sin eliminar'], ['Alt 1–9', 'poner o quitar una etiqueta rápida'], ['Mayús 1–8', 'barrer una macro']]],
   ['Biblioteca', [['↑ ↓', 'moverse por la lista'], ['Espacio', 'escuchar'], ['Supr', 'eliminar el patch o la selección (a la papelera)'], ['Alt 1–9', 'etiqueta rápida'], ['G', 'patrón generado: otro'], ['A', 'adjuntar el patrón generado']]],
   ['Organizar · octava', [['Esc', 'volver al plan'], ['1 / 2', 'original / corregido'], ['Intro', 'aceptar'], ['Supr', 'descartar la corrección'], ['K', 'estaba bien'], ['← →', 'anterior / siguiente']]],
@@ -347,14 +347,14 @@ const pbar = (label, v, min = 0, max = 127, opts = {}) => {
 };
 const pp = (p, key, opts = {}) => { const d = PARAMS.find((x) => x.key === key); return pbar(opts.label || d.label, p.payload[d.off], d.min, d.max, { center: d.center, text: formatValue(d, p.payload[d.off]), ...opts }); };
 const pt = (p, key, label) => { const d = PARAMS.find((x) => x.key === key), v = p.payload[d.off]; return pbar(label, v, 0, 127, { text: v + ' · ' + fmtSeconds(approxSeconds(v)) }); };
-const CTABS = [['anatomy', 'Anatomía'], ['params', 'Parámetros'], ['macros', 'Macros'], ['compare', 'Comparar'], ['history', 'Historial']];
+const CTABS = [['anatomy', 'Anatomía'], ['params', 'Parámetros'], ['macros', 'Macros'], ['compare', 'Comparar'], ['lab', 'Laboratorio'], ['history', 'Historial']];
 function renderCenter() {
   const p = S.sel && lib.byId(S.sel);
   if (!p) return html`<section class="pane center"><div class="empty"><h3>Elige un patch</h3><p>Verás cómo está construido: fuentes, filtro, envolventes, modulación y macros, explicado en un diagrama y en una receta legible.</p></div></section>`;
   const inf = lib.info(p);
   return html`<section class="pane center"><div class="pane-h"><button class="btn small mobile-back" data-act="closeDetail">${raw(IC.back)}Lista</button><div class="ctabs" style="border:0;padding:0">${CTABS.map(([k, l]) => html`<button class="${S.ctab === k ? 'on' : ''}" data-act="ctab" data-t="${k}">${l}</button>`)}</div><span class="sp"></span>
-      <button class="btn small" data-act="listenSel" ${S.dev.session ? '' : 'disabled'} title="Enviar a la RAM del equipo y tocar la frase de prueba (Espacio)">${raw(IC.play)}Escuchar</button>${p.kind === 'variant' ? '' : html`<button class="btn small" data-act="duplicate" title="Crear una copia editable">${raw(IC.dup)}Variante</button>`}</div>
-    <div class="pane-b">${{ anatomy: centerAnatomy, params: tabSynth, macros: tabMacros, compare: tabCompare, history: centerHistory }[S.ctab](p, inf)}</div></section>`;
+      <button class="btn small" data-act="listenSel" ${S.dev.session ? '' : 'disabled'} title="Enviar a la RAM del equipo y tocar la frase de prueba (Espacio)">${raw(IC.play)}Escuchar</button>${octBtnsHTML(p)}${p.kind === 'variant' ? '' : html`<button class="btn small" data-act="duplicate" title="Crear una copia editable">${raw(IC.dup)}Variante</button>`}</div>
+    <div class="pane-b">${{ anatomy: centerAnatomy, params: tabSynth, macros: tabMacros, compare: tabCompare, lab: centerLab, history: centerHistory }[S.ctab](p, inf)}</div></section>`;
 }
 function centerHistory(p) {
   const hist = lib.history.filter((h) => h.ids?.includes(p.id)).slice(-20).reverse();
@@ -471,7 +471,7 @@ function openPalette() {
   draw(); inp.focus();
 }
 // ---------- Patch actual: la ficha completa en cualquier sección ----------
-const EDIT_TABS = [['anatomy', 'Anatomía'], ['params', 'Parámetros'], ['macros', 'Macros'], ['compare', 'Comparar'], ['history', 'Historial']];
+const EDIT_TABS = [['anatomy', 'Anatomía'], ['params', 'Parámetros'], ['macros', 'Macros'], ['compare', 'Comparar'], ['lab', 'Laboratorio'], ['history', 'Historial']];
 function renderDock() {
   const p = cur();
   return html`<div class="dock"><div class="dock-h"><span class="mlabel">Patch actual</span><span class="sp"></span><button class="lk" data-act="dockLib" title="Abrirlo en la Biblioteca">Biblioteca</button><button class="lk" data-act="dockToggle" aria-label="Cerrar">✕</button></div>
@@ -528,7 +528,7 @@ function inspTags(p, inf) {
     <datalist id="tagList">${[...new Set([...lib.allTags().map(([t]) => t), ...inPal, ...DESCRIPTORS])].map((t) => html`<option value="${t}">`)}</datalist>
     <div class="tagpal">${pal.map((g) => html`<div class="tpg"><span class="tpn">${g.name}</span><span class="tpc">${g.tags.map((t) => { const on = tags.includes(t), hint = sugMap.get(t); const qn = quickTags().indexOf(t); return html`<button class="tq ${on ? 'on' : ''} ${!on && hint ? 'hint' : ''}" data-act="tagToggle" data-t="${t}" aria-pressed="${on}" title="${hint ? hint.why || ({ name: 'Del nombre', meas: 'Medido', par: 'De los ajustes', pdesc: 'Carácter leído en los ajustes', use: 'Uso' }[hint.k] || '') : qn >= 0 ? 'Alt+' + (qn + 1) : ''}">${t}${qn >= 0 ? html`<sup>${qn + 1}</sup>` : ''}</button>`; })}</span></div>`)}</div>
     ${sug.length ? html`<div class="chips" style="margin-top:6px">${sug.map((x) => html`<button class="tagc ${x.k}" data-act="addTag" data-t="${x.t}" title="${x.why || { use: 'Uso', name: 'Del nombre', meas: 'Medido', par: 'De los ajustes', pdesc: 'Carácter leído en los ajustes' }[x.k] || ''}">+ ${x.t}</button>`)}</div>` : ''}
-    <p class="note" style="margin-top:4px"><a href="#" data-act="orgFolders" data-c="">Editar las etiquetas rápidas</a> · con borde discontinuo, las que sugiere el nombre o el patch.</p></div>`;
+    ${tagClipHTML()}<p class="note" style="margin-top:4px"><a href="#" data-act="orgFolders" data-c="">Editar las etiquetas rápidas</a> · con borde discontinuo, las que sugiere el nombre o el patch.</p></div>`;
 }
 async function acceptSubs(ids) {
   if (!ids.length) return;
@@ -1463,6 +1463,7 @@ function viewAudition() {
     <div class="box"><h3>Decidir <small>tecla = categoría · Intro = aceptar propuesta · 1–5 valoración · F favorito · Supr eliminar · ← → navegar · ? todos los atajos</small></h3>
       <div class="keys">${CATEGORIES.filter((x) => KEY_OF[x.id]).map((x) => html`<button class="btn ${m.category === x.id ? 'cur' : c.category === x.id ? 'prop' : ''}" data-act="audCat" data-c="${x.id}">${x.label}<kbd>${KEY_OF[x.id]}</kbd></button>`)}</div>
       <div class="row2" style="margin-top:8px"><button class="btn primary" data-act="audAccept" ${c.category ? '' : 'disabled'}>Aceptar propuesta <span class="kbd">INTRO</span></button><button class="btn" data-act="audReview" data-r="keep">Conservar</button><button class="btn" data-act="audReview" data-r="discard" title="Se queda en la biblioteca, pero no se exporta">Descartar <span class="kbd">MAYÚS SUPR</span></button><button class="btn danger" data-act="audDelete" title="Fuera de la biblioteca (a la papelera; Ctrl+Z deshace)">Eliminar <span class="kbd">SUPR</span></button><button class="btn" data-act="audFav">${m.fav ? '♥ Favorito' : '♡ Favorito'} <span class="kbd">F</span></button><span style="flex:1"></span><button class="btn" data-act="qstep" data-d="-1">◀</button><button class="btn" data-act="qstep" data-d="1">Siguiente ▶</button><button class="btn" data-act="openSel">Abrir ficha</button></div>
+      <div class="row2" style="margin-top:8px">${octBtnsHTML(p)}</div>${tagClipHTML()}
       <div class="qtags"><span class="mlabel">Etiquetas rápidas</span>${quickTags().map((t, i) => html`<button class="tq ${(m.tags || []).includes(t) ? 'on' : ''}" data-act="audTag" data-t="${t}" title="Alt+${i + 1}">${t}<sup>${i + 1}</sup></button>`)}</div></div>
   </div></div>`;
 }
@@ -1470,7 +1471,7 @@ async function audPlay(p = lib.byId(S.queue[S.qi])) {
   const s = S.dev.session; if (!s || !p) return;
   s.stopAll();
   const inf = lib.info(p), ph = S.phrase === 'auto' ? (S.view === 'library' && !patternOf(p) ? 'gen:' + p.id : phraseKeyFor(p)) : S.phrase;
-  const t = s.sendPatch(p.payload, S.dev.synth);
+  const t = s.sendPatch(lib.currentVersion(p).payload, S.dev.synth);
   const r = s.playPhrase(phraseObj(ph), S.dev.synth, { tempo: tempoNow(), root: phraseObj(ph).custom ? 0 : S.dev.root, start: t + (S.dev.patchDelay ?? 80) });
   S.playing = true; $('[data-act="audPlay"]')?.classList.add('on');
   clearTimeout(S.playTimer); S.playTimer = setTimeout(() => { S.playing = false; $('[data-act="audPlay"]')?.classList.remove('on'); }, r.end - performance.now());

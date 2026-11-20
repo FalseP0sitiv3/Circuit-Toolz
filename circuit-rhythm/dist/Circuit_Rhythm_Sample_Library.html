@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Circuit Rhythm · Sample Library 2.2.0 · © 2026 FalsePositive · GPL-3.0 · https://ko-fi.com/falsepositive · fingerprint c2256cb1637547f3 -->
+<!-- Circuit Rhythm · Sample Library 2.4.0 · © 2026 FalsePositive · GPL-3.0 · https://ko-fi.com/falsepositive · fingerprint ff7089703edc5b40 -->
 <html lang="es">
 <head>
 <meta charset="utf-8">
@@ -411,11 +411,33 @@ table.shopts td.acts .btn + .btn, .shtab td.acts .btn + .btn { margin-left: 4px;
 .langsw > a:hover, .langsw > a:focus-visible { color: var(--ink); background: #ffffff14; outline: none; }
 .langsw.hdr { margin-left: 4px; }
 
+.box:has(.hitbox){max-width:min(1000px,94vw)}
+.hitwave{width:100%;height:90px;background:var(--bg);border-radius:6px;display:block}
+.hitlist{max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+.hitrow{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)}
+.hitrow:last-child{border-bottom:0}
+.hitrow.off,.tunet tr.off{opacity:.45}
+.hitrow .sw{width:10px;height:10px;border-radius:2px;flex:none}
+.hitrow select{max-width:130px}
+.hvars{display:flex;flex-wrap:wrap;gap:3px}
+.hvars .hv{min-width:24px;padding:1px 5px;font:12px var(--f-mono);background:transparent;border:1px solid var(--line);border-radius:4px;color:inherit;cursor:pointer}
+.hvars .hv.on{border-color:var(--ok);color:var(--ok)}
+.tunet{width:100%;border-collapse:collapse;font-size:13.5px}
+.tunet th{text-align:left;font-weight:600;opacity:.7;padding:3px 6px}
+.tunet td{padding:3px 6px;border-top:1px solid var(--line)}
+.lvdet{flex-basis:100%;margin-left:26px}
+.lvdet summary{cursor:pointer;opacity:.75}
+
+.tclip > div{border:1px dashed var(--line2);border-radius:6px;padding:6px 8px}
+.tclip .chip2.clip{border-color:var(--o)}
+.tclip .clipin{width:200px}
+.tgrp{display:inline-flex;align-items:center;gap:1px}
+
 </style>
 </head>
 <body>
 <header class="top">
-  <div class="brand"><span class="dev">CIRCUIT⁠​‌​​​​‌‌​‌​‌​‌​​​​‌‌​​​‌​‌‌‌‌‌​​​‌‌​​​‌‌​​‌‌​​‌​​​‌‌​​‌​​​‌‌​‌​‌​​‌‌​‌‌​​‌‌​​​‌‌​‌‌​​​‌​​​‌‌​​​‌​​‌‌​‌‌​​​‌‌​​‌‌​​‌‌​‌‌‌​​‌‌​‌​‌​​‌‌​‌​​​​‌‌​‌‌‌​‌‌​​‌‌​​​‌‌​​‌‌​‌‌‌‌‌​​​‌​​​‌‌​​‌‌​​​​‌​‌‌​‌‌​​​‌‌‌​​‌‌​‌‌​​‌​‌​‌​‌​​​​​‌‌​‌‌‌‌​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​‌​‌‌‌​‌‌​​‌‌​​‌​‌​‌‌‌‌‌​​​‌​​​​‌‌​‌‌​‌​​‌​‌‌‌​​‌​​‌‌​​​‌‌​‌‌‌​‌​‌​‌‌​‌​​‌​‌‌‌​‌​​​​‌​​​​​​‌​‌​​‌​​‌‌​‌​​​​‌‌‌‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌​‌‌​‌​​‌​​​​​‌‌​​​​‌​‌​‌‌​‌‌‌​​‌​​​​​​‌​‌​​‌‌​‌‌​​​​‌​‌‌​‌‌​‌​‌‌‌​​​​​‌‌​‌‌​​​‌‌​​‌​‌​​‌​​​​​​‌​​‌‌​​​‌‌​‌​​‌​‌‌​​​‌​​‌‌‌​​‌​​‌‌​​​​‌​‌‌‌​​‌​​‌‌‌‌​​‌⁠ <span class="thin">RHYTHM</span></span><span class="sub">Sample Library · Pack Builder</span></div>
+  <div class="brand"><span class="dev">CIRCUIT⁠​‌​​​​‌‌​‌​‌​‌​​​​‌‌​​​‌​‌‌‌‌‌​​​‌‌​​‌‌​​‌‌​​‌‌​​​‌‌​‌‌‌​​‌‌​​​​​​‌‌‌​​​​​‌‌‌​​‌​​‌‌​‌‌‌​​‌‌​​​​​​‌‌​​‌‌​‌‌​​‌​‌​‌‌​​‌​​​‌‌​​​‌‌​​‌‌​‌​‌​‌‌​​​‌​​​‌‌​‌​​​​‌‌​​​​​‌‌‌‌‌​​​‌​​​‌‌​​‌‌​​​​‌​‌‌​‌‌​​​‌‌‌​​‌‌​‌‌​​‌​‌​‌​‌​​​​​‌‌​‌‌‌‌​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​‌​‌‌‌​‌‌​​‌‌​​‌​‌​‌‌‌‌‌​​​‌​​​​‌‌​‌‌​‌​​‌​‌‌‌​​‌​​‌‌​​​‌‌​‌‌‌​‌​‌​‌‌​‌​​‌​‌‌‌​‌​​​​‌​​​​​​‌​‌​​‌​​‌‌​‌​​​​‌‌‌‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌​‌‌​‌​​‌​​​​​‌‌​​​​‌​‌​‌‌​‌‌‌​​‌​​​​​​‌​‌​​‌‌​‌‌​​​​‌​‌‌​‌‌​‌​‌‌‌​​​​​‌‌​‌‌​​​‌‌​​‌​‌​​‌​​​​​​‌​​‌‌​​​‌‌​‌​​‌​‌‌​​​‌​​‌‌‌​​‌​​‌‌​​​​‌​‌‌‌​​‌​​‌‌‌‌​​‌⁠ <span class="thin">RHYTHM</span></span><span class="sub">Sample Library · Pack Builder</span></div>
   <nav class="tabs" id="tabs"></nav>
   <div class="status" id="status"></div>
 </header>
@@ -430,8 +452,8 @@ const __LANG__ = "es";
 const __DICT__ = {};
 const __SITE__ = {"brand":"Circuit Tools","author":"FalsePositive","siteUrl":"","kofiUrl":"https://ko-fi.com/falsepositive","githubUrl":"","issuesUrl":"","license":"GPL-3.0","langFiles":{"es":"Circuit_Rhythm_Sample_Library.html","en":"Circuit_Rhythm_Sample_Library_EN.html"}};
 const __NCS_TPL__ = "7da9ahRRGMfh/86b/SAGTGFhISEBi4AWIhYWwk6KgGCzJOQO0lgoIhZaTeMleL9H1pmAHwTsQtjnYdgzO3Pe7gz8Lq4uz7//6DJL8iDJ+YdPX74d3y5Jvr6swL2xSJZtd9eH+b/vtQEA7BidqBMBAHSiTgQA0Ik6EQBAJ+pEAACdqBMBAHSiTgQA0Ik6EQBAJ+pEAACdqBMBAHSiTgQA0Ik6EQBAJ+pEJwUA0Ik6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6USfqRABAJ+pEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnagTAQCdqBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1ok4EAHSiTtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgDATnTiX95Obv4f1I0/th1uf/oMfTL8urau+3/7ysbbNnbXH8eb/ZOhTrY38+3TcdmcZrVOjo6S5Xas7/txejaburWy1yqrVjlolcNWedQqj1vlSasct8rTVjltleet8qJVXrXK61Z508r8fZ/PcjwH83GZvs7pcOxNJ2x8Vr8fnG6c68a5bnzXje/m++8262S+uvj8LFmsN2dnyeL9MAwB7sBP";
-const __ORIGIN__ = {"tool":"Circuit Rhythm · Sample Library","version":"2.2.0","author":"FalsePositive","year":2026,"url":"https://ko-fi.com/falsepositive","license":"GPL-3.0","fp":"c2256cb1637547f3"};
-const __WM__ = "⁠​‌​​​​‌‌​‌​‌​‌​​​​‌‌​​​‌​‌‌‌‌‌​​​‌‌​​​‌‌​​‌‌​​‌​​​‌‌​​‌​​​‌‌​‌​‌​​‌‌​‌‌​​‌‌​​​‌‌​‌‌​​​‌​​​‌‌​​​‌​​‌‌​‌‌​​​‌‌​​‌‌​​‌‌​‌‌‌​​‌‌​‌​‌​​‌‌​‌​​​​‌‌​‌‌‌​‌‌​​‌‌​​​‌‌​​‌‌​‌‌‌‌‌​​​‌​​​‌‌​​‌‌​​​​‌​‌‌​‌‌​​​‌‌‌​​‌‌​‌‌​​‌​‌​‌​‌​​​​​‌‌​‌‌‌‌​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​‌​‌‌‌​‌‌​​‌‌​​‌​‌​‌‌‌‌‌​​​‌​​​​‌‌​‌‌​‌​​‌​‌‌‌​​‌​​‌‌​​​‌‌​‌‌‌​‌​‌​‌‌​‌​​‌​‌‌‌​‌​​​​‌​​​​​​‌​‌​​‌​​‌‌​‌​​​​‌‌‌‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌​‌‌​‌​​‌​​​​​‌‌​​​​‌​‌​‌‌​‌‌‌​​‌​​​​​​‌​‌​​‌‌​‌‌​​​​‌​‌‌​‌‌​‌​‌‌‌​​​​​‌‌​‌‌​​​‌‌​​‌​‌​​‌​​​​​​‌​​‌‌​​​‌‌​‌​​‌​‌‌​​​‌​​‌‌‌​​‌​​‌‌​​​​‌​‌‌‌​​‌​​‌‌‌‌​​‌⁠";
+const __ORIGIN__ = {"tool":"Circuit Rhythm · Sample Library","version":"2.4.0","author":"FalsePositive","year":2026,"url":"https://ko-fi.com/falsepositive","license":"GPL-3.0","fp":"ff7089703edc5b40"};
+const __WM__ = "⁠​‌​​​​‌‌​‌​‌​‌​​​​‌‌​​​‌​‌‌‌‌‌​​​‌‌​​‌‌​​‌‌​​‌‌​​​‌‌​‌‌‌​​‌‌​​​​​​‌‌‌​​​​​‌‌‌​​‌​​‌‌​‌‌‌​​‌‌​​​​​​‌‌​​‌‌​‌‌​​‌​‌​‌‌​​‌​​​‌‌​​​‌‌​​‌‌​‌​‌​‌‌​​​‌​​​‌‌​‌​​​​‌‌​​​​​‌‌‌‌‌​​​‌​​​‌‌​​‌‌​​​​‌​‌‌​‌‌​​​‌‌‌​​‌‌​‌‌​​‌​‌​‌​‌​​​​​‌‌​‌‌‌‌​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​‌​‌‌‌​‌‌​​‌‌​​‌​‌​‌‌‌‌‌​​​‌​​​​‌‌​‌‌​‌​​‌​‌‌‌​​‌​​‌‌​​​‌‌​‌‌‌​‌​‌​‌‌​‌​​‌​‌‌‌​‌​​​​‌​​​​​​‌​‌​​‌​​‌‌​‌​​​​‌‌‌‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌​‌‌​‌​​‌​​​​​‌‌​​​​‌​‌​‌‌​‌‌‌​​‌​​​​​​‌​‌​​‌‌​‌‌​​​​‌​‌‌​‌‌​‌​‌‌‌​​​​​‌‌​‌‌​​​‌‌​​‌​‌​​‌​​​​​​‌​​‌‌​​​‌‌​‌​​‌​‌‌​​​‌​​‌‌‌​​‌​​‌‌​​​​‌​‌‌‌​​‌​​‌‌‌‌​​‌⁠";
 // ---- src/core/wav.js ----
 // core/wav.js — lectura de WAV/AIFF/AIFC y escritura de WAV 16 bit mono.
 // Puro JS (sin Web Audio) para poder probarlo en Node y para conservar la frecuencia original.
@@ -642,7 +664,71 @@ function encodeWavGeneric(channels, rate, bits = 16, float = false) {
   return new Uint8Array(buf);
 }
 
+// ---- src/core/loud.js ----
+// core/loud.js — v2.3: volumen percibido (LUFS, ITU-R BS.1770) para igualar los samples de una pista.
+// Se usa el máximo de la sonoridad momentánea (ventanas de 400 ms): un golpe corto se mide en su ventana
+// de 400 ms, como lo oiría un medidor, así un clic cuenta menos que un bombo largo con el mismo pico.
+
+// Coeficientes de la ponderación K para cualquier frecuencia (derivación de De Man: a 48 kHz dan
+// exactamente los de la norma)
+function biquadShelf(fs) {
+  const f0 = 1681.974450955533, G = 3.999843853973347, Q = 0.7071752369554196;
+  const K = Math.tan((Math.PI * f0) / fs), Vh = Math.pow(10, G / 20), Vb = Math.pow(Vh, 0.4996667741545416);
+  const a0 = 1 + K / Q + K * K;
+  return { b: [(Vh + (Vb * K) / Q + K * K) / a0, (2 * (K * K - Vh)) / a0, (Vh - (Vb * K) / Q + K * K) / a0], a: [1, (2 * (K * K - 1)) / a0, (1 - K / Q + K * K) / a0] };
+}
+function biquadHP(fs) {
+  const f0 = 38.13547087602444, Q = 0.5003270373238773, K = Math.tan((Math.PI * f0) / fs), a0 = 1 + K / Q + K * K;
+  return { b: [1, -2, 1], a: [1, (2 * (K * K - 1)) / a0, (1 - K / Q + K * K) / a0] };
+}
+function kCoefficients(fs) { return [biquadShelf(fs), biquadHP(fs)]; }
+function filt(x, { b, a }) {
+  const y = new Float64Array(x.length);
+  let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+  for (let i = 0; i < x.length; i++) {
+    const v = b[0] * x[i] + b[1] * x1 + b[2] * x2 - a[1] * y1 - a[2] * y2;
+    x2 = x1; x1 = x[i]; y2 = y1; y1 = v; y[i] = v;
+  }
+  return y;
+}
+// Máximo de la sonoridad momentánea en LUFS (−Infinity si es silencio). Mono.
+function loudnessMax(x, fs) {
+  if (!x || !x.length) return -Infinity;
+  const [s1, s2] = kCoefficients(fs);
+  const y = filt(filt(x, s1), s2);
+  const W = Math.round(0.4 * fs), H = Math.round(0.1 * fs);
+  let best = 0;
+  if (y.length <= W) { let s = 0; for (let i = 0; i < y.length; i++) s += y[i] * y[i]; best = s / W; }
+  else {
+    // suma deslizante: ventana de 400 ms cada 100 ms, más la última ventana al final
+    const c = new Float64Array(y.length + 1);
+    for (let i = 0; i < y.length; i++) c[i + 1] = c[i] + y[i] * y[i];
+    for (let st = 0; ; st += H) {
+      const s0 = Math.min(st, y.length - W);
+      best = Math.max(best, (c[s0 + W] - c[s0]) / W);
+      if (s0 === y.length - W) break;
+    }
+  }
+  return best > 0 ? -0.691 + 10 * Math.log10(best) : -Infinity;
+}
+
+// Igualar una pista (página): items [{id, lufs}] medidos con el pico ya normalizado, es decir, lo más
+// fuerte que puede sonar cada uno sin saturar. El objetivo es el más flojo de los normales (los que están
+// a menos de `spread` dB de la mediana): los demás bajan hasta él. Los que quedan por debajo no pueden subir
+// sin saturar y se avisan.
+function matchGroup(items, { spread = 6 } = {}) {
+  const ok = items.filter((x) => Number.isFinite(x.lufs));
+  if (!ok.length) return { target: null, items: [] };
+  const v = ok.map((x) => x.lufs).sort((p, q) => p - q), med = v[v.length >> 1];
+  const target = Math.min(...v.filter((l) => l >= med - spread));
+  return {
+    target,
+    items: ok.map((x) => ({ id: x.id, from: x.lufs, to: Math.min(x.lufs, target), cut: Math.max(0, x.lufs - target), low: x.lufs < target - 0.05 ? target - x.lufs : 0 })),
+  };
+}
+
 // ---- src/core/dsp.js ----
+
 
 // core/dsp.js — conversión al formato de la Circuit Rhythm (48 kHz · mono · 16 bit) y utilidades.
 // Todo es no destructivo: el original no se toca; la "preparación" es una receta que se aplica al exportar.
@@ -662,6 +748,8 @@ const DEFAULT_RECIPE = Object.freeze({
   maxSec: 30,          // límite de la Circuit Rhythm por sample
   fitSec: null,        // loops: duración exacta (compases enteros) → Beat Match sin cambio de tono
   keep: null,          // loops: {n, sel} → solo esas slices, en ese orden (acortar; ver core/shorten.js)
+  tune: 0,             // v2.3: semitonos (con decimales). Como un sampler: cambia la velocidad y la duración
+  targetLufs: -14,     // v2.3: normalize = 'loud' → volumen percibido (máximo momentáneo, LUFS), sin pasar de targetDb de pico
 });
 
 const db = (x) => (x > 0 ? 20 * Math.log10(x) : -Infinity);
@@ -846,11 +934,13 @@ function render(decoded, recipeIn = {}, dstRate = 48000) {
   let { s, e, cutTail } = trimRange(x, sr, r);
   rep.trimStart = s / sr; rep.trimEnd = e / sr; rep.srcDur = x.length / sr;
   x = x.subarray(s, e);
-  // remuestreo
-  let y = resample(x, sr, dstRate);
-  rep.resampled = sr !== dstRate;
+  // remuestreo (y afinación: subir un semitono = leer el original 2^(1/12) veces más rápido)
+  const ratio = Math.pow(2, (r.tune || 0) / 12);
+  let y = resample(x, sr * ratio, dstRate);
+  rep.resampled = sr !== dstRate || ratio !== 1;
+  if (ratio !== 1) rep.tuned = r.tune;
   if (r.fitSec) {
-    const n = Math.round(r.fitSec * dstRate);
+    const n = Math.round((r.fitSec * dstRate) / ratio);
     if (n > y.length) { const z = new Float32Array(n); z.set(y); y = z; rep.padded = true; }
     else if (n < y.length) { y = y.slice(0, n); cutTail = true; }
     rep.fitted = true;
@@ -873,6 +963,13 @@ function render(decoded, recipeIn = {}, dstRate = 48000) {
   let gain = 1;
   if (r.normalize === 'peak' && pk > 0) gain = undb(r.targetDb) / pk;
   else if (r.normalize === 'none') gain = undb(r.gainDb || 0);
+  else if (r.normalize === 'loud' && pk > 0) {
+    const L = loudnessMax(y, dstRate);
+    gain = Number.isFinite(L) ? undb((r.targetLufs ?? -14) - L) : 1;
+    // sin pasar del pico objetivo: si no llega, se queda en el pico (y se avisa)
+    if (pk * gain > undb(r.targetDb)) { gain = undb(r.targetDb) / pk; rep.loudLimited = true; }
+    rep.lufs = L + db(gain);
+  }
   if (gain !== 1) for (let i = 0; i < y.length; i++) y[i] *= gain;
   rep.gainDb = db(gain);
   // fundidos
@@ -898,7 +995,7 @@ function renderedDuration(decodedMono, rate, recipeIn = {}) {
   if (r.trimEnd != null) e = Math.round(r.trimEnd * rate);
   let d = Math.max(0, (e - s) / rate);
   if (r.fitSec) d = r.fitSec;
-  return Math.min(r.maxSec, d * keepFraction(r.keep));
+  return Math.min(r.maxSec, (d * keepFraction(r.keep)) / Math.pow(2, (r.tune || 0) / 12));
 }
 
 // Picos para dibujar la forma de onda (min/max por columna)
@@ -1879,7 +1976,8 @@ function rawSeconds(sample) {
     d = Math.max(0, e - s);
   }
   if (r.fitSec) d = r.fitSec;
-  return Math.max(0, d) * keepFraction(r.keep);
+  // afinado (v2.3): más agudo = más corto, como en un sampler
+  return (Math.max(0, d) * keepFraction(r.keep)) / Math.pow(2, (r.tune || 0) / 12);
 }
 // Loops: tiempos enteros a un BPM → duración exacta para que el Beat Match no cambie el tono
 function fitToBeats(durSec, bpm) {
@@ -2180,6 +2278,254 @@ function encodeOriginal(part, fmt) {
 function encodeRhythm(part) { return encodeWav16(quantize16(part.channels[0]), part.sampleRate); }
 // «Nombre 03.wav»: número con ceros según cuántas haya
 function sliceName(base, i, n) { return n > 1 ? `${base} ${String(i + 1).padStart(String(n).length < 2 ? 2 : String(n).length, '0')}` : base; }
+
+// ---- src/core/tune.js ----
+// core/tune.js — v2.3: afinar los samples al tono del pack.
+// Se afina como lo hace un sampler: más rápido para subir y más lento para bajar, así que la duración cambia.
+// Es lo que hace el macro Tune de la Rhythm, pero fijado en el sample: el pad suena ya en el tono del tema.
+
+const PITCH_CLASSES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const TUNE_LIMIT = 12;                       // semitonos, arriba o abajo
+const ROOT_CATS = ['kick', 'tom', 'bass'];   // a la tónica por defecto: lo que hace de nota base
+const TUNE_MODES = ['root', 'allroot', 'cents'];
+const tuneRatio = (st) => Math.pow(2, (st || 0) / 12);
+const rnd2 = (x) => Math.round(x * 100) / 100;
+
+// La nota medida (MIDI con decimales) si es fiable; los acordes no tienen una nota.
+function measuredMidi(a) {
+  return a && !a.error && !a.chordLike && a.f0conf > 0.6 && a.midi != null ? a.midi : null;
+}
+// La nota con la que sonará en la Rhythm (medida + afinación de la receta)
+function effectiveMidi(s) {
+  const m = measuredMidi(s && s.analysis);
+  return m == null ? null : m + ((s.recipe && s.recipe.tune) || 0);
+}
+// Desplazamiento más corto hasta una nota de esa clase (±6 semitonos; el tritono baja)
+function shiftToPc(midi, pc) {
+  let d = (((pc - midi) % 12) + 12) % 12;
+  if (d >= 6) d -= 12;
+  return rnd2(d);
+}
+// Solo corregir los cents: al semitono más cercano
+const shiftToSemitone = (midi) => rnd2(Math.round(midi) - midi);
+
+// «F1 −12 ct»
+function pitchLabel(midi) {
+  if (midi == null) return '—';
+  const n = Math.round(midi), c = Math.round((midi - n) * 100);
+  return noteName(n) + (c ? ` ${c > 0 ? '+' : '−'}${Math.abs(c)} ct` : '');
+}
+
+// items: [{id, cat, midi (medido), loop, tune (actual)}] → propuesta por sample
+//  mode 'root':    bombos, toms y bajos a la tónica; el resto, al semitono más cercano
+//  mode 'allroot': todo lo que tiene nota, a la tónica
+//  mode 'cents':   solo corregir los cents
+function tunePlan(items, { root = 5, mode = 'root' } = {}) {
+  const out = [];
+  for (const it of items) {
+    if (it.midi == null) { out.push({ id: it.id, status: 'nopitch' }); continue; }
+    if (it.loop) { out.push({ id: it.id, status: 'loop' }); continue; }
+    const toRoot = mode === 'allroot' || (mode === 'root' && ROOT_CATS.includes(it.cat));
+    let shift = toRoot ? shiftToPc(it.midi, root) : shiftToSemitone(it.midi);
+    if (Math.abs(shift) < 0.05) shift = 0;
+    const cur = it.tune || 0;
+    const status = Math.abs(shift - cur) < 0.01 ? (shift === 0 ? 'ok' : 'same') : 'change';
+    out.push({ id: it.id, status, toRoot, from: it.midi, shift, to: it.midi + shift, cur });
+  }
+  return out;
+}
+
+// ---- src/core/hits.js ----
+// core/hits.js — v2.3: sacar los golpes de un loop (un break, un loop de batería) como one-shots.
+// 1. Ataques por flujo espectral con ventanas cortas (≈3 ms de resolución) y umbral adaptativo.
+// 2. Cada golpe va de su ataque al siguiente, sin la cola por debajo de −50 dB, con fundidos cortos.
+// 3. Cada golpe se mide y se clasifica por el sonido (como cualquier sample).
+// 4. Los golpes parecidos de la misma categoría se agrupan: un break con 8 bombos da un grupo «Kick ×8» y se
+//    queda el más completo (el de cola más larga, que no corta el golpe siguiente).
+
+
+
+const HIT_SENS = { low: { k: 2.2, rel: 0.14, gap: 0.07 }, normal: { k: 1.6, rel: 0.07, gap: 0.045 }, high: { k: 1.25, rel: 0.035, gap: 0.03 } };
+const HIT_GROUP_DIST = 0.09;
+const HIGH_CATS = ['hat', 'ohat', 'cymbal', 'snare', 'clap', 'perc'];   // distancia de rasgos para «el mismo golpe» (pack.featureDistance)
+const N = 512;
+
+function monoSum(channels) {
+  if (channels.length === 1) return channels[0];
+  const n = channels[0].length, y = new Float32Array(n);
+  for (const c of channels) for (let i = 0; i < n; i++) y[i] += c[i] / channels.length;
+  return y;
+}
+function env1ms(x, sr) {
+  const w = Math.max(1, Math.round(sr / 2000)), n = Math.ceil(x.length / w), e = new Float32Array(n);
+  for (let j = 0; j < n; j++) { let s = 0; const a = j * w, b = Math.min(x.length, a + w); for (let i = a; i < b; i++) s += x[i] * x[i]; e[j] = Math.sqrt(s / Math.max(1, b - a)); }
+  return { e, w };
+}
+
+// Ataques (en muestras) de una señal mono
+function hitOnsets(x, sr, sens = 'normal') {
+  const P = HIT_SENS[sens] || HIT_SENS.normal, hop = Math.max(64, Math.round(sr / 375)); // ≈2,7 ms
+  const frames = Math.floor((x.length - N) / hop) + 1;
+  if (frames < 3) return x.length ? [0] : [];
+  const w = new Float64Array(N); for (let i = 0; i < N; i++) w[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (N - 1));
+  const re = new Float64Array(N), im = new Float64Array(N), flux = new Float64Array(frames);
+  let prev = new Float64Array(N / 2);
+  for (let f = 0; f < frames; f++) {
+    for (let i = 0; i < N; i++) { re[i] = x[f * hop + i] * w[i]; im[i] = 0; }
+    fft(re, im);
+    const cur = new Float64Array(N / 2); let s = 0;
+    for (let k = 1; k < N / 2; k++) { const m = Math.log1p(100 * Math.hypot(re[k], im[k])); cur[k] = m; if (m > prev[k]) s += m - prev[k]; }
+    flux[f] = s; prev = cur;
+  }
+  let mx = 0; for (const v of flux) mx = Math.max(mx, v);
+  const { e, w: ew } = env1ms(x, sr);
+  // envolvente de la señal derivada (agudos): marca el ataque aunque suene encima la cola de un bombo
+  const dx = new Float32Array(x.length); for (let i = 1; i < x.length; i++) dx[i] = x[i] - x[i - 1];
+  const ed = env1ms(dx, sr).e;
+  const out = [], gap = Math.round(P.gap * sr);
+  for (let f = 1; f < frames - 1; f++) {
+    if (!(flux[f] > flux[f - 1] && flux[f] >= flux[f + 1])) continue;
+    const win = Array.from(flux.subarray(Math.max(0, f - 16), Math.min(frames, f + 16))).sort((p, q) => p - q);
+    if (flux[f] < win[win.length >> 1] * P.k + mx * P.rel) continue;
+    // afinar en el tiempo: el mínimo antes del máximo de la envolvente de agudos y, desde ahí, donde sube al 20 %
+    const a0 = Math.max(0, Math.floor((f * hop - N / 4) / ew)), a1 = Math.min(ed.length, Math.ceil((f * hop + N + 0.01 * sr) / ew));
+    let pj = a0; for (let j = a0; j < a1; j++) if (ed[j] > ed[pj]) pj = j;
+    let bj = a0; for (let j = a0; j <= pj; j++) if (ed[j] < ed[bj]) bj = j;
+    const thr = ed[bj] + 0.2 * (ed[pj] - ed[bj]);
+    let j = bj; while (j < pj && ed[j] < thr) j++;
+    const at = Math.max(0, j * ew - Math.round(0.001 * sr));
+    if (out.length && at - out[out.length - 1] < gap) continue;
+    out.push(at);
+  }
+  // si el audio empieza sonando, el principio también es un golpe
+  if (!out.length || out[0] > gap) {
+    let pk0 = 0; for (let j = 0; j < Math.min(e.length, Math.round(0.02 * sr / ew)); j++) pk0 = Math.max(pk0, e[j]);
+    let pkAll = 0; for (const v of e) pkAll = Math.max(pkAll, v);
+    if (pk0 > pkAll * 0.1) out.unshift(0);
+  }
+  return out;
+}
+
+// Golpes de un audio decodificado: [{a, b, t, dur, cut}] (muestras del original; cut = lo corta el siguiente)
+function findHits(decoded, { sens = 'normal', floorDb = -50 } = {}) {
+  const sr = decoded.sampleRate, x = monoSum(decoded.channels);
+  const on = hitOnsets(x, sr, sens), { e, w } = env1ms(x, sr), out = [];
+  for (let i = 0; i < on.length; i++) {
+    const a = on[i], next = i + 1 < on.length ? on[i + 1] : x.length;
+    let pk = 0; for (let j = Math.floor(a / w); j < Math.ceil(next / w) && j < e.length; j++) pk = Math.max(pk, e[j]);
+    if (pk <= 1e-5) continue;
+    const thr = pk * Math.pow(10, floorDb / 20);
+    let last = Math.floor(a / w); for (let j = Math.floor(a / w); j < Math.ceil(next / w) && j < e.length; j++) if (e[j] > thr) last = j;
+    const b = Math.min(next, (last + 1) * w);
+    if (b - a < Math.round(0.01 * sr)) continue;
+    out.push({ a, b, t: a / sr, dur: (b - a) / sr, cut: next < x.length && b >= next - w, peak: pk });
+  }
+  return out;
+}
+
+// El audio de un golpe, con todos los canales del original y fundidos cortos (0,5 ms de entrada; de salida
+// 4 ms si lo corta el golpe siguiente y 2 ms si acaba solo)
+function hitAudio(decoded, h) {
+  const sr = decoded.sampleRate, fi = Math.round(0.0005 * sr), fo = Math.round((h.cut ? 0.004 : 0.002) * sr);
+  const channels = decoded.channels.map((c) => {
+    const y = c.slice(h.a, h.b);
+    for (let i = 0; i < Math.min(fi, y.length); i++) y[i] *= i / fi;
+    for (let i = 0; i < Math.min(fo, y.length); i++) y[y.length - 1 - i] *= Math.sin((Math.PI / 2) * (i / fo)) ** 2;
+    return y;
+  });
+  return { channels, sampleRate: sr, bits: decoded.bits, format: decoded.format };
+}
+
+// Graves (< 150 Hz) con dos polos: para saber si un golpe trae graves propios o solo lleva la cola del anterior
+function lowPass(x, sr, fc = 150) {
+  const k = 1 - Math.exp((-2 * Math.PI * fc) / sr), y = new Float32Array(x.length);
+  let p1 = 0, p2 = 0;
+  for (let i = 0; i < x.length; i++) { p1 += k * (x[i] - p1); p2 += k * (p1 - p2); y[i] = p2; }
+  return y;
+}
+// Paso alto de 4.º orden (dos biquads Butterworth a 200 Hz): quita la cola grave del golpe anterior (−48 dB a 50 Hz)
+function highPass4(x, sr, fc = 200) {
+  const w = (2 * Math.PI * fc) / sr, cw = Math.cos(w), al = Math.sin(w) / Math.SQRT2, a0 = 1 + al;
+  const b0 = (1 + cw) / 2 / a0, b1 = -(1 + cw) / a0, a1 = (-2 * cw) / a0, a2 = (1 - al) / a0;
+  let y = x;
+  for (let pass = 0; pass < 2; pass++) {
+    const z = new Float32Array(y.length); let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+    for (let i = 0; i < y.length; i++) { const v = b0 * y[i] + b1 * x1 + b0 * x2 - a1 * y1 - a2 * y2; x2 = x1; x1 = y[i]; y2 = y1; y1 = v; z[i] = v; }
+    y = z;
+  }
+  return y;
+}
+// Solo el golpe, para medirlo: hasta que cae 40 dB por debajo de su pico y se queda ahí 5 ms. Lo que suene
+// después (el final brusco de la cola de otro golpe, un clic de un recorte mal hecho) no cuenta.
+function trimTail(c, sr, dB = -40) {
+  const { e, w } = env1ms(c, sr); let pk = 0, pj = 0; for (let j = 0; j < e.length; j++) if (e[j] > pk) { pk = e[j]; pj = j; }
+  const thr = pk * Math.pow(10, dB / 20), hold = Math.max(1, Math.round((0.005 * sr) / w));
+  let end = e.length;
+  for (let j = pj, run = 0; j < e.length; j++) { if (e[j] < thr) { if (++run >= hold) { end = j - hold + 1; break; } } else run = 0; }
+  return c.slice(0, Math.min(c.length, end * w));
+}
+const energy = (x, a, b) => { let s = 0; for (let i = Math.max(0, a); i < Math.min(x.length, b); i++) s += x[i] * x[i]; return s; };
+
+// Medir y clasificar por el sonido cada golpe. Si el golpe no trae graves nuevos (los que hay son la cola del
+// golpe anterior: un charles encima de un bombo), se clasifica sin ellos; el audio que se guarda no cambia.
+function describeHits(decoded, hits) {
+  const sr = decoded.sampleRate, mono = monoSum(decoded.channels), low = lowPass(mono, sr), w = Math.round(0.03 * sr);
+  let hp = null; // el loop entero sin graves, filtrado de una vez: recortar después no deja transitorios en los bordes
+  return hits.map((h, i) => {
+    const d = hitAudio(decoded, h);
+    const before = h.a > w ? energy(low, h.a - w, h.a) : 0, after = energy(low, h.a, h.a + w);
+    const bleed = h.a > w && before > 1e-6 && after < before * 2;
+    const highOnly = () => { hp ||= highPass4(mono, sr); const m = trimTail(hp.slice(h.a, h.b), sr); try { return analyze({ ...d, channels: [m] }); } catch { return null; } };
+    let analysis = null;
+    if (bleed) analysis = highOnly(); else try { analysis = analyze(d); } catch { analysis = null; }
+    const sc = soundScores(analysis).scores;
+    const top = Object.entries(sc).filter(([c]) => c !== 'dloop' && c !== 'mloop').sort((p, q) => q[1] - p[1])[0];
+    const cat = top ? top[0] : 'perc';
+    // para agrupar, los golpes agudos se comparan siempre sin graves: así el mismo charles con y sin la cola
+    // de un bombo debajo cae en el mismo grupo
+    const ga = HIGH_CATS.includes(cat) ? (bleed ? analysis : highOnly()) : analysis;
+    return { ...h, i, analysis, ga, bleed, cat, conf: top ? top[1] : 0 };
+  });
+}
+
+// Distancia entre golpes: como la de los parecidos de la biblioteca, pero el ruido y la duración pesan menos,
+// porque cambian con lo que suena debajo (la cola de la caja bajo un charles); el brillo y las bandas, no.
+function hitVec(a) {
+  if (!a || !a.bands) return null;
+  return [0.5 * Math.log2((a.activeDur || 0.01) + 0.01) / 5, Math.log2((a.centroid || 100) / 100) / 8, a.bands.sub + a.bands.low, a.bands.lowmid + a.bands.mid, a.bands.high + a.bands.air, 0.35 * (a.flatness || 0), a.f0conf > 0.6 ? (a.midi || 0) / 127 : 0];
+}
+function hitDistance(a, b) {
+  const x = hitVec(a), y = hitVec(b);
+  if (!x || !y) return 1;
+  let s = 0; for (let i = 0; i < x.length; i++) s += (x[i] - y[i]) ** 2;
+  return Math.sqrt(s);
+}
+
+// Agrupar los golpes parecidos de la misma categoría. Devuelve grupos ordenados como las categorías,
+// cada uno con sus miembros y el elegido (rep).
+function groupHits(described, { dist = HIT_GROUP_DIST } = {}) {
+  const groups = [];
+  for (const h of described) {
+    const fa = (m) => m.ga || m.analysis;
+    const g = groups.find((x) => x.cat === h.cat && fa(h) && fa(x.members[0]) && hitDistance(fa(x.members[0]), fa(h)) < dist);
+    if (g) g.members.push(h); else groups.push({ cat: h.cat, members: [h] });
+  }
+  for (const g of groups) {
+    g.rep = g.members.slice().sort((p, q) => (p.bleed - q.bleed) || (p.cut - q.cut) || (q.dur - p.dur) || (q.peak - p.peak))[0];
+  }
+  const ord = (c) => { const i = CAT_IDS.indexOf(c); return i < 0 ? 99 : i; };
+  return groups.sort((p, q) => ord(p.cat) - ord(q.cat) || q.members.length - p.members.length || p.rep.t - q.rep.t);
+}
+
+// Nombre base para los golpes: sin «loop», «break», tempo… para que el nombre no diga que es un loop
+function hitBaseName(name) {
+  const raw = String(name || '').replace(/\.(wav|wave|aiff?|aifc|mp3|flac|ogg)$/i, '').replace(/[_\-.]+/g, ' ');
+  const tidy = (x) => x.replace(/\s+/g, ' ').trim();
+  const light = tidy(raw.replace(/\b\d{2,3}\s*bpm\b/gi, ' ').replace(/\bbpm\s*\d{2,3}\b/gi, ' ').replace(/\b(loops?|drumloops?)\b/gi, ' '));
+  const full = tidy(light.replace(/\b(breaks?|breakbeats?|brks?|grooves?|grv|beats?|fills?|tops?|percloops?|hatloops?|toploops?)\b/gi, ' '));
+  // si no queda nada (un «Top Loop»), basta con quitar «loop» y el tempo
+  return full || light || tidy(raw) || 'Hit';
+}
 
 // ---- src/core/patterns.js ----
 // core/patterns.js — patrones para las 8 pistas de la Circuit Rhythm: generador, grabación por reloj y .mid
@@ -3412,7 +3758,7 @@ const Player = {
 
 
 
-const APP_VERSION = '2.2.0';
+const APP_VERSION = '2.4.0';
 const MAX_FILE = 200 * 1024 * 1024;
 
 const S = {
@@ -4170,10 +4516,11 @@ function prepHTML(s) {
       <input type="number" data-rc="thresholdDb" value="${r.thresholdDb}" step="6" min="-90" max="-24" style="width:64px"> dB</span>
     <span class="lbl">${t('Inicio / fin')}</span><span class="row"><input type="number" data-rc="trimStart" placeholder="${t('auto')}" value="${s.recipe?.trimStart ?? ''}" step="0.001" min="0" style="width:86px"> – <input type="number" data-rc="trimEnd" placeholder="${t('auto')}" value="${s.recipe?.trimEnd ?? ''}" step="0.001" min="0" style="width:86px"> s <span class="dim">${t('(o arrastra en la onda)')}</span></span>
     <span class="lbl">${t('Fundidos')}</span><span class="row">${t('entrada')} <input type="number" data-rc="fadeInMs" value="${r.fadeInMs}" min="0" step="1" style="width:64px"> ms · ${t('salida')} <input type="number" data-rc="fadeOutMs" value="${r.fadeOutMs}" min="0" step="5" style="width:64px"> ms</span>
-    <span class="lbl">${t('Nivel')}</span><span class="row"><select data-rc="normalize"><option value="peak" ${r.normalize === 'peak' ? 'selected' : ''}>${t('normalizar pico a')}</option><option value="none" ${r.normalize === 'none' ? 'selected' : ''}>${t('ganancia fija')}</option></select>
-      ${r.normalize === 'peak' ? `<input type="number" data-rc="targetDb" value="${r.targetDb}" step="0.5" max="0" min="-24" style="width:64px"> dBFS` : `<input type="number" data-rc="gainDb" value="${r.gainDb || 0}" step="0.5" min="-24" max="24" style="width:64px"> dB`}</span>
+    <span class="lbl">${t('Nivel')}</span><span class="row"><select data-rc="normalize"><option value="peak" ${r.normalize === 'peak' ? 'selected' : ''}>${t('normalizar pico a')}</option><option value="none" ${r.normalize === 'none' ? 'selected' : ''}>${t('ganancia fija')}</option><option value="loud" ${r.normalize === 'loud' ? 'selected' : ''}>${t('volumen percibido a')}</option></select>
+      ${r.normalize === 'peak' ? `<input type="number" data-rc="targetDb" value="${r.targetDb}" step="0.5" max="0" min="-24" style="width:64px"> dBFS` : r.normalize === 'loud' ? `<input type="number" data-rc="targetLufs" value="${r.targetLufs}" step="0.5" max="0" min="-40" style="width:64px"> LUFS <span class="dim">${t('sin pasar de {d} dBFS de pico', { d: nf(r.targetDb, 1) })}</span>` : `<input type="number" data-rc="gainDb" value="${r.gainDb || 0}" step="0.5" min="-24" max="24" style="width:64px"> dB`}</span>
     <span class="lbl">${t('A mono')}</span><span class="row"><select data-rc="mono">${[['auto', t('automático')], ['sum', t('suma L+R')], ['left', t('canal izquierdo')], ['right', t('canal derecho')]].map(([k, l]) => `<option value="${k}" ${r.mono === k ? 'selected' : ''}>${l}</option>`).join('')}</select> <span class="muted">${esc(mono)}</span></span>
     ${fitHTML(s)}
+    <span class="lbl">${t('Afinación')}</span><span class="row">${tuneRowHTML(s)}</span>
     <span class="lbl">${t('Reverse')}</span><span><label class="inl"><input type="checkbox" data-rc="reverse" ${r.reverse ? 'checked' : ''}> ${t('guardar al revés')}</label></span>
   </div>
   <div class="result ${capped || (a.stereo && a.corr < 0 && r.mono === 'sum') ? 'warn' : ''}">${t('En la Rhythm: 48 kHz · mono · 16 bit · {d}', { d: fmtDur(sec) })}${capped ? ' · ' + t('recortado a 30 s') : ''}${a.stereo && a.corr < 0 && r.mono === 'sum' ? ' · ' + t('⚠ la suma se cancela') : ''}
@@ -4189,8 +4536,8 @@ function renderDetail() {
   const cl = CERT_LABEL();
   d.innerHTML = `
     <div class="label"><div class="nm">${esc(s.name.replace(/\.(wav|aiff?|mp3|flac|ogg)$/i, ''))}</div>
-      <div class="path">${esc(s.path)}${s.paths?.length > 1 ? ` <b>+${s.paths.length - 1}</b> ${t('copias idénticas')}` : ''}${s.missing ? ` · <b style="color:#b3261e">${t('no encontrado')}</b>` : ''}</div>
-      <div class="meta"><span>${fmtDur(sampleSeconds(s))}</span>${a.note && a.f0conf > 0.6 && !['dloop', 'mloop'].includes(c.cat) ? `<span>${a.note}</span>` : ''}${a.loopBpm && isLoopSample(s) ? `<span>${nf(a.loopBpm, 1)} BPM</span>` : ''}${isLoopSample(s) ? `<span>${t('Loop')}</span>` : ''}${s.info?.key ? `<span>${esc(s.info.key)}</span>` : ''}<span>${s.src?.kind === 'root' ? t('enlazado') : t('copiado en el navegador')}</span></div></div>
+      <div class="path">${esc(s.path)}${fromHTML(s)}${s.paths?.length > 1 ? ` <b>+${s.paths.length - 1}</b> ${t('copias idénticas')}` : ''}${s.missing ? ` · <b style="color:#b3261e">${t('no encontrado')}</b>` : ''}</div>
+      <div class="meta"><span>${fmtDur(sampleSeconds(s))}</span>${a.note && a.f0conf > 0.6 && !['dloop', 'mloop'].includes(c.cat) ? `<span>${s.recipe?.tune && effectiveMidi(s) != null ? '♪ ' + noteName(Math.round(effectiveMidi(s))) : a.note}</span>` : ''}${a.loopBpm && isLoopSample(s) ? `<span>${nf(a.loopBpm, 1)} BPM</span>` : ''}${isLoopSample(s) ? `<span>${t('Loop')}</span>` : ''}${s.info?.key ? `<span>${esc(s.info.key)}</span>` : ''}<span>${s.src?.kind === 'root' ? t('enlazado') : t('copiado en el navegador')}</span></div></div>
     <div class="panel" style="margin-top:12px">
       <canvas class="wave" id="wave" width="900" height="200"></canvas>
       <div class="transport">
@@ -4393,7 +4740,7 @@ function renderPacks(v) {
       <label class="inl">BPM <input type="number" id="packbpm" value="${p.bpm || S.set.bpm}" min="40" max="240" style="width:64px" title="${t('Tempo de tus proyectos: sirve para comprobar el Beat Match de los loops')}"></label>
     </div>
     <div class="budget"><div class="bbar">${b.pages.map((sec, i) => `<i style="width:${(sec / Math.max(MAX_TOTAL_S, b.total)) * 100}%;background:${pageCols[i]}" title="${t('Página {n}', { n: i + 1 })}: ${nf(sec)} s"></i>`).join('')}${b.total > MAX_TOTAL_S ? `<span class="lim" style="left:${(MAX_TOTAL_S / b.total) * 100}%"></span>` : ''}</div>
-      <div class="btext"><span><b class="${b.over ? 'bad' : ''}">${nf(b.total)} s</b> ${t('de {m} s', { m: MAX_TOTAL_S })} · ${b.over ? `<b class="bad">${t('te pasas {x} s', { x: nf(-b.free) })}</b>` : t('quedan {x} s', { x: nf(b.free) })}</span><span>${t('{n} de 128 slots', { n: b.used })}</span><button class="btn small" data-act="sh-from-pack" title="${t('Loops que se repiten: quedarse con una parte para ahorrar tiempo')}">✂ ${t('Acortar loops')}</button>
+      <div class="btext"><span><b class="${b.over ? 'bad' : ''}">${nf(b.total)} s</b> ${t('de {m} s', { m: MAX_TOTAL_S })} · ${b.over ? `<b class="bad">${t('te pasas {x} s', { x: nf(-b.free) })}</b>` : t('quedan {x} s', { x: nf(b.free) })}</span><span>${t('{n} de 128 slots', { n: b.used })}</span><button class="btn small" data-act="sh-from-pack" title="${t('Loops que se repiten: quedarse con una parte para ahorrar tiempo')}">✂ ${t('Acortar loops')}</button><span class="row" style="gap:6px">${packSoundHTML(p)}</span>
         <span>${p.source ? t('Importado de {f}', { f: esc(p.source.file) }) : ''}</span></div></div>
     ${chk.issues.length ? `<ul class="warnlist">${chk.issues.map((i) => `<li class="${i.k}">${i.m}</li>`).join('')}</ul>` : ''}
     </div>
@@ -5164,8 +5511,9 @@ function packKit() {
   return S.pack.kit;
 }
 function sampleMidiOf(slot) {
-  const id = slot != null && S.pack ? S.pack.slots[slot] : null; const a = id && S.byId[id]?.analysis;
-  return a && a.f0conf > 0.6 && a.midi != null ? Math.round(a.midi) : null;
+  // v2.3: la nota con la que suena en la Rhythm (medida + afinación de la receta)
+  const id = slot != null && S.pack ? S.pack.slots[slot] : null, m = id && S.byId[id] ? effectiveMidi(S.byId[id]) : null;
+  return m == null ? null : Math.round(m);
 }
 function curPat() {
   if (!S.pat) S.pat = { name: '', ...generate({ style: 'techno', seed: 1, steps: 16, root: 33, scale: 'minor' }), opts: { style: 'techno', seed: 1, steps: 16, density: 0.5, velVar: 0.3, fill: true, root: 33, scale: 'minor', bassStyle: 'auto' }, swing: 50, mute: [] };
@@ -5936,6 +6284,7 @@ function orgDetailHTML(s, { compact = false } = {}) {
     <div class="orow"><span class="lbl">${t('Etiquetas')}</span><div><span class="chips">${mine}</span>${det}
       ${compact ? quick : `<div class="pal">${palHTML}</div>`}
       <input type="text" class="otag" data-id="${s.id}" placeholder="${t('Otra etiqueta y Intro')}" maxlength="24" list="o-taglist"><datalist id="o-taglist">${allTags().slice(0, 60).map(([x]) => `<option value="${esc(x)}">`).join('')}</datalist></div></div>
+    ${tagClipHTML(s)}
   </div>`;
 }
 function orgPanelHTML(s) { return `<div class="panel" style="margin-top:12px"><h2>${t('Carpeta y etiquetas')}</h2>${orgDetailHTML(s)}</div>`; }
@@ -6219,7 +6568,7 @@ function keepOnDecide(s, oldCat, newCat) {
 // ---------- reanalizar y exportar un sample ----------
 function sampleToolsHTML(s) {
   return `<span class="stools"><button class="btn small ghost" data-act="s-reanalyze" data-id="${s.id}" title="${t('Vuelve a medir el audio y a proponer categoría, subcarpeta y etiquetas')}">↻ ${t('Reanalizar')}</button>
-    <button class="btn small ghost" data-act="s-exp" data-id="${s.id}" title="${t('Entero o en slices, para la Rhythm o con las propiedades del original')}">⤓ ${t('Exportar…')}</button></span>`;
+    <button class="btn small ghost" data-act="s-exp" data-id="${s.id}" title="${t('Entero o en slices, para la Rhythm o con las propiedades del original')}">⤓ ${t('Exportar…')}</button>${hitsButtonHTML(s)}</span>`;
 }
 async function reanalyze(s) {
   if (!s) return;
@@ -6529,6 +6878,360 @@ document.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && ev.targ
 Object.assign(ACT, {
   'coll-save': () => { const n = document.getElementById('coll-name')?.value; closeModal(); collSave(n); },
   'lib-csv': () => { const list = filtered(); download(filteredCSV(list), `Circuit Rhythm · ${list.length} samples.csv`, 'text/csv;charset=utf-8'); },
+});
+
+// ---- src/ui/app_sound.js ----
+// ui/app_sound.js — v2.3: trabajar el sonido para tocar en directo.
+//  · Sacar los golpes de un loop como one-shots (un break → un kit), agrupando los repetidos.
+//  · Afinar al tono del pack: bombos, toms y bajos a la tónica; el resto, al semitono más cercano.
+//  · Igualar el volumen percibido de cada página (pista): cambiar de sample en directo sin saltos de volumen.
+
+
+
+
+
+
+
+const signed = (x, d = 2) => (x > 0 ? '+' : x < 0 ? '−' : '') + nf(Math.abs(x), d);
+const cssColor = (v) => (String(v).startsWith('var(') ? getComputedStyle(document.body).getPropertyValue(v.slice(4, -1)).trim() || '#999' : v);
+
+// ======================================================================
+// Golpes
+// ======================================================================
+const HT = { id: null, sens: 'normal', group: true, data: null, off: {}, cats: {}, reps: {}, last: [] };
+function hitsAvailable(s) {
+  const a = s && s.analysis;
+  return !!a && !a.error && !a.silent && (isLoopSample(s) || ((a.onsets || 0) >= 3 && (a.activeDur || 0) >= 0.6));
+}
+function hitsButtonHTML(s) {
+  return hitsAvailable(s) ? `<button class="btn small ghost" data-act="hits-open" data-id="${s.id}" title="${t('Saca cada golpe de este loop como un one-shot: un break se convierte en un kit')}">✂ ${t('Golpes…')}</button>` : '';
+}
+function hitItems() {
+  const D = HT.data; if (!D) return [];
+  if (HT.group) return D.groups.map((g, gi) => { const key = 'g' + gi; return { key, cat: HT.cats[key] || g.cat, auto: g.cat, members: g.members, rep: D.hits[HT.reps[key] ?? g.rep.i] }; });
+  return D.hits.map((h) => { const key = 'h' + h.i; return { key, cat: HT.cats[key] || h.cat, auto: h.cat, members: [h], rep: h }; });
+}
+async function hitsOpen(s) {
+  if (!s) return;
+  if (HT.id !== s.id) { HT.off = {}; HT.cats = {}; HT.reps = {}; }
+  HT.id = s.id; HT.data = null;
+  modal(`<div class="hitbox"><h2>${t('Golpes de «{n}»', { n: esc(hitBaseName(s.name)) })}</h2><p class="muted">${t('Buscando los golpes…')}</p></div>`);
+  await yieldUI();
+  try {
+    const d = await decodedOf(s);
+    const hits = describeHits(d, findHits(d, { sens: HT.sens }));
+    HT.data = { hits, groups: groupHits(hits), len: d.channels[0].length, sr: d.sampleRate };
+  } catch (e) { closeModal(); toast(esc(e.message || e), 'bad', 7000); return; }
+  hitsPaint();
+}
+function hitsPaint() {
+  const s = S.byId[HT.id], D = HT.data; if (!s || !D) return;
+  const items = hitItems(), on = items.filter((it) => !HT.off[it.key]).length, base = hitBaseName(s.name);
+  const catOpts = (sel) => CATS.filter((c) => c.id !== 'dloop' && c.id !== 'mloop').map((c) => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${catLabel(c.id)}</option>`).join('');
+  const rows = items.map((it) => `<div class="hitrow ${HT.off[it.key] ? 'off' : ''}">
+      <input type="checkbox" data-hk="${it.key}" ${HT.off[it.key] ? '' : 'checked'} title="${t('Añadir este golpe')}">
+      <button class="btn small" data-act="hits-play" data-k="${it.key}" title="${t('Escuchar')}">▶</button>
+      <span class="sw" style="background:${catVar(it.cat)}"></span>
+      <select data-hcat="${it.key}">${catOpts(it.cat)}</select>
+      ${it.members.length > 1 ? `<b class="mono">×${it.members.length}</b>` : ''}
+      <span class="muted">${fmtDur(it.rep.dur)} · ${t('en {s}', { s: nf(it.rep.t, 2) + ' s' })}${it.rep.bleed ? ` · <span class="warn">${t('lleva la cola del golpe anterior')}</span>` : ''}</span>
+      ${it.members.length > 1 ? `<span class="hvars" title="${t('Los golpes de este grupo: pulsa uno para escucharlo y quedarte con él')}">${it.members.slice(0, 24).map((m, j) => `<button class="hv ${m === it.rep ? 'on' : ''}" data-act="hits-rep" data-k="${it.key}" data-i="${m.i}" title="${nf(m.t, 2)} s${m.bleed ? ' · ' + t('lleva la cola del golpe anterior') : ''}">${j + 1}</button>`).join('')}</span>` : ''}
+    </div>`).join('');
+  modal(`<div class="hitbox"><h2>${t('Golpes de «{n}»', { n: esc(base) })}</h2>
+    <canvas id="hitwave" class="hitwave" width="900" height="90"></canvas>
+    <div class="row" style="gap:10px;margin:8px 0">
+      <span class="lbl">${t('Sensibilidad')}</span><span class="seg">${[['low', t('Menos')], ['normal', t('Normal')], ['high', t('Más')]].map(([k, l]) => `<button class="${HT.sens === k ? 'on' : ''}" data-act="hits-sens" data-v="${k}">${l}</button>`).join('')}</span>
+      <label class="inl"><input type="checkbox" id="hits-group" ${HT.group ? 'checked' : ''}> ${t('Agrupar los parecidos')}</label>
+      <span class="grow"></span><span class="muted">${t('{n} golpes · {g} grupos', { n: D.hits.length, g: D.groups.length })}</span>
+    </div>
+    ${D.hits.length ? `<div class="hitlist">${rows}</div>` : `<p class="warn">${t('No he encontrado golpes. Prueba con más sensibilidad.')}</p>`}
+    <p class="note">${t('Cada golpe va de su ataque al siguiente, sin la cola que queda por debajo de −50 dB. De cada grupo de golpes parecidos se queda el más completo; pulsa los números para escuchar los demás y elegir otro. Entran en la biblioteca como one-shots, con la categoría que ves (puedes cambiarla aquí o después) y con la frecuencia, los canales y los bits del original.')}</p>
+    <div class="row" style="justify-content:space-between;margin-top:10px"><span class="muted">${t('Carpeta: «{f}»', { f: esc(t('Extraídos') + '/' + base) })}</span>
+      <span class="row"><button class="btn" data-act="modal-close">${t('Cancelar')}</button><button class="btn primary" data-act="hits-add" ${on ? '' : 'disabled'}>${t('Añadir {n} a la biblioteca', { n: on })}</button></span></div></div>`);
+  hitsDraw(s, items);
+}
+function hitsDraw(s, items) {
+  const cv = document.getElementById('hitwave'), D = HT.data; if (!cv || !D) return;
+  const g = cv.getContext('2d'), W = cv.width, Hh = cv.height, ov = s.ov;
+  g.clearRect(0, 0, W, Hh);
+  g.fillStyle = cssColor('var(--line)') || '#444';
+  if (ov) { const n = ov.length / 2; for (let c = 0; c < n; c++) { const x = (c / n) * W, y0 = Hh / 2 - ov[c * 2 + 1] * Hh * 0.45, y1 = Hh / 2 - ov[c * 2] * Hh * 0.45; g.fillRect(x, y0, Math.max(1, W / n), Math.max(1, y1 - y0)); } }
+  const catOf = new Map(); for (const it of items) for (const m of it.members) catOf.set(m.i, { cat: it.cat, rep: m === it.rep, off: HT.off[it.key] });
+  for (const h of D.hits) {
+    const c = catOf.get(h.i) || { cat: h.cat }, x = (h.a / D.len) * W;
+    g.globalAlpha = c.off ? 0.25 : 1; g.fillStyle = cssColor(catVar(c.cat));
+    g.fillRect(x, 0, c.rep ? 3 : 1.5, Hh);
+    if (c.rep) g.fillRect(x, Hh - 5, Math.max(3, ((h.b - h.a) / D.len) * W), 5);
+  }
+  g.globalAlpha = 1;
+}
+async function hitsPlay(key, idx = null) {
+  const s = S.byId[HT.id], it = hitItems().find((x) => x.key === key); if (!s || !it) return;
+  const h = idx != null ? HT.data.hits[idx] : it.rep;
+  const a = hitAudio(await decodedOf(s), h);
+  Player.play(a.channels, a.sampleRate);
+}
+async function hitsAdd() {
+  const s = S.byId[HT.id]; if (!s || !HT.data) return;
+  const items = hitItems().filter((it) => !HT.off[it.key]); if (!items.length) return;
+  const d = await decodedOf(s), of = originalFormat(d), base = hitBaseName(s.name), folder = t('Extraídos') + '/' + base;
+  const entries = items.map((it, j) => {
+    const name = `${base} ${String(j + 1).padStart(2, '0')}.wav`, u8 = encodeOriginal(hitAudio(d, it.rep), of);
+    return { name, path: `${folder}/${name}`, getFile: async () => new File([u8], name), it };
+  });
+  closeModal();
+  const res = await importEntries(entries, t('Añadiendo golpes'));
+  const byPath = new Map(entries.map((e) => [e.path, e.it])), done = [];
+  for (const rec of res.added) {
+    const it = byPath.get(rec.path); if (!it) continue;
+    rec.from = { id: s.id, at: Math.round(it.rep.t * 1000) / 1000 };
+    rec.user = { ...(rec.user || {}), kind: 'oneshot', cat: it.cat };
+    done.push(rec);
+  }
+  if (done.length) await saveSamples(done);
+  invalidateAll();
+  HT.last = done.map((x) => x.id);
+  const dup = res.dup.length ? ' ' + t('{n} ya estaban en la biblioteca.', { n: res.dup.length }) : '';
+  toast(t('{n} golpes añadidos a la biblioteca, en «{f}».', { n: done.length, f: esc(folder) }) + dup + (done.length ? ` <button class="btn small ghost" data-act="hits-show">${t('Verlos')}</button>` : ''), done.length ? 'ok' : 'warn', 9000);
+  renderAll();
+}
+function hitsShow() {
+  const ids = HT.last.filter((id) => S.byId[id]); if (!ids.length) return;
+  S.multi = new Set(ids); S.f = { ...S.f, flag: 'sel' }; S.sel = ids[0]; S.view = 'library'; renderAll();
+}
+// En la ficha: de qué loop sale un golpe
+function fromHTML(s) {
+  const f = s && s.from, src = f && S.byId[f.id];
+  if (!f) return '';
+  return ` · ${t('golpe sacado de')} ${src ? `<button class="btn small ghost" data-act="sel" data-id="${src.id}">«${esc(hitBaseName(src.name))}»</button>` : t('un loop que ya no está')} <span class="dim">(${nf(f.at, 2)} s)</span>`;
+}
+
+// ======================================================================
+// Afinar
+// ======================================================================
+function tuneRowHTML(s) {
+  const r = s.recipe || {}, m = measuredMidi(s.analysis), tu = r.tune || 0, key = S.pack?.key, loop = isLoopSample(s);
+  const parts = [`<input type="number" data-rc="tune" value="${tu ? rnd2(tu) : ''}" placeholder="0" step="0.01" min="-12" max="12" style="width:72px"> ${t('semitonos')}`];
+  if (m != null) {
+    parts.push(`<span class="muted">${pitchLabel(m)}${tu ? ` → <b>${pitchLabel(m + tu)}</b>` : ''}</span>`);
+    if (Math.abs(shiftToSemitone(m)) >= 0.05 && Math.abs(tu - shiftToSemitone(m)) > 0.004) parts.push(`<button class="btn small ghost" data-act="tune-semi" title="${t('Corregir los cents: al semitono más cercano')}">${t('Al semitono')}</button>`);
+    if (key != null && Math.abs(tu - shiftToPc(m, key)) > 0.004) parts.push(`<button class="btn small ghost" data-act="tune-root" title="${t('Al {k} más cercano (tono del pack)', { k: PITCH_CLASSES[key] })}">${t('A la tónica ({k})', { k: PITCH_CLASSES[key] })}</button>`);
+  } else parts.push(`<span class="muted">${t('sin tono claro: se puede afinar a mano')}</span>`);
+  if (tu) parts.push(`<span class="${loop ? 'warn' : 'dim'}">${loop ? t('en un loop también cambia el tempo') : t('como en un sampler: más agudo, más corto')}</span>`);
+  return parts.join(' ');
+}
+async function tuneSample(s, how) {
+  const m = measuredMidi(s && s.analysis); if (m == null) return;
+  const v = how === 'root' ? (S.pack?.key != null ? shiftToPc(m, S.pack.key) : null) : shiftToSemitone(m);
+  if (v == null) return;
+  s.recipe = { ...(s.recipe || {}) };
+  if (Math.abs(v) < 0.005) delete s.recipe.tune; else s.recipe.tune = v;
+  await saveSample(s); renderDetail();
+}
+function packSoundHTML(p) {
+  return `<label class="inl" title="${t('Tónica de los temas que harás con este pack: para afinar bombos, toms y bajos')}">${t('Tono')} <select id="packkey"><option value="">—</option>${PITCH_CLASSES.map((n, i) => `<option value="${i}" ${p.key === i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+    <button class="btn small" data-act="snd-tune" title="${t('Afinar los samples del pack al tono')}">♪ ${t('Afinar…')}</button>
+    <button class="btn small" data-act="snd-level" title="${t('Que todos los samples de cada página suenen igual de fuerte')}">≋ ${t('Igualar volumen…')}</button>`;
+}
+const TU = { root: null, mode: 'root', off: {}, undo: null };
+function packItems() {
+  const p = S.pack, seen = new Set(), out = [];
+  if (!p) return out;
+  p.slots.forEach((id, i) => { const s = id && S.byId[id]; if (!s || seen.has(id)) return; seen.add(id); out.push({ slot: i, s }); });
+  return out;
+}
+function tuneModal() {
+  const p = S.pack; if (!p) return;
+  if (TU.root == null) TU.root = p.key ?? (S.pat?.opts?.root != null ? S.pat.opts.root % 12 : 5);
+  const its = packItems(), plan = tunePlan(its.map(({ s }) => ({ id: s.id, cat: clsOf(s).cat, midi: measuredMidi(s.analysis), loop: isLoopSample(s), tune: s.recipe?.tune || 0 })), { root: TU.root, mode: TU.mode });
+  const by = Object.fromEntries(plan.map((x) => [x.id, x])), cnt = (st) => plan.filter((x) => x.status === st).length;
+  const rows = its.filter(({ s }) => by[s.id].status === 'change');
+  const on = rows.filter(({ s }) => !TU.off[s.id]).length;
+  modal(`<div class="hitbox"><h2>${t('Afinar «{p}»', { p: esc(p.name) })}</h2>
+    <div class="row" style="gap:12px;margin-bottom:8px">
+      <label class="inl">${t('Tónica')} <select id="tu-root">${PITCH_CLASSES.map((n, i) => `<option value="${i}" ${TU.root === i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+      <label class="inl">${t('Qué afinar')} <select id="tu-mode">${[['root', t('Bombos, toms y bajos a la tónica; el resto, al semitono')], ['allroot', t('Todo lo que tiene nota, a la tónica')], ['cents', t('Solo corregir los cents')]].map(([k, l]) => `<option value="${k}" ${TU.mode === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+    </div>
+    ${rows.length ? `<div class="hitlist"><table class="tunet"><tr><th></th><th>${t('Slot')}</th><th>${t('Sample')}</th><th>${t('Categoría')}</th><th>${t('Nota')}</th><th>${t('Cambio')}</th><th>${t('Duración')}</th><th></th></tr>
+      ${rows.map(({ slot, s }) => { const x = by[s.id], d0 = sampleSeconds({ ...s, recipe: { ...(s.recipe || {}), tune: 0 } }); return `<tr class="${TU.off[s.id] ? 'off' : ''}"><td><input type="checkbox" data-tk="${s.id}" ${TU.off[s.id] ? '' : 'checked'}></td><td class="mono">${slot + 1}</td><td>${esc(shortName(s.name))}</td><td><span style="color:${catVar(clsOf(s).cat)}">${catLabel(clsOf(s).cat)}</span></td>
+        <td>${pitchLabel(x.from)} → <b>${pitchLabel(x.to)}</b></td><td class="mono">${signed(x.shift)} st</td><td class="mono dim">${fmtDur(d0 / tuneRatio(x.shift))}</td><td><button class="btn small" data-act="snd-tune-play" data-id="${s.id}" data-v="${x.shift}" title="${t('Escuchar afinado')}">▶</button></td></tr>`; }).join('')}</table></div>`
+      : `<p class="ok">${t('Nada que afinar con esta tónica.')}</p>`}
+    <p class="note">${[cnt('ok') + cnt('same') ? t('{n} ya están afinados', { n: cnt('ok') + cnt('same') }) : '', cnt('nopitch') ? t('{n} sin tono claro (charles, platos, ruido…)', { n: cnt('nopitch') }) : '', cnt('loop') ? t('{n} loops: no se afinan, cambiaría su tempo', { n: cnt('loop') }) : ''].filter(Boolean).join(' · ')}</p>
+    <p class="note">${t('Se afina como en un sampler: más agudo es más rápido y más corto. Queda en la preparación de cada sample (Afinación) y se puede cambiar o quitar ahí. La tónica se guarda como tono del pack.')}</p>
+    <div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><button class="btn" data-act="modal-close">${t('Cancelar')}</button><button class="btn primary" data-act="snd-tune-go" ${on ? '' : 'disabled'}>${t('Afinar {n}', { n: on })}</button></div></div>`);
+}
+async function tuneApply() {
+  const p = S.pack; if (!p) return;
+  const its = packItems(), plan = tunePlan(its.map(({ s }) => ({ id: s.id, cat: clsOf(s).cat, midi: measuredMidi(s.analysis), loop: isLoopSample(s), tune: s.recipe?.tune || 0 })), { root: TU.root, mode: TU.mode });
+  const prev = [], list = [];
+  for (const x of plan) {
+    if (x.status !== 'change' || TU.off[x.id]) continue;
+    const s = S.byId[x.id]; prev.push([s.id, s.recipe?.tune]);
+    s.recipe = { ...(s.recipe || {}) }; if (x.shift) s.recipe.tune = x.shift; else delete s.recipe.tune;
+    list.push(s);
+  }
+  TU.undo = { prev, key: p.key };
+  p.key = TU.root; await savePack(p);
+  if (list.length) await saveSamples(list);
+  closeModal(); invalidateAll(); renderAll();
+  toast(t('{n} samples afinados a {k}.', { n: list.length, k: PITCH_CLASSES[TU.root] }) + ` <button class="btn small ghost" data-act="snd-undo">${t('Deshacer')}</button>`, 'ok', 9000);
+}
+
+// ======================================================================
+// Igualar el volumen percibido (por página = por pista)
+// ======================================================================
+const LV = { pages: null, off: {}, undo: null };
+async function levelModal() {
+  const p = S.pack; if (!p) return;
+  const its = packItems(); if (!its.length) { toast(t('El pack está vacío.'), 'warn'); return; }
+  modal(`<div class="hitbox"><h2>${t('Igualar el volumen de «{p}»', { p: esc(p.name) })}</h2><p class="muted" id="lv-prog">${t('Midiendo…')}</p></div>`);
+  const L = {};
+  for (let i = 0; i < its.length; i++) {
+    const s = its[i].s;
+    try { const r = render(await decodedOf(s), { ...recipeOf(s), normalize: 'peak' }); L[s.id] = loudnessMax(r.data, r.rate); } catch { L[s.id] = -Infinity; }
+    const el = document.getElementById('lv-prog'); if (el) el.textContent = t('Midiendo {i} de {n}…', { i: i + 1, n: its.length });
+    if (i % 3 === 2) await yieldUI();
+  }
+  const pages = [];
+  for (let pg = 0; pg < p.slots.length / PAGE; pg++) {
+    const items = its.filter(({ slot }) => Math.floor(slot / PAGE) === pg).map(({ s }) => ({ id: s.id, lufs: L[s.id] }));
+    if (items.length < 2) continue;
+    const cats = {}; for (const { id } of items) { const c = clsOf(S.byId[id]).cat || ''; cats[c] = (cats[c] || 0) + 1; }
+    const top = Object.entries(cats).sort((a, b) => b[1] - a[1])[0][0];
+    pages.push({ pg, cat: top, match: matchGroup(items) });
+  }
+  LV.pages = pages;
+  levelPaint();
+}
+function levelPaint() {
+  const p = S.pack; if (!p || !LV.pages) return;
+  const on = LV.pages.filter((x) => !LV.off[x.pg] && x.match.target != null).length;
+  const rows = LV.pages.map(({ pg, cat, match: m }) => {
+    const down = m.items.filter((x) => x.cut > 0.25), low = m.items.filter((x) => x.low > 0.25);
+    return `<div class="hitrow ${LV.off[pg] ? 'off' : ''}" style="flex-wrap:wrap">
+      <input type="checkbox" data-lp="${pg}" ${LV.off[pg] ? '' : 'checked'}>
+      <b>${t('Página {n}', { n: pg + 1 })}</b> <span style="color:${catVar(cat)}">${catLabel(cat)}</span>
+      <span class="muted">${t('{n} samples', { n: m.items.length })} · ${m.target != null ? `${t('objetivo')} <b class="mono">${nf(m.target, 1)} LUFS</b> · ${down.length ? t('{n} bajan (hasta {d} dB)', { n: down.length, d: nf(Math.max(...down.map((x) => x.cut)), 1) }) : t('ya suenan igual')}` : '—'}</span>
+      ${low.length ? `<span class="warn">${t('{n} se quedan más bajos: no pueden subir sin saturar', { n: low.length })}</span>` : ''}
+      <details class="lvdet"><summary>${t('ver')}</summary><table class="tunet">${m.items.map((x) => `<tr><td>${esc(shortName(S.byId[x.id].name))}</td><td class="mono">${nf(x.from, 1)}</td><td class="mono">→ ${nf(x.to, 1)} LUFS</td><td class="mono ${x.low > 0.25 ? 'warn' : 'dim'}">${x.cut > 0.05 ? '−' + nf(x.cut, 1) + ' dB' : x.low > 0.25 ? t('{d} dB por debajo', { d: nf(x.low, 1) }) : ''}</td></tr>`).join('')}</table></details>
+    </div>`;
+  }).join('');
+  modal(`<div class="hitbox"><h2>${t('Igualar el volumen de «{p}»', { p: esc(p.name) })}</h2>
+    <p class="note" style="margin-top:0">${t('En la Rhythm cada página suele ser una pista. Si todos sus samples suenan igual de fuertes, puedes cambiar de sample en directo sin tocar el nivel. Se mide el volumen percibido (LUFS, el máximo en ventanas de 400 ms) y los más fuertes bajan hasta el más flojo; nada sube por encima de su pico.')}</p>
+    ${LV.pages.length ? `<div class="hitlist">${rows}</div>` : `<p class="muted">${t('Hace falta al menos una página con dos samples.')}</p>`}
+    <p class="note">${t('Queda en la preparación de cada sample (Nivel → volumen percibido) y vale para todos los packs donde esté.')}</p>
+    <div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><button class="btn" data-act="modal-close">${t('Cancelar')}</button><button class="btn primary" data-act="snd-level-go" ${on ? '' : 'disabled'}>${t('Igualar {n} páginas', { n: on })}</button></div></div>`);
+}
+async function levelApply() {
+  if (!LV.pages) return;
+  const prev = [], list = [];
+  for (const { pg, match: m } of LV.pages) {
+    if (LV.off[pg] || m.target == null) continue;
+    for (const x of m.items) {
+      const s = S.byId[x.id]; if (!s) continue;
+      prev.push([s.id, s.recipe?.normalize, s.recipe?.targetLufs]);
+      s.recipe = { ...(s.recipe || {}), normalize: 'loud', targetLufs: Math.round(m.target * 10) / 10 };
+      list.push(s);
+    }
+  }
+  LV.undo = prev; TU.undo = null;
+  if (list.length) await saveSamples(list);
+  closeModal(); invalidateAll(); renderAll();
+  toast(t('Volumen igualado en {n} samples.', { n: list.length }) + ` <button class="btn small ghost" data-act="snd-undo">${t('Deshacer')}</button>`, 'ok', 9000);
+}
+async function soundUndo() {
+  const list = [];
+  if (TU.undo) {
+    for (const [id, v] of TU.undo.prev) { const s = S.byId[id]; if (!s) continue; s.recipe = { ...(s.recipe || {}) }; if (v == null) delete s.recipe.tune; else s.recipe.tune = v; list.push(s); }
+    if (S.pack) { if (TU.undo.key == null) delete S.pack.key; else S.pack.key = TU.undo.key; await savePack(S.pack); }
+    TU.undo = null;
+  } else if (LV.undo) {
+    for (const [id, n, l] of LV.undo) { const s = S.byId[id]; if (!s) continue; s.recipe = { ...(s.recipe || {}) }; if (n == null) delete s.recipe.normalize; else s.recipe.normalize = n; if (l == null) delete s.recipe.targetLufs; else s.recipe.targetLufs = l; list.push(s); }
+    LV.undo = null;
+  }
+  if (list.length) await saveSamples(list);
+  invalidateAll(); renderAll(); toast(t('Deshecho.'), 'ok', 3000);
+}
+
+Object.assign(ACT, {
+  'hits-open': (el) => hitsOpen(sOf(el)),
+  'hits-sens': (el) => { HT.sens = el.dataset.v; HT.off = {}; HT.cats = {}; HT.reps = {}; hitsOpen(S.byId[HT.id]); },
+  'hits-play': (el) => hitsPlay(el.dataset.k),
+  'hits-rep': (el) => { HT.reps[el.dataset.k] = +el.dataset.i; hitsPaint(); hitsPlay(el.dataset.k, +el.dataset.i); },
+  'hits-add': () => hitsAdd(),
+  'hits-show': () => hitsShow(),
+  'tune-semi': () => tuneSample(current(), 'semi'),
+  'tune-root': () => tuneSample(current(), 'root'),
+  'snd-tune': () => { TU.off = {}; TU.root = null; tuneModal(); },
+  'snd-tune-play': async (el) => { const s = S.byId[el.dataset.id]; if (!s) return; const r = render(await decodedOf(s), { ...recipeOf(s), tune: +el.dataset.v }); Player.play([r.data], r.rate, { quant16: true }); },
+  'snd-tune-go': () => tuneApply(),
+  'snd-level': () => { LV.off = {}; levelModal(); },
+  'snd-level-go': () => levelApply(),
+  'snd-undo': () => soundUndo(),
+});
+document.addEventListener('change', async (ev) => {
+  const el = ev.target;
+  if (el.id === 'packkey' && S.pack) { if (el.value === '') delete S.pack.key; else S.pack.key = +el.value; await savePack(S.pack); renderAll(); }
+  else if (el.id === 'tu-root') { TU.root = +el.value; tuneModal(); }
+  else if (el.id === 'tu-mode') { TU.mode = el.value; tuneModal(); }
+  else if (el.dataset.tk) { TU.off[el.dataset.tk] = !el.checked; tuneModal(); }
+  else if (el.dataset.lp != null) { LV.off[+el.dataset.lp] = !el.checked; levelPaint(); }
+  else if (el.id === 'hits-group') { HT.group = el.checked; hitsPaint(); }
+  else if (el.dataset.hk) { HT.off[el.dataset.hk] = !el.checked; hitsPaint(); }
+  else if (el.dataset.hcat) { HT.cats[el.dataset.hcat] = el.value; hitsPaint(); }
+});
+
+// ---- src/ui/app_tagclip.js ----
+// ui/app_tagclip.js — v2.4: portapapeles de etiquetas, como en la herramienta de Tracks (3.9).
+// Copiar las etiquetas de un sample (Alt Mayús V), pegarlas en el que escuchas o en la selección (Alt V; la V sola
+// ya es «Vox» al decidir) y guardar conjuntos como grupos para cargarlos con un clic. Viven en los ajustes
+// (S.set.tagClip, S.set.tagGroups), así que viajan en la copia de seguridad.
+const clipList = () => (Array.isArray(S.set.tagClip) ? S.set.tagClip : []);
+const clipGroups = () => (Array.isArray(S.set.tagGroups) ? S.set.tagGroups : []);
+async function clipSet(tags) { S.set.tagClip = [...new Set(tags.map((x) => String(x).trim().slice(0, 24)).filter(Boolean))].slice(0, 12); await saveSettings(); }
+function clipTargetsOf(s) { return S.view === 'library' && S.multi.size > 1 ? [...S.multi].map((id) => S.byId[id]).filter(Boolean) : s ? [s] : []; }
+function tagClipHTML(s) {
+  const c = clipList(), g = clipGroups(), has = s ? tagsOf(s) : [], multi = S.view === 'library' && S.multi.size > 1;
+  const pending = c.filter((x) => !has.includes(x)).length;
+  return `<div class="orow tclip"><span class="lbl">${t('Portapapeles')}</span><div>
+    <span class="chips">${c.map((x) => `<span class="chip2 on clip">${esc(tagName(x))}<button data-act="clip-del" data-v="${esc(x)}" aria-label="${t('Quitar')}">✕</button></span>`).join('')}
+      <input type="text" class="clipin" placeholder="${c.length ? t('Añadir…') : t('Escribe una etiqueta, o copia las de un sample')}" maxlength="24" list="o-taglist"></span>
+    <div class="row" style="gap:5px;margin-top:5px;flex-wrap:wrap">
+      <button class="btn small" data-act="clip-copy" data-id="${s ? s.id : ''}" ${s && has.length ? '' : 'disabled'} title="${t('Las etiquetas de este sample al portapapeles')} (Alt ${t('Mayús')} V)">${t('Copiar de este')}</button>
+      <button class="btn small ${c.length && (pending || multi) ? 'primary' : ''}" data-act="clip-paste" data-id="${s ? s.id : ''}" ${c.length && s ? '' : 'disabled'} title="${t('Añadir las del portapapeles')} (Alt V)">${multi ? t('Pegar en {n}', { n: S.multi.size }) : pending || !c.length ? t('Pegar en este') : '✓ ' + t('Ya las tiene')}</button>
+      ${c.length ? `<button class="btn small ghost" data-act="clip-group" title="${t('Guardar este conjunto para cargarlo con un clic')}">${t('Guardar como grupo')}</button><button class="btn small ghost" data-act="clip-clear">${t('Vaciar')}</button>` : ''}
+      <span class="muted" style="font-size:12px"><span class="kbd">Alt V</span> ${t('pegar')} · <span class="kbd">Alt ${t('Mayús')} V</span> ${t('copiar')}</span></div>
+    ${g.length ? `<div class="chips" style="margin-top:5px">${g.map((x, i) => `<span class="tgrp"><button class="chip2" data-act="clip-load" data-i="${i}" title="${t('Cargar en el portapapeles')}">${x.map((y) => esc(tagName(y))).join(' + ')}</button><button class="btn small ghost" data-act="clip-group-del" data-i="${i}" aria-label="${t('Quitar el grupo')}">✕</button></span>`).join('')}</div>` : ''}
+  </div></div>`;
+}
+async function clipPaste(s) {
+  const c = clipList(), list = clipTargetsOf(s); if (!c.length || !list.length) return;
+  await addTags(list, c); refresh();
+  toast(`${c.map(tagName).map(esc).join(', ')} → ${list.length === 1 ? '«' + esc(list[0].name) + '»' : t('{n} samples', { n: list.length })}`, 'ok', 2500);
+}
+async function clipCopy(s) {
+  const tg = s ? tagsOf(s) : []; if (!tg.length) { toast(t('Este sample no tiene etiquetas'), 'warn', 2500); return; }
+  await clipSet(tg); refresh(); toast(t('Copiadas: {t}', { t: tg.map(tagName).map(esc).join(', ') }), 'ok', 2500);
+}
+document.addEventListener('keydown', (ev) => {
+  if (ev.target.classList?.contains('clipin') && ev.key === 'Enter') {
+    ev.preventDefault(); const v = ev.target.value.trim(); if (!v) return;
+    clipSet([...clipList(), ...v.split(',')]).then(() => { refresh(); setTimeout(() => document.querySelector('.clipin')?.focus(), 0); });
+    return;
+  }
+  if (!ev.altKey || ev.code !== 'KeyV' || ev.ctrlKey || ev.metaKey || ev.target.matches?.('input,textarea,select') || document.querySelector('#modal.on')) return;
+  const s = current(); if (!s) return;
+  ev.preventDefault(); ev.stopImmediatePropagation();
+  if (ev.shiftKey) clipCopy(s); else clipPaste(s);
+}, true);
+Object.assign(ACT, {
+  'clip-copy': (el) => clipCopy(sOf(el) || current()),
+  'clip-paste': (el) => clipPaste(sOf(el) || current()),
+  'clip-del': async (el) => { await clipSet(clipList().filter((x) => x !== el.dataset.v)); refresh(); },
+  'clip-clear': async () => { await clipSet([]); refresh(); },
+  'clip-group': async () => { const c = clipList(); if (!c.length) return; S.set.tagGroups = [c, ...clipGroups().filter((x) => x.join('|') !== c.join('|'))].slice(0, 12); await saveSettings(); refresh(); },
+  'clip-load': async (el) => { const g = clipGroups()[+el.dataset.i]; if (g) { await clipSet(g); refresh(); } },
+  'clip-group-del': async (el) => { const g = clipGroups().slice(); g.splice(+el.dataset.i, 1); S.set.tagGroups = g; await saveSettings(); refresh(); },
 });
 
 // ---- src/ui/app_short.js ----
@@ -6916,7 +7619,7 @@ function purgeAsk(ids) {
 // ---------- atajos ----------
 const KEYS_HELP = () => [
   [t('Siempre'), [['Ctrl K', t('paleta: ir a, hacer o buscar un sample')], ['.', t('abrir o cerrar «Sample actual»')], ['/', t('buscar')], ['Ctrl Z', t('deshacer la última eliminación (en Packs, el último cambio del pack)')], ['?', t('esta ayuda')]]],
-  [t('Escucha y biblioteca'), [[t('Espacio'), t('escuchar')], ['← → ↑ ↓', t('anterior / siguiente')], ['K S C H O Y T E', t('baterías')], ['B L P X V D M', t('bajo, synth, atmos, FX, voz y loops')], [t('Intro'), t('aceptar la propuesta')], ['G', t('subcarpeta propuesta')], ['1–5 · 0', t('valorar / quitar valoración')], ['F', t('favorito')], [t('Supr'), t('eliminar (a la papelera) y pasar al siguiente')], [t('Mayús') + ' ' + t('Supr'), t('marcar «Descartado» sin eliminar')], ['Alt 1–9', t('poner o quitar una etiqueta rápida')], ['R', t('original / como en la Rhythm')], ['Tab', 'A/B'], [t('Mayús') + ' 1–8', t('barrer una macro')]]],
+  [t('Escucha y biblioteca'), [[t('Espacio'), t('escuchar')], ['Alt V', t('pegar las etiquetas del portapapeles')], ['Alt ' + t('Mayús') + ' V', t('copiar las etiquetas del sample')], ['← → ↑ ↓', t('anterior / siguiente')], ['K S C H O Y T E', t('baterías')], ['B L P X V D M', t('bajo, synth, atmos, FX, voz y loops')], [t('Intro'), t('aceptar la propuesta')], ['G', t('subcarpeta propuesta')], ['1–5 · 0', t('valorar / quitar valoración')], ['F', t('favorito')], [t('Supr'), t('eliminar (a la papelera) y pasar al siguiente')], [t('Mayús') + ' ' + t('Supr'), t('marcar «Descartado» sin eliminar')], ['Alt 1–9', t('poner o quitar una etiqueta rápida')], ['R', t('original / como en la Rhythm')], ['Tab', 'A/B'], [t('Mayús') + ' 1–8', t('barrer una macro')]]],
   [t('Packs'), [['← → ↑ ↓', t('moverse por los slots')], [t('Espacio'), t('escuchar')], [t('Supr'), t('vaciar el slot')], ['Ctrl Z', t('deshacer')]]],
   [t('Canciones'), [[t('Espacio'), t('escuchar / parar')], ['N', t('otra canción')], ['P', t('otros patrones')], ['E', t('otra estructura')], ['1–5', t('estrategia')]]],
 ];

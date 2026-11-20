@@ -1,7 +1,7 @@
 // Empaqueta los módulos ES en un único HTML autónomo (sin dependencias externas obligatorias).
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-const order = ['core/params.js', 'core/sysex.js', 'core/patch.js', 'core/acoustic.js', 'core/classify.js', 'core/compare.js', 'core/families.js', 'core/macros.js', 'core/zip.js', 'core/midi.js', 'core/library.js', 'core/analysis.js', 'core/packbuilder.js', 'core/anatomy.js', 'core/organize.js', 'core/templates.js', 'core/patterns.js', 'core/song.js', 'core/mapsel.js', 'ui/app.js', 'ui/song_ui.js', 'ui/public.js', 'ui/mapsel_ui.js'];
+const order = ['core/params.js', 'core/sysex.js', 'core/patch.js', 'core/acoustic.js', 'core/classify.js', 'core/compare.js', 'core/families.js', 'core/macros.js', 'core/zip.js', 'core/midi.js', 'core/library.js', 'core/analysis.js', 'core/packbuilder.js', 'core/anatomy.js', 'core/organize.js', 'core/templates.js', 'core/patterns.js', 'core/song.js', 'core/mapsel.js', 'core/lab.js', 'ui/app.js', 'ui/song_ui.js', 'ui/public.js', 'ui/mapsel_ui.js', 'ui/lab_ui.js', 'ui/quick_ui.js'];
 const names = new Map();
 let js = order.map((f) => {
   let src = readFileSync('src/' + f, 'utf8');

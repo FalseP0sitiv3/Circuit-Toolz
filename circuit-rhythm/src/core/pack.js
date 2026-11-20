@@ -90,7 +90,8 @@ export function rawSeconds(sample) {
     d = Math.max(0, e - s);
   }
   if (r.fitSec) d = r.fitSec;
-  return Math.max(0, d) * keepFraction(r.keep);
+  // afinado (v2.3): más agudo = más corto, como en un sampler
+  return (Math.max(0, d) * keepFraction(r.keep)) / Math.pow(2, (r.tune || 0) / 12);
 }
 // Loops: tiempos enteros a un BPM → duración exacta para que el Beat Match no cambie el tono
 export function fitToBeats(durSec, bpm) {

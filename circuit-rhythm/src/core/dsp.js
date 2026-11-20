@@ -1,4 +1,5 @@
 import { applyKeep, keepIsIdentity, keepFraction } from './shorten.js';
+import { loudnessMax } from './loud.js';
 // core/dsp.js — conversión al formato de la Circuit Rhythm (48 kHz · mono · 16 bit) y utilidades.
 // Todo es no destructivo: el original no se toca; la "preparación" es una receta que se aplica al exportar.
 
@@ -17,6 +18,8 @@ export const DEFAULT_RECIPE = Object.freeze({
   maxSec: 30,          // límite de la Circuit Rhythm por sample
   fitSec: null,        // loops: duración exacta (compases enteros) → Beat Match sin cambio de tono
   keep: null,          // loops: {n, sel} → solo esas slices, en ese orden (acortar; ver core/shorten.js)
+  tune: 0,             // v2.3: semitonos (con decimales). Como un sampler: cambia la velocidad y la duración
+  targetLufs: -14,     // v2.3: normalize = 'loud' → volumen percibido (máximo momentáneo, LUFS), sin pasar de targetDb de pico
 });
 
 export const db = (x) => (x > 0 ? 20 * Math.log10(x) : -Infinity);
@@ -201,11 +204,13 @@ export function render(decoded, recipeIn = {}, dstRate = 48000) {
   let { s, e, cutTail } = trimRange(x, sr, r);
   rep.trimStart = s / sr; rep.trimEnd = e / sr; rep.srcDur = x.length / sr;
   x = x.subarray(s, e);
-  // remuestreo
-  let y = resample(x, sr, dstRate);
-  rep.resampled = sr !== dstRate;
+  // remuestreo (y afinación: subir un semitono = leer el original 2^(1/12) veces más rápido)
+  const ratio = Math.pow(2, (r.tune || 0) / 12);
+  let y = resample(x, sr * ratio, dstRate);
+  rep.resampled = sr !== dstRate || ratio !== 1;
+  if (ratio !== 1) rep.tuned = r.tune;
   if (r.fitSec) {
-    const n = Math.round(r.fitSec * dstRate);
+    const n = Math.round((r.fitSec * dstRate) / ratio);
     if (n > y.length) { const z = new Float32Array(n); z.set(y); y = z; rep.padded = true; }
     else if (n < y.length) { y = y.slice(0, n); cutTail = true; }
     rep.fitted = true;
@@ -228,6 +233,13 @@ export function render(decoded, recipeIn = {}, dstRate = 48000) {
   let gain = 1;
   if (r.normalize === 'peak' && pk > 0) gain = undb(r.targetDb) / pk;
   else if (r.normalize === 'none') gain = undb(r.gainDb || 0);
+  else if (r.normalize === 'loud' && pk > 0) {
+    const L = loudnessMax(y, dstRate);
+    gain = Number.isFinite(L) ? undb((r.targetLufs ?? -14) - L) : 1;
+    // sin pasar del pico objetivo: si no llega, se queda en el pico (y se avisa)
+    if (pk * gain > undb(r.targetDb)) { gain = undb(r.targetDb) / pk; rep.loudLimited = true; }
+    rep.lufs = L + db(gain);
+  }
   if (gain !== 1) for (let i = 0; i < y.length; i++) y[i] *= gain;
   rep.gainDb = db(gain);
   // fundidos
@@ -253,7 +265,7 @@ export function renderedDuration(decodedMono, rate, recipeIn = {}) {
   if (r.trimEnd != null) e = Math.round(r.trimEnd * rate);
   let d = Math.max(0, (e - s) / rate);
   if (r.fitSec) d = r.fitSec;
-  return Math.min(r.maxSec, d * keepFraction(r.keep));
+  return Math.min(r.maxSec, (d * keepFraction(r.keep)) / Math.pow(2, (r.tune || 0) / 12));
 }
 
 // Picos para dibujar la forma de onda (min/max por columna)

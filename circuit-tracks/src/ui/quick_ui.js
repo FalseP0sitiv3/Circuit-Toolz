@@ -1,0 +1,103 @@
+// ui/quick_ui.js — v3.9: lo que se hace mientras se escucha, sin ir a otra sección.
+//  · Octava rápida: −8va / +8va (Alt ↓ / Alt ↑) en Escucha, en la ficha y en el patch acoplado. Crea una versión
+//    aceptada (la que se exporta y la que suena en el equipo) y las pulsaciones siguientes se suman en esa misma
+//    versión. Si vuelve a quedar como el original, la versión se quita. Suena otra vez al momento.
+//  · Portapapeles de etiquetas: copiar las de un patch (Mayús V), pegarlas en el que escuchas (V) o en la
+//    selección, y guardar conjuntos como grupos («Wobble + Dark») para cargarlos con un clic.
+
+// ---------- octava rápida ----------
+function quickOctOf(p) { const v = p && lib.currentVersion(p); return v && v.kind === 'variant' && v.meta.quickOct ? v.meta.quickOct : 0; }
+function octBtnsHTML(p) {
+  if (!p) return '';
+  const n = quickOctOf(p), lbl = n ? `${n > 0 ? '+' : '−'}${Math.abs(n / 12)} oct` : 'Octava';
+  return html`<span class="octq" title="Bajar o subir una octava este patch (Alt ↓ / Alt ↑). Queda como versión aceptada: se exporta así.">
+    <button class="btn small" data-act="qOct" data-n="-12" data-id="${p.id}">−8va</button><b class="mono ${n ? 'on' : ''}">${lbl}</b><button class="btn small" data-act="qOct" data-n="12" data-id="${p.id}">+8va</button></span>`;
+}
+async function quickOctave(p0, n) {
+  if (!p0) return;
+  const base = p0.kind === 'variant' && p0.meta.quickOct ? lib.byId(p0.parentId) || p0 : p0;
+  const cv = lib.currentVersion(base);
+  const t = transposeSemitones(cv.payload, n, regMethod(), {});
+  if (!t || !t.payload) { toast('No se puede transponer este patch', 5000); return; }
+  const quick = cv.kind === 'variant' && cv.meta.quickOct;
+  const total = (quick ? cv.meta.quickOct : 0) + n;
+  let now = cv;
+  if (quick) {
+    if (!total) {
+      // vuelve a ser el original: la versión rápida sobra
+      await lib.adoptVariants([cv.id], false); await lib.deletePatches([cv.id], true); now = lib.currentVersion(base);
+    } else {
+      const edits = []; for (let i = 0; i < 340; i++) if (t.payload[i] !== cv.payload[i]) edits.push([i, t.payload[i]]);
+      await lib.editVariantBytes(cv.id, edits, `Altura ${fmtSemis(n)} st (a mano)`);
+      await lib.updateMeta([cv.id], { quickOct: total }, `Octava a mano: ${fmtSemis(total / 12)} oct`);
+      cv.originText = `Octava ${fmtSemis(total / 12)} (a mano)`;
+    }
+  } else {
+    const v = await lib.createVariant(cv.id, t.payload, 'register', `Octava ${fmtSemis(total / 12)} (a mano)`, '');
+    await lib.updateMeta([v.id], { quickOct: total }, `Octava a mano: ${fmtSemis(total / 12)} oct`);
+    await lib.adoptVariants([v.id], true); now = v;
+  }
+  if (S.sel && !lib.byId(S.sel)) S.sel = base.id;
+  if (S.sel && lib.byId(S.sel)?.kind === 'variant' && lib.byId(S.sel).meta.quickOct) S.sel = now.id;
+  S.rowsKey = ''; rerender();
+  const s = S.dev.session;
+  if (s) quickPlay(base, lib.currentVersion(base).payload);
+  toast(total ? `«${base.name}»: ${fmtSemis(total / 12)} oct respecto al original${t.problems?.length ? ' · ' + t.problems[0] : ''}` : `«${base.name}» vuelve a su octava original`, 4000);
+}
+function quickPlay(p, payload) {
+  const s = S.dev.session; if (!s) return;
+  s.stopAll();
+  const ph = S.phrase === 'auto' ? phraseKeyFor(p) : S.phrase, t = s.sendPatch(payload, S.dev.synth);
+  s.playPhrase(phraseObj(ph), S.dev.synth, { tempo: tempoNow(), root: phraseObj(ph).custom ? 0 : S.dev.root, start: t + (S.dev.patchDelay ?? 80) });
+}
+
+// ---------- portapapeles de etiquetas ----------
+const clipTags = () => lib.settings.tagClip || [];
+const tagGroups = () => lib.settings.tagGroups || [];
+async function setClip(tags) { await lib.setSetting('tagClip', [...new Set(tags.map((x) => String(x).trim()).filter(Boolean))].slice(0, 12)); }
+function clipTargets() {
+  if (S.view === 'library' && S.multi.size > 1) return [...S.multi];
+  const p = cur(); return p ? [p.id] : [];
+}
+function tagClipHTML() {
+  const c = clipTags(), g = tagGroups(), p = cur(), has = p ? (p.meta.tags || []) : [], multi = S.view === 'library' && S.multi.size > 1;
+  const pending = c.filter((x) => !has.includes(x)).length;
+  return html`<div class="tclip"><div class="mlabel"><span>Portapapeles de etiquetas</span><span class="kbdh"><kbd>V</kbd> pegar · <kbd>Mayús</kbd><kbd>V</kbd> copiar</span></div>
+    <div class="tagbox">${c.map((t) => html`<span class="tagp clip">${t}<button data-act="clipDel" data-t="${t}" aria-label="Quitar ${t}">×</button></span>`)}<input class="tagin" id="clipIn" list="tagList" placeholder="${c.length ? 'Añadir…' : 'Escribe una etiqueta, o copia las de un patch'}"></div>
+    <div class="row2" style="gap:5px;flex-wrap:wrap;margin-top:5px">
+      <button class="btn small" data-act="clipCopy" ${p && has.length ? '' : 'disabled'} title="Las etiquetas de este patch al portapapeles (Mayús V)">Copiar de este</button>
+      <button class="btn small ${c.length && (pending || multi) ? 'primary' : ''}" data-act="clipPaste" ${c.length && p ? '' : 'disabled'} title="Añadir las del portapapeles (V)">${multi ? `Pegar en ${S.multi.size}` : pending || !c.length ? 'Pegar en este' : '✓ Ya las tiene'}</button>
+      ${c.length ? html`<button class="btn small" data-act="clipGroup" title="Guardar este conjunto para cargarlo con un clic">Guardar como grupo</button><button class="btn small" data-act="clipClear">Vaciar</button>` : ''}</div>
+    ${g.length ? html`<div class="chips" style="margin-top:6px">${g.map((x, i) => html`<span class="tgrp"><button class="tq" data-act="clipLoad" data-i="${i}" title="Cargar en el portapapeles: ${x.join(', ')}">${x.join(' + ')}</button><button class="lk" data-act="clipGroupDel" data-i="${i}" aria-label="Quitar el grupo">×</button></span>`)}</div>` : ''}</div>`;
+}
+async function clipPaste() {
+  const c = clipTags(), ids = clipTargets(); if (!c.length || !ids.length) return;
+  await lib.addTags(ids, c);
+  rerender(); toast(`${c.join(', ')} → ${ids.length === 1 ? '«' + lib.byId(ids[0]).name + '»' : ids.length + ' patches'}`, 2500);
+}
+async function clipCopy() {
+  const p = cur(), t = p ? p.meta.tags || [] : []; if (!t.length) { toast('Este patch no tiene etiquetas'); return; }
+  await setClip(t); rerender(); toast('Copiadas: ' + t.join(', '), 2500);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.matches('input,textarea,select') || document.querySelector('.modal') || e.ctrlKey || e.metaKey) return;
+  if (!['audition', 'library'].includes(S.view)) return;
+  if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); e.stopImmediatePropagation(); quickOctave(cur(), e.key === 'ArrowUp' ? 12 : -12); return; }
+  if (!e.altKey && e.key.toLowerCase() === 'v') { e.preventDefault(); e.stopImmediatePropagation(); if (e.shiftKey) clipCopy(); else clipPaste(); }
+}, true);
+document.addEventListener('keydown', async (e) => {
+  if (e.target.id !== 'clipIn' || e.key !== 'Enter') return;
+  e.preventDefault(); const v = e.target.value.trim(); if (!v) return;
+  await setClip([...clipTags(), ...v.split(',')]); rerender(); setTimeout(() => document.getElementById('clipIn')?.focus(), 0);
+});
+Object.assign(A, {
+  qOct: (el) => quickOctave(lib.byId(el.dataset.id) || cur(), +el.dataset.n),
+  clipCopy: () => clipCopy(),
+  clipPaste: () => clipPaste(),
+  clipDel: async (el) => { await setClip(clipTags().filter((x) => x !== el.dataset.t)); rerender(); },
+  clipClear: async () => { await setClip([]); rerender(); },
+  clipGroup: async () => { const c = clipTags(); if (!c.length) return; const g = tagGroups().filter((x) => x.join('|') !== c.join('|')); await lib.setSetting('tagGroups', [c, ...g].slice(0, 12)); rerender(); },
+  clipLoad: async (el) => { const g = tagGroups()[+el.dataset.i]; if (g) { await setClip(g); rerender(); } },
+  clipGroupDel: async (el) => { const g = tagGroups().slice(); g.splice(+el.dataset.i, 1); await lib.setSetting('tagGroups', g); rerender(); },
+});

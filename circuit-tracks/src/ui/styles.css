@@ -1001,3 +1001,27 @@ button.stat.w strong{color:var(--warn)}
 .empty.welcome{text-align:left;max-width:520px;margin:0 auto}
 .empty.welcome .steps{margin:10px 0 8px 18px;padding:0;display:grid;gap:8px;font-size:13.5px;color:var(--dim)}
 .empty.welcome .steps b{color:var(--tx)}
+
+/* v3.8 · Laboratorio */
+.labo .labopts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 4px}
+.labo .labopts .mlabel{margin:0 4px 0 8px}
+.labo .labopts .mlabel:first-child{margin-left:0}
+.labo .labopts select{max-width:320px}
+.labgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-top:10px}
+.labcard{border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--raise)}
+.labcard.saved{border-color:var(--ok)}
+.labcard-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.labch{font-size:12.5px;line-height:1.35;margin-top:4px}
+.labmorph{display:flex;align-items:center;gap:10px;margin-top:10px}
+.labmorph input[type=range]{flex:1;accent-color:var(--o)}
+.labkids{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px}
+
+/* v3.9 · octava rápida y portapapeles de etiquetas */
+.octq{display:inline-flex;align-items:center;gap:4px}
+.octq b{min-width:58px;text-align:center;font-size:12px;color:var(--mute)}
+.octq b.on{color:var(--o)}
+.tclip{margin-top:10px;padding:8px;border:1px dashed var(--line2);border-radius:6px}
+.tclip .kbdh{font:11px var(--fm);color:var(--mute)}
+.tclip .kbdh kbd{font:11px var(--fm);border:1px solid var(--line2);border-radius:3px;padding:0 4px}
+.tagp.clip{border-color:var(--o)}
+.tgrp{display:inline-flex;align-items:center;gap:1px}

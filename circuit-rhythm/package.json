@@ -1,1 +1,1 @@
-{"type":"module","name":"circuit-rhythm-sample-library","version":"2.2.0","scripts":{"test":"node tests/core.test.mjs","build":"node tools/build.mjs"}}
+{"type":"module","name":"circuit-rhythm-sample-library","version":"2.4.0","scripts":{"test":"node tests/core.test.mjs","build":"node tools/build.mjs"}}

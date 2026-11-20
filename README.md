@@ -6,8 +6,8 @@ Herramientas gratuitas y locales para **Novation Circuit Rhythm** y **Circuit Tr
 
 | Tool | Version | Download (ES · EN) |
 |---|---|---|
-| Circuit Rhythm · Sample Library / Pack Builder | 2.2.0 | [ES](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library.html) · [EN](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library_EN.html) |
-| Circuit Tracks · Patch Library / Editor | 3.7.0 | [ES](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html) · [EN](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html) |
+| Circuit Rhythm · Sample Library / Pack Builder | 2.4.0 | [ES](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library.html) · [EN](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library_EN.html) |
+| Circuit Tracks · Patch Library / Editor | 3.9.0 | [ES](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html) · [EN](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html) |
 
 Support the project / Apoya el proyecto: https://ko-fi.com/falsepositive
 

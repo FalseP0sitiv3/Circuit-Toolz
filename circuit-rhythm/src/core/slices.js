@@ -12,7 +12,7 @@ export const SLICE_MAX_SEC = 30;         // tope por archivo de la Rhythm (solo 
 export function zoneOf(decoded, recipeIn = {}) {
   const r = { ...DEFAULT_RECIPE, ...recipeIn };
   const sr = decoded.sampleRate;
-  const m = toMono(decoded.channels, r.mono);
+  const m = toMono(decoded.channels, r.mono, decoded.sampleRate);
   const { s, e } = trimRange(m.data, sr, r);
   const len = r.fitSec ? Math.round(r.fitSec * sr) : e - s;
   return { s, len, sr };

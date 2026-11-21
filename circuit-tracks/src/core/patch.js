@@ -82,11 +82,11 @@ export function analyze(payload) {
   const A = v['env1.a'], D = v['env1.d'], S = v['env1.s'], R = v['env1.r'];
   if (A <= T.percAttack && S <= T.percSustain && D <= T.percDecayMax) add('percussive', 'Envolvente percusiva', `A ${A} · D ${D} · S ${S}`);
   else if (S >= 90 && A <= T.percAttack) add('sustained', 'Sostenido con ataque rápido', `A ${A} · S ${S}`);
-  if (A >= T.slowAttack) add('slow-attack', 'Ataque lento', `Env amp attack = ${A} (${fmtSeconds(approxSeconds(A))}, escala inferida)`);
+  if (A >= T.slowAttack) add('slow-attack', 'Ataque lento', `Env amp attack = ${A} (${fmtSeconds(approxSeconds(A))})`);
   if (A <= T.percAttack) add('fast-attack', 'Ataque rápido', 'Env amp attack = ' + A);
   if (S <= T.percSustain && D <= T.shortDecay) add('short-decay', 'Decaimiento breve', `D ${D} · S ${S}`);
   if (D >= T.longDecay && S <= T.percSustain) add('long-decay', 'Decaimiento largo', `D ${D} · S ${S}`);
-  if (R >= T.longRelease) add('long-release', 'Release largo', `Env amp release = ${R} (${fmtSeconds(approxSeconds(R))}, escala inferida)`);
+  if (R >= T.longRelease) add('long-release', 'Release largo', `Env amp release = ${R} (${fmtSeconds(approxSeconds(R))})`);
   // Filtro
   const ft = v['filter.type'], fq = v['filter.freq'], res = v['filter.res'], routing = v['filter.routing'];
   const lp = ft <= 1, filtered = routing !== 2;

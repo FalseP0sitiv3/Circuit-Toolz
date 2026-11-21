@@ -147,7 +147,7 @@ function shortInner(s) {
     <span class="shchips">${chips}</span>
     <label class="inl">${t('Orden')} <input type="text" data-sh="txt" value="${esc(E.txt ?? selText(E.sel))}" style="width:120px" placeholder="1-4, 7 8" spellcheck="false"></label>
     ${ed && !ident ? `${loopBtn(s, ed, t('Escuchar'))}<button class="btn small" data-act="sh-apply" data-id="${s.id}" ${sameKeep(k, ed) ? 'disabled' : ''}>${t('Usar estas slices')}</button> <span class="dim">${fmtDur(now * E.sel.length / E.n)}</span>` : `<span class="dim">${valid ? t('todas las slices: queda igual') : t('elige al menos una slice')}</span>`}</div>`;
-  return `${head}${cur}${props}${manual}
+  return `${head}${cur}${splitHTML(s)}${props}${manual}
     <p class="note" style="margin-bottom:0">${t('Las slices se cuentan sobre la zona útil del loop, como en la Rhythm. En cada unión y al volver al principio hay un fundido cruzado de 2–3 ms para que no haga clic. El original no se toca: se aplica al exportar.')} ${k && rep?.bpm ? t('En la Rhythm, el Beat Match pasa a {s} pasos.', { s: Math.round((sampleSeconds(s) * rep.bpm) / 15) }) : ''}</p>
     ${loopBtn(s, null, t('Original en bucle'), 'style="margin-top:6px"')}`;
 }
@@ -158,6 +158,7 @@ function paintShort() {
 }
 // llamado tras pintar la ficha
 function afterDetail(s) {
+  if (s) monoEnsure(s);
   if (!s || !canShorten(s)) return;
   if (s.rep && s.rep.key === repKey(s)) return;
   repOf(s).then(() => { if (current() === s) { if (S.kEdit?.id === s.id && !keepOf(s)) S.kEdit = null; paintShort(); } }).catch((e) => {
@@ -169,6 +170,7 @@ async function setKeep(s, keep) {
   if (keep && validKeep(keep) && !keepIsIdentity(keep)) s.recipe.keep = { n: keep.n, sel: keep.sel.slice() }; else delete s.recipe.keep;
   S.kEdit = null; Player.stop();
   await saveSample(s);
+  await afterKeepChange(s);
   if (S.view === 'library' && (S.libMode || 'list') === 'list' && typeof paintList === 'function') paintList();
 }
 

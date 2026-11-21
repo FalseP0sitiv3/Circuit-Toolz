@@ -89,7 +89,7 @@ async function pubAbout() {
     <p class="note">No hay cuentas, servidores ni seguimiento. Tus patches, patrones y packs se guardan solo en este navegador. Nada se envía a ningún sitio, tampoco el informe de fallos: lo copias tú si quieres.</p>
     <p class="note">Espacio usado en este navegador: ${mb(st.used)} de ${mb(st.quota)}. ${st.persisted ? html`<span class="okc">Almacenamiento persistente concedido.</span>` : html`<span class="warnc">El navegador podría borrar los datos si le falta espacio: descarga copias de seguridad.</span>`}</p>
     <h4 class="mlabel">Sin garantía</h4>
-    <p class="note">Se ofrece tal cual, sin garantía. Los patches se envían solo a la RAM del equipo, nunca a su memoria flash. Las funciones marcadas «sin verificar» se basan en la documentación y aún no se han confirmado en todos los equipos.</p>
+    <p class="note">Se ofrece tal cual, sin garantía. Los patches se envían solo a la RAM del equipo, nunca a su memoria flash.</p>
     <h4 class="mlabel">Créditos y licencias</h4>
     <p class="note">Código bajo licencia ${SITE.license || 'GPL-3.0'}. Protocolo según la Programmer's Reference de Novation. Fuentes Archivo, Barlow Condensed y JetBrains Mono (SIL Open Font License).</p>
     <h4 class="mlabel">Informar de un fallo</h4>

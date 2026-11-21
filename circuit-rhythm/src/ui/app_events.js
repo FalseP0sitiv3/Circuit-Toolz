@@ -75,9 +75,17 @@ async function undoPack() {
 async function place(i, id) {
   const p = S.pack, s = S.byId[id]; if (!p || !s || i == null) return;
   pushHist();
+  // v2.7: el original separado en partes se pone como sus partes, desde ese pad
+  if (partsOf(s).length) {
+    const ids = partsOf(s).map((x) => x.id);
+    p.slots.forEach((x, k) => { if (ids.includes(x)) { p.slots[k] = null; p.names[k] = ''; } });
+    const r = placeGroup(p, ids, i); S.packSel = r.at >= 0 ? r.at : i;
+    if (r.at !== i) toast(t('No caben desde ese pad: van juntas en el primer hueco con sitio.'), 'warn', 4000);
+    await savePack(p); renderAll(); return;
+  }
   const old = p.slots.indexOf(id);
   if (old >= 0 && old !== i) { p.slots[old] = p.slots[i]; p.names[old] = p.slots[i] ? p.names[i] : ''; }
-  p.slots[i] = id; p.names[i] = shortName(s.name);
+  p.slots[i] = id; p.names[i] = slotName(s);
   S.packSel = i;
   await savePack(p); renderAll();
 }
@@ -99,11 +107,22 @@ async function addToPack(ids) {
   if (!S.pack) await newPack();
   const p = S.pack; pushHist();
   let n = 0, already = 0, full = 0;
+  // v2.7: un sample separado en partes entra con todas sus partes, en pads seguidos
+  const done = new Set();
   for (const id of ids) {
-    const s = S.byId[id]; if (!s) continue;
+    const s = S.byId[id]; if (!s || done.has(id)) continue;
+    // el original separado → todas sus partes; una parte con hermanas también elegidas → esas hermanas juntas
+    const group = partsOf(s).length ? partsOf(s) : relOf(s) ? siblingsOf(s).filter((x) => ids.includes(x.id)) : null;
+    if (group && group.length > 1) {
+      group.forEach((x) => done.add(x.id)); done.add(id);
+      const todo = group.filter((x) => !p.slots.includes(x.id)); already += group.length - todo.length; if (!todo.length) continue;
+      const at = freeSlotFor(todo[0]); const r = placeGroup(p, todo.map((x) => x.id), at >= 0 ? at : null);
+      n += todo.length - r.left; full += r.left; continue;
+    }
+    done.add(id);
     if (p.slots.includes(id)) { already++; continue; }
     const i = freeSlotFor(s); if (i < 0) { full++; continue; }
-    p.slots[i] = id; p.names[i] = shortName(s.name); n++;
+    p.slots[i] = id; p.names[i] = slotName(s); n++;
   }
   await savePack(p);
   toast(t('{n} añadidos a «{p}»', { n, p: esc(p.name) }) + (already ? ' · ' + t('{n} ya estaban', { n: already }) : '') + (full ? ` · <span class="warn">${t('{n} no caben: pack lleno', { n: full })}</span>` : ''), full ? 'warn' : 'ok');
@@ -122,10 +141,10 @@ async function runAutoBuild() {
   S.set.loopMax = +document.getElementById('ab-loop').value || 8;
   const keep = document.getElementById('ab-keep').checked;
   saveSettings();
-  const pool = S.samples.filter((s) => !s.analysis?.error && !s.missing).map((s) => ({ ...s, cls: clsOf(s), rating: s.user?.rating, fav: s.user?.fav, discard: s.user?.discard }));
+  const pool = S.samples.filter((s) => !s.analysis?.error && !s.missing && !partsOf(s).length).map((s) => ({ ...s, cls: clsOf(s), rating: s.user?.rating, fav: s.user?.fav, discard: s.user?.discard }));
   const { slots, report } = autoBuild(pool, { layout: p.layout, minCert: S.set.minCert, loopMaxSec: S.set.loopMax, bpm: p.bpm || S.set.bpm, keep: keep ? p.slots : null });
   pushHist();
-  slots.forEach((id, i) => { if (id !== p.slots[i]) { p.slots[i] = id; p.names[i] = id ? shortName(S.byId[id].name) : ''; } });
+  slots.forEach((id, i) => { if (id !== p.slots[i]) { p.slots[i] = id; p.names[i] = id ? slotName(S.byId[id]) : ''; } });
   await savePack(p);
   const empty = Object.entries(report.emptyNoCandidates).map(([r, n]) => `${ROLE_LABEL()[r]} ×${n}`).join(', ');
   toast(t('{n} slots rellenados · {s} s usados.', { n: report.placed, s: nf(report.total) }) + (empty ? '<br>' + t('Sin candidatos con esa certeza: {l}. Escucha más samples o baja la certeza mínima.', { l: empty }) : '') + (report.emptyBudget ? '<br>' + t('{n} slots vacíos por el límite de tiempo.', { n: report.emptyBudget }) : '') + (report.emptySimilar ? '<br>' + t('{n} slots vacíos: los candidatos que quedan son casi idénticos a otros ya elegidos.', { n: report.emptySimilar }) : '') + (report.skippedLong ? '<br>' + t('{n} loops descartados por largos (más de {s} s).', { n: report.skippedLong, s: S.set.loopMax }) : ''), empty || report.emptyBudget || report.emptySimilar ? 'warn' : 'ok', 10000);
@@ -447,6 +466,6 @@ async function init() {
   await autoPurge();
   renderAll();
   if (S.samples.length && navigator.storage?.persist) navigator.storage.persist().catch(() => {});
-  window.__crsl = { origin: __ORIGIN__, S, ACT, scanRoot, trashCount, curPat, packKit, recordEvents, revision, calibration, organizePlan, mapPoints, decide, place, play, renderAll, filtered, clsOf, packChecks, exportComponents, importFiles, importComponentsPack, Player, songState, curTimeline, readProject, songEvents, renderSongAudio, renderedOf, wavOf, budget, sampleSeconds, newPack, savePack, repOf };
+  window.__crsl = { origin: __ORIGIN__, S, ACT, scanRoot, trashCount, curPat, packKit, recordEvents, revision, calibration, organizePlan, mapPoints, decide, place, play, renderAll, filtered, clsOf, packChecks, exportComponents, importFiles, importComponentsPack, Player, songState, curTimeline, readProject, songEvents, renderSongAudio, renderedOf, wavOf, budget, sampleSeconds, newPack, savePack, repOf, invalidateAll, addToPack, organizePlanOf: (s) => orgPlan().items.find((x) => x.id === s.id)?.dest };
 }
 init();

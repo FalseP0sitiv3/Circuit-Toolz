@@ -191,11 +191,11 @@ export function analyze(decoded) {
   const sr = decoded.sampleRate;
   const st = stereoInfo(decoded.channels);
   // se mide lo que sonará en la Rhythm: mono automático (la suma, salvo que se cancele)
-  const mono = toMono(decoded.channels, 'auto').data;
+  const mm = toMono(decoded.channels, 'auto', sr), mono = mm.data;
   const totalDur = mono.length / sr;
   const t = autoTrimPoints(mono, sr, -60);
   const out = {
-    v: 4,
+    v: 5,
     sr, ch: decoded.channels.length, bits: decoded.bits,
     dur: totalDur,
     silent: t.silent,
@@ -267,5 +267,7 @@ export function analyze(decoded) {
   }
   if (st.stereo) { let pk2 = 0; for (const c of decoded.channels) pk2 = Math.max(pk2, peakOf(c)); out.peakChDb = db(pk2); }
   out.stereo = st.stereo; out.corr = st.corr; out.monoLossDb = st.lossDb; out.identicalLR = !!st.identical;
+  // v2.8: cómo se pasa a mono para la Rhythm y cuánto se perdía con la suma tal cual
+  out.mono = { used: mm.used, ...(mm.fix ? { lossBefore: +mm.fix.lossBefore.toFixed(2), lossAfter: +mm.fix.lossAfter.toFixed(2), delayMs: +(mm.fix.delayMs || 0).toFixed(2), flipped: !!mm.fix.flipped, lead: mm.fix.lead || null, worstDb: +(mm.fix.worstDb || 0).toFixed(1), worstHz: Math.round(mm.fix.worstHz || 0) } : {}) };
   return out;
 }

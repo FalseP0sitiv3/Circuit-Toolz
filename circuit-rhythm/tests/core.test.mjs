@@ -1,7 +1,7 @@
 // npm test — pruebas del núcleo con señales sintéticas (sin hardware)
 import * as S from './synth.mjs';
 import { parseAudio, encodeWav16, encodeWavGeneric, quantize16, sniffAudio } from '../src/core/wav.js';
-import { resample, render, stereoInfo, toMono, peakOf, db, autoTrimPoints, fft } from '../src/core/dsp.js';
+import { resample, render, stereoInfo, toMono, peakOf, db, autoTrimPoints, fft, channelDelay, monoBands } from '../src/core/dsp.js';
 import { analyze, bpmFromDuration, noteName } from '../src/core/analyze.js';
 import { classify, nameInfo, tokenize, learnFrom } from '../src/core/classify.js';
 import { zipWrite, zipEntries, zipRead, crc32 } from '../src/core/zip.js';
@@ -11,7 +11,7 @@ import { generate, vary, recordEvents, toMidi, noteFor, euclid, STYLES, DEFAULT_
 import { pca, nearYourFavourites, zVectors, nearestIds, measuredChar, inRect, MEASURED_CHARS, kmeansGroups, groupCount } from '../src/core/map.js';
 import { organizePlan, manifestCSV } from '../src/core/organize.js';
 import { songFamily, arrange, timeline, scenePlan, songEvents, writeProject, readProject, roadmap, mixEvents, STRATEGY_IDS, RANGES, timerPattern } from '../src/core/song.js';
-import { taxonomy, addSubfolder, renameSubfolder, moveSubfolder, removeSubfolder, resetTax, proposeSub, detectTags, wordIndex, wordsOf, neighbourGuess, vecDist, SUBTYPES } from '../src/core/taxonomy.js';
+import { taxonomy, addSubfolder, renameSubfolder, moveSubfolder, removeSubfolder, resetTax, proposeSub, detectTags, wordIndex, wordsOf, neighbourGuess, vecDist, SUBTYPES, contentSubFor, defaultSubLabel } from '../src/core/taxonomy.js';
 import { readFileSync } from 'node:fs';
 import { zoneOf, sliceBounds, slicesOriginal, slicesRhythm, originalFormat, encodeOriginal, encodeRhythm, sliceName } from '../src/core/slices.js';
 import { repetition, applyKeep, parseSel, selText, validKeep, keepIsIdentity, REPEAT_HIGH } from '../src/core/shorten.js';
@@ -284,7 +284,7 @@ await test('ordenar en disco: carpetas por categoría, sin colisiones, descartad
   const p = organizePlan(S2);
   const dest = p.items.map((i) => i.dest);
   ok(dest.includes('01 Kicks/Kick.wav') && dest.includes('01 Kicks/Kick (2).wav'), dest.join('|'));
-  ok(dest.includes('04 Hats Closed/Hat.aif') && dest.includes('_Por revisar/Raro.wav'));
+  ok(dest.includes('04 Closed-Hats/Hat.aif') && dest.includes('_Por revisar/Raro.wav'));
   ok(!dest.some((d) => d.includes('Malo')) && p.skipped.discard === 1);
   ok(organizePlan(S2, { converted: true }).items.find((i) => i.id === 'c').dest.endsWith('Hat.wav'));
   ok(manifestCSV(p, 'R').split('\n')[1].startsWith('"x/Kick.wav","R/01 Kicks/Kick.wav"'));
@@ -522,7 +522,7 @@ await test('ordenar en disco: loops y one-shots por separado, etiquetas en el no
   const d = (p) => Object.fromEntries(p.items.map((i) => [i.id, i.dest]));
   const p1 = d(organizePlan(L, { kinds: true }));
   ok(p1.a === '09 Bass/Loops/Subs/Moog Bass 13.wav' && p1.b === '09 Bass/One-shots/Subs/Sub 1.wav', JSON.stringify(p1));
-  ok(p1.c === '14 Loops Drum/Break.wav', 'las categorías de loops no repiten carpeta');
+  ok(p1.c === '14 Drum Loops/Break.wav', 'las categorías de loops no repiten carpeta');
   const p2 = d(organizePlan(L, { kinds: false }));
   ok(p2.a === '09 Bass/Subs/Moog Bass 13.wav', 'sin separar, como antes');
   const p3 = d(organizePlan(L, { kinds: true, tagsInName: true, kindDir: { loop: 'Loops', oneshot: 'One-shots' } }));
@@ -739,6 +739,63 @@ await test('golpes: ataques precisos, cortes limpios, categorías y grupos de un
   ok(g.every((x) => x.rep && x.members.includes(x.rep)), 'cada grupo tiene su golpe elegido');
   ok(hitOnsets(new Float32Array(sr), sr).length === 0, 'el silencio no tiene golpes');
   ok(hitBaseName('Amen_Break_170bpm Loop 02.wav') === 'Amen 02' && hitBaseName('Top Loop 128bpm.wav') === 'Top', hitBaseName('Amen_Break_170bpm Loop 02.wav') + ' · ' + hitBaseName('Top Loop 128bpm.wav'));
+});
+
+await test('loops: lo que suena en ellos es su subcarpeta (nombre, carpeta y sonido)', () => {
+  const sub = (name, path, a = null) => proposeSub({ name, path, analysis: a }, 'dloop')?.id;
+  ok(sub('hatloop 128.wav', 'Loops/hatloop 128.wav') === 'hat', 'hatloop → Hats cerrados');
+  ok(sub('loop 07.wav', 'Loops/hh/loop 07.wav') === 'hat', 'carpeta «hh» → Hats cerrados');
+  ok(sub('Open Hat Loop 126.wav', 'Loops/Open Hat Loop 126.wav') === 'ohat', 'open hat → Hats abiertos');
+  ok(sub('Shaker Loop.wav', 'Loops/Shaker Loop.wav') === 'shaker', 'shaker → Shakers');
+  ok(sub('Kick Loop 02.wav', 'Loops/Kick Loop 02.wav') === 'kick', 'kick loop → Kicks');
+  ok(sub('Top Loop 128bpm.wav', 'Loops/Top Loop 128bpm.wav') === 'top', 'top loop sigue siendo Tops');
+  const hi = { bands: { sub: 0.01, low: 0.02, lowmid: 0.02, mid: 0.05, high: 0.5, air: 0.4 }, centroid: 9000, flatness: 0.2, attackMs: 2, activeDur: 4, t20: 60 };
+  ok(sub('loop 3.wav', 'Loops/loop 3.wav', hi) === 'hat', 'por el sonido: solo agudos y cortos → Hats cerrados');
+  ok(sub('loop 3.wav', 'Loops/loop 3.wav', { ...hi, t20: 300 }) === 'ohat', 'con cola → Hats abiertos');
+  ok(sub('loop 3.wav', 'Loops/loop 3.wav', { ...hi, attackMs: 25, flatness: 0.5 }) === 'shaker', 'ataque suave y ruido → Shakers');
+  ok(contentSubFor('dloop', 'hat', 'hh') === 'hat' && contentSubFor('dloop', 'perc', 'shaker') === 'shaker' && contentSubFor('dloop', 'snare') === 'clap', 'pista → subcarpeta del loop');
+  ok(contentSubFor('mloop', 'bass') === 'bass' && contentSubFor('dloop', 'bass') === null, 'loop melódico: bajo; un bajo no es contenido de un loop de batería');
+  ok(defaultSubLabel('dloop', 'hat') === 'Closed-Hats', 'etiqueta de fábrica');
+  const plan = organizePlan([{ id: 'a', name: 'hatloop', path: 'x/hatloop.wav', ext: 'wav', cat: 'dloop', cert: 'user', sub: 'Closed-Hats', kind: 'loop' }]);
+  ok(plan.items[0].dest === '14 Drum Loops/Closed-Hats/hatloop.wav', 'Ordenar en disco: ' + plan.items[0].dest);
+});
+
+await test('mono reparado: contrafase, retardo entre canales, cancelación parcial y estéreo sin relación', () => {
+  const sr = 44100, n = sr * 2; let sd = 7; const rnd = () => ((sd = (sd * 1103515245 + 12345) % 2147483648) / 2147483648) * 2 - 1;
+  const x = new Float32Array(n).map((_, i) => 0.3 * rnd() + 0.3 * Math.sin((2 * Math.PI * 220 * i) / sr));
+  const shift = (a, d) => new Float32Array(a.length).map((_, i) => (i - d >= 0 ? a[i - d] : 0));
+  const eRef = (L, R) => (L.reduce((a, v) => a + v * v, 0) + R.reduce((a, v) => a + v * v, 0)) / 2;
+  const kept = (L, R, y) => 10 * Math.log10(eRef(L, R) / y.reduce((a, v) => a + v * v, 0));
+  // canal invertido → se le da la vuelta, sin pérdida
+  const inv = toMono([x, x.map((v) => -v)], 'auto', sr);
+  ok(inv.used === 'flip' && Math.abs(kept(x, x, inv.data)) < 0.1, 'contrafase: ' + inv.used);
+  // R 11 ms por delante → se alinea: la suma tal cual pierde mucho, la alineada casi nada
+  const d = Math.round(0.011 * sr), L = shift(x, d);
+  ok(channelDelay(L, x, sr).lag === d, 'retardo medido');
+  const al = toMono([L, x], 'auto', sr);
+  ok(al.used === 'align' && al.fix.lead === 'R' && Math.abs(al.fix.delayMs - 11) < 0.1 && al.fix.lossAfter < 0.1 && al.fix.worstDb > 6, 'retardo: ' + JSON.stringify(al.fix));
+  // efecto Haas de 0,8 ms (filtro de peine) → también se alinea
+  ok(toMono([x, shift(x, Math.round(0.0008 * sr))], 'auto', sr).used === 'align', 'Haas 0,8 ms');
+  // retardo + contrafase
+  const ai = toMono([shift(x, 200), x.map((v) => -v)], 'auto', sr);
+  ok(ai.used === 'align' && ai.fix.flipped, 'retardo con un canal invertido');
+  // cancelación parcial sin retardo (correlación negativa, contenido distinto) → suma alineada por frecuencias
+  const y = new Float32Array(n).map(() => 0.3 * rnd());
+  const pL = x.map((v, i) => 0.6 * v + 0.9 * y[i]), pR = x.map((v, i) => -0.6 * v + 0.9 * y[i]);
+  const sp = toMono([pL, pR], 'auto', sr);
+  ok(sp.used === 'spectral' && sp.fix.lossAfter < sp.fix.lossBefore - 3, 'parcial: ' + sp.used + ' ' + JSON.stringify(sp.fix));
+  ok(Math.abs(sp.data.length - n) === 0 && sp.data.every(Number.isFinite), 'misma longitud y sin valores raros');
+  // dos canales sin relación: no es cancelación, se suman tal cual
+  const u1 = new Float32Array(n).map(() => 0.3 * rnd()), u2 = new Float32Array(n).map(() => 0.3 * rnd());
+  ok(toMono([u1, u2], 'auto', sr).used === 'sum' && monoBands(u1, u2, sr).worstDb < 6, 'sin relación: suma');
+  // una suma normal (correlación alta) no se toca; idénticos → un canal; a mano manda
+  const near = x.map((v, i) => v + 0.05 * u1[i]);
+  ok(toMono([x, near], 'auto', sr).used === 'sum' && toMono([x, x.slice()], 'auto', sr).used === 'left', 'suma normal e idénticos');
+  ok(toMono([L, x], 'sum', sr).used === 'sum' && toMono([L, x], 'right', sr).data === x && toMono([u1, u2], 'repair', sr).used === 'spectral', 'modos a mano');
+  // la receta lo usa al pasar a 48 kHz mono: el render del retardo conserva el nivel
+  const dec = { sampleRate: sr, channels: [L, x] };
+  const rep = render(dec, { normalize: 'none', gainDb: 0, autoTrim: false });
+  ok(rep.report.monoUsed === 'align', 'render usa la reparación');
 });
 
 console.log(results.join('\n'));

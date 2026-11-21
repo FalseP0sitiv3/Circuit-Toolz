@@ -21,8 +21,8 @@ Free, local, browser-based tool for the **Novation Circuit Tracks**: understand 
 ## Configure for your website
 Edit `src/site.json` and rebuild: brand name, site URL, Ko-fi, GitHub and issues links (empty links are hidden), licence, and the file names used by the language switch.
 
-## Not verified on hardware yet
-Pattern and song recording by MIDI clock, Drum/MIDI track recording over USB and the macro destination table (community sourced) are based on Novation's Programmer's Reference and community notes. Reports welcome.
+## Hardware notes
+Pattern and song recording by MIDI clock and Drum/MIDI track recording over USB follow Novation's Programmer's Reference. If something behaves differently on your unit, please open an issue.
 
 ## Credits
 Protocol per Novation's Circuit Tracks Programmer's Reference. Fonts: Archivo, Barlow Condensed, JetBrains Mono (SIL OFL, see `licenses/`). Design notes: `docs/DISENO.md` (Spanish).

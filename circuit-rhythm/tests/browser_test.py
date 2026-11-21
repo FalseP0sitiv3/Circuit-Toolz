@@ -338,7 +338,7 @@ def main():
         page.evaluate('() => { window.__org = window.__mkFS("DEST", {}); window.__pickQueue.push(window.__org); }')
         page.click('[data-act="org-dir"]'); time.sleep(0.5); wait_idle(page, 60); time.sleep(0.5)
         org = page.evaluate('() => window.__listFS(window.__org)')
-        ok(any('/01 Kicks/One-shots/BD Dark 01.wav:' in x for x in org) and any('manifest.csv:' in x for x in org), f'ordenar en disco: carpeta con fecha, 01 Kicks y manifiesto ({len(org)} entradas)')
+        ok(any('/01 Kicks/One-shots/' in x and '/BD Dark 01.wav:' in x for x in org) and any('manifest.csv:' in x for x in org), f'ordenar en disco: carpeta con fecha, 01 Kicks y manifiesto ({len(org)} entradas)')
         page.evaluate(SD_JS)
         page.click('[data-act="sd-read"]'); time.sleep(0.6)
         sdp = page.evaluate('() => window.__crsl.S.sdPacks.map((p) => [p.name, p.files.length, p.sessions])')

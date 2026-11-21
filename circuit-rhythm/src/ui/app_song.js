@@ -70,7 +70,7 @@ function renderSong(v) {
       <span class="lbl">${t('Densidad')}</span><input type="range" id="sg-density" min="0" max="1" step="0.05" value="${s.density}">
       <span class="lbl">${t('Tónica')}</span><select id="sg-root">${[...Array(36).keys()].map((k) => 24 + k).map((m) => `<option value="${m}" ${s.root === m ? 'selected' : ''}>${noteLabel(m)}</option>`).join('')}</select>
       <span class="lbl">${t('Escala')}</span><select id="sg-scale">${Object.keys(SCALES).map((k) => `<option value="${k}" ${s.scale === k ? 'selected' : ''}>${k}</option>`).join('')}</select>
-      <span class="lbl">${t('Variación viva')}</span><label class="inl"><input type="checkbox" id="sg-prob" ${s.prob ? 'checked' : ''}> ${t('probabilidad en golpes suaves')}<span class="tag-unv">${t('sin verificar')}</span></label>
+      <span class="lbl">${t('Variación viva')}</span><label class="inl"><input type="checkbox" id="sg-prob" ${s.prob ? 'checked' : ''}> ${t('probabilidad en golpes suaves')}</label>
       <span class="lbl">Sample flip</span><label class="inl"><input type="checkbox" id="sg-flip" ${s.flip ? 'checked' : ''}> ${t('varios sonidos en la percusión (página 4)')}</label>
     </div>
     <p class="note">${t('Los candados de cada pista conservan sus patrones al pedir otra canción u otros patrones.')}</p>
@@ -91,7 +91,7 @@ function renderSong(v) {
   </section>
   <aside class="panel"><h2>${t('Llevarla al equipo')}</h2>
     <h3>${t('Proyecto dentro del pack')}</h3>
-    <p class="note" style="margin-top:0">${t('Escribe la canción como proyecto de la Rhythm: 8 patrones por pista, {n} escenas (las secciones largas son varias escenas iguales seguidas) y la cadena de escenas en orden. Viaja en el .circuitrhythmpack (04 Packs → Para Components).', { n: tl.scenes.length })}<span class="tag-unv">${t('experimental · sin verificar en tu equipo')}</span></p>
+    <p class="note" style="margin-top:0">${t('Escribe la canción como proyecto de la Rhythm: 8 patrones por pista, {n} escenas (las secciones largas son varias escenas iguales seguidas) y la cadena de escenas en orden. Viaja en el .circuitrhythmpack (04 Packs → Para Components).', { n: tl.scenes.length })}</p>
     ${S.pack ? `<div class="row"><label class="inl">${t('Proyecto')} <select id="sg-slot">${[...Array(64).keys()].map((i) => `<option value="${i}" ${(S._songSlot ?? 1) === i ? 'selected' : ''}>${i + 1}${occupied.has(i) ? ' ●' : ''}</option>`).join('')}</select></label><button class="btn" data-act="sg-topack">${t('Guardar en «{p}»', { p: esc(S.pack.name) })}</button></div>
       ${songsIn.length ? `<p class="note">${t('Canciones en este pack: proyectos {l}.', { l: songsIn.map((i) => i + 1).join(', ') })} <button class="btn small ghost" data-act="sg-clearpack">${t('Quitarlas')}</button></p>` : ''}` : `<p class="muted">${t('Crea un pack en 04 Packs: el kit de la canción sale de sus slots.')}</p>`}
     <div class="sep"></div>
@@ -103,7 +103,7 @@ function renderSong(v) {
     <h3>${t('Hoja de ruta')}</h3>
     <table class="t rm"><tr class="muted"><td>${t('Esc.')}</td><td>${t('Sección')}</td><td>${t('Comp.')}</td><td>${t('Pistas')}</td></tr>${roadmap(s.fam, tl, L, songBpm()).map((r) => `<tr class="${r.same ? 'dup' : ''}"><td class="mono">${r.scene}</td><td>${r.same ? `<span class="muted">= ${r.same}</span>` : esc(r.label)}${r.of > 1 && !r.same ? ` <span class="muted mono">×${r.of}</span>` : ''}${r.end ? ` <span class="muted" title="${t('Última escena de la sección: el groove remata con A\' y fill')}">· ${t('remate')}</span>` : ''}</td><td class="mono">${r.bars}</td><td class="mono muted">${r.tracks}</td></tr>`).join('')}</table>
     <p class="note">${t('Más repetición, como en la pista: en cada sección el groove repite A y las escenas del medio tocan solo A; la última escena remata con A\' (un cambio sutil en el último tiempo) y el fill.')}</p>
-    ${tl.timers ? `<p class="note">${t('Las pistas en silencio tocan el patrón 8, vacío y alargado ({b} compases): marca cuánto dura cada escena aunque las demás cadenas sean más cortas.', { b: [...new Set(tl.timers)].sort((a, b) => a - b).join(' / ') })}<span class="tag-unv">${t('sin verificar')}</span></p>` : ''}
+    ${tl.timers ? `<p class="note">${t('Las pistas en silencio tocan el patrón 8, vacío y alargado ({b} compases): marca cuánto dura cada escena aunque las demás cadenas sean más cortas.', { b: [...new Set(tl.timers)].sort((a, b) => a - b).join(' / ') })}</p>` : ''}
     <button class="btn small" data-act="sg-sheet" style="margin-top:6px">${t('Descargar hoja de ruta')}</button>
   </aside></div>`;
 }

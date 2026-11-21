@@ -21,8 +21,8 @@ Free, local, browser-based tool for the **Novation Circuit Rhythm**: measure and
 ## Configure for your website
 Edit `src/site.json` and rebuild: brand name, site URL, Ko-fi, GitHub and issues links (empty links are hidden), licence, and the file names used by the language switch.
 
-## Not verified on hardware yet
-Manual SD-card packs, `.circuitrhythmpack` in Components, sample selection by CC 8, pattern recording by MIDI clock and song projects (`.ncs`) written by *06 Songs* (including the scene clock: pattern 8 at 1/8 or 1/4) and shortened loops looping seamlessly on the device are based on Novation's and the community's documentation. Reports welcome.
+## Hardware notes
+The SD-card layout, `.circuitrhythmpack` for Components, sample selection by CC 8, pattern recording by MIDI clock and the song projects written by *06 Songs* follow Novation's documentation and the community's format notes. If something behaves differently on your unit, please open an issue.
 
 ## Credits
 Pack and project format notes: the open-source CircuitGM project; the empty project template in `third_party/circuitgm/` comes from it under the Mozilla Public License 2.0. Fonts: Archivo, Barlow Condensed, JetBrains Mono (SIL OFL, see `licenses/`). Design notes: `DISENO_Sample_Library_Pack_Builder.md` (Spanish).

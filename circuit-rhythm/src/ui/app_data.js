@@ -8,7 +8,7 @@ import { autoTrimOf, emptyPack, componentsFiles, sdPlan, projectUsage, shortName
 import { Library, sha256hex, walkDir, fileFromRoot, ensurePermission, AUDIO_EXT, PACK_EXT, isJunk } from '../core/library.js';
 import { RhythmMidi } from '../core/midi.js';
 
-const APP_VERSION = '2.4.0';
+const APP_VERSION = '2.8.0';
 const MAX_FILE = 200 * 1024 * 1024;
 
 const S = {

@@ -9,7 +9,7 @@ import { auditMacros } from './macros.js';
 import { buildFamilies, vectorize, pca2, affinity } from './families.js';
 import { measuredFeatures } from './acoustic.js';
 
-export const APP_VERSION = '3.9.0';
+export const APP_VERSION = '3.9.2';
 export const STORES = ['files', 'patches', 'collections', 'banks', 'rules', 'history', 'settings'];
 const MAX_SYX = 2 * 1024 * 1024;
 
@@ -189,7 +189,7 @@ export class Library {
           for (const e of ents) await handleSyx(e.path.split('/').pop(), [inp.path, pack.name].filter(Boolean).join('/'), e.bytes, inp.name, pack);
           report.packs.push({ name: inp.name, pack: pack.name, product: pack.product, patches: report.patches - before, entries: ents.length });
         } else if (/\.circuitpack$/i.test(inp.name)) {
-          report.foreign.push({ name: (inp.path ? inp.path + '/' : '') + inp.name, kind: 'components', why: 'Pack del Circuit original (.circuitpack): formato de Components no publicado. Para usar sus patches, ábrelo en Components y exporta cada patch como .syx', count: 1, names: [] });
+          report.foreign.push({ name: (inp.path ? inp.path + '/' : '') + inp.name, kind: 'components', why: 'Pack del Circuit original (.circuitpack): formato propio de Components. Para usar sus patches, ábrelo en Components y exporta cada patch como .syx', count: 1, names: [] });
         } else if (/\.zip$/i.test(inp.name)) {
           const z = await readZip(inp.bytes, (p) => /\.(syx|sysex)$/i.test(p) && !/(^|\/)(__MACOSX|\._)/.test(p));
           report.errors.push(...z.errors.map((e) => `${inp.name}: ${e}`));

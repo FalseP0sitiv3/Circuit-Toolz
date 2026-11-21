@@ -36,7 +36,7 @@ with sync_playwright() as pw:
     page.locator('#detail .label').click(); time.sleep(0.1)
     page.keyboard.press('Alt+v'); time.sleep(0.4)
     ok('Wobble' in tags('Kick 99.wav'), 'Alt V lo pega en el sample')
-    ok(('already has them' if EN else 'ya las tiene') in page.locator('#detail [data-act="clip-paste"]').inner_text().lower(), 'y el botón dice «Ya las tiene»')
+    ok(('already has it' if EN else 'ya lo tiene') in page.locator('#detail [data-act="clip-paste"]').inner_text().lower(), 'y el botón dice «Ya lo tiene»')
     # en Escucha: Alt V pega y no decide «Vox»
     J('() => { const c = window.__crsl; c.S.view = "listen"; c.renderAll(); }'); time.sleep(0.5)
     cid = J('() => { const c = window.__crsl; return c.S.listen.queue[c.S.listen.i]; }')

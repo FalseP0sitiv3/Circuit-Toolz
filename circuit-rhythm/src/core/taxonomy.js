@@ -18,8 +18,11 @@ export const SUBTYPES = {
   atmos: [['pad', 'Pads'], ['drone', 'Drones'], ['texture', 'Texturas'], ['field', 'Field recordings']],
   fx: [['riser', 'Subidas'], ['down', 'Bajadas'], ['impact', 'Impactos'], ['noise', 'Ruido'], ['glitch', 'Glitch']],
   vox: [['phrase', 'Frases'], ['chop', 'Chops'], ['shout', 'Gritos y efectos']],
-  dloop: [['full', 'Completos'], ['top', 'Tops'], ['perc', 'Percusión'], ['break', 'Breaks']],
-  mloop: [['bass', 'Bajo'], ['synth', 'Synth'], ['chord', 'Acordes'], ['texture', 'Texturas']],
+  // v2.5: lo que suena en el loop. «Drum loop» dice que es un loop de batería; la subcarpeta dice de qué.
+  dloop: [['full', 'Full'], ['break', 'Breaks'], ['top', 'Tops'], ['kick', 'Kicks'], ['clap', 'Snares & Claps'], ['hat', 'Closed-Hats'],
+    ['ohat', 'Open-Hats'], ['shaker', 'Shakers'], ['perc', 'Perc'], ['cymbal', 'Cymbals']],
+  // v2.6: los loops se ordenan por instrumento, con los mismos nombres que las carpetas de categoría
+  mloop: [['bass', 'Bass'], ['synth', 'Synth'], ['chord', 'Chords'], ['texture', 'Atmos']],
 };
 
 // Paleta rápida de etiquetas: grupos con las más usadas. El usuario la amplía o la recorta.
@@ -67,7 +70,12 @@ const TEXT_SUB = {
   atmos: { pad: ['pad', 'pads'], drone: ['drone', 'drones'], texture: ['texture', 'tex', 'noise', 'granular', 'grain'], field: ['field', 'foley', 'rain', 'city', 'street', 'nature', 'birds', 'ambience', 'amb', 'room'] },
   fx: { riser: ['riser', 'rise', 'up', 'uplifter', 'sweepup', 'build'], down: ['down', 'downlifter', 'fall', 'drop', 'sweepdown'], impact: ['impact', 'hit', 'boom', 'slam', 'crash'], noise: ['noise', 'white', 'sweep'], glitch: ['glitch', 'stutter', 'zap', 'laser', 'blip'] },
   vox: { phrase: ['phrase', 'vocal', 'spoken', 'speech', 'word', 'words'], chop: ['chop', 'chops', 'cut', 'slice'], shout: ['shout', 'yeah', 'hey', 'scream', 'breath', 'fx'] },
-  dloop: { top: ['top', 'tops', 'toploop', 'hats', 'hat'], break: ['break', 'breaks', 'breakbeat', 'amen', 'jungle'], perc: ['perc', 'percussion', 'conga', 'bongo', 'shaker'], full: ['full', 'drum', 'drums', 'beat'] },
+  // el orden importa: lo más concreto primero («open hat» antes que «hat», «shaker» antes que «perc»)
+  dloop: { ohat: ['openhat', 'hatopen', 'ohh', 'oh', 'hho', 'open', 'ophat'], shaker: ['shaker', 'shakers', 'shake', 'shk', 'maraca', 'maracas', 'cabasa', 'tamb', 'tambourine'],
+    hat: ['hatloop', 'hihat', 'hh', 'chh', 'ch', 'closedhat', 'hatclosed', 'closed', 'hat', 'hats'], cymbal: ['ride', 'rides', 'crash', 'cym', 'cymbal', 'cymbals'],
+    kick: ['kick', 'kicks', 'kik', 'bd', 'bassdrum', 'kickloop'], clap: ['clap', 'claps', 'snare', 'snares', 'snr', 'sd'],
+    break: ['break', 'breaks', 'breakbeat', 'amen', 'jungle'], top: ['top', 'tops', 'toploop'],
+    perc: ['perc', 'percs', 'percussion', 'percloop', 'conga', 'bongo', 'tom', 'toms'], full: ['full', 'fullbeat'] },
   mloop: { bass: ['bass', 'bassline', 'sub'], chord: ['chord', 'chords', 'keys', 'piano'], texture: ['texture', 'atmos', 'pad', 'ambient', 'drone'], synth: ['synth', 'lead', 'arp', 'melody', 'riff', 'seq'] },
 };
 export function nameTokens(s) { return new Set([...tokenize(s.name || ''), ...tokenize(String(s.path || '').split('/').slice(-2, -1)[0] || '')]); }
@@ -154,6 +162,11 @@ function soundSub(a, cat) {
       if (fl > 0.3) return R('shout', 'ruidoso');
       return R('chop', 'corto');
     case 'dloop':
+      if (low < 0.08 && hi > 0.55 && a.centroid > 5000) {
+        if ((a.attackMs || 0) > 12 && fl > 0.3) return R('shaker', 'agudos de ataque suave');
+        const t20 = a.t20 == null ? 999 : a.t20;
+        return t20 > 160 ? R('ohat', 'solo agudos, con cola') : R('hat', 'solo agudos, muy cortos');
+      }
       if (low < 0.12) return R('top', 'casi sin graves');
       if ((a.onsetRegularity || 1) < 0.45) return R('break', 'golpes irregulares');
       return R('full', 'graves y agudos');
@@ -165,6 +178,22 @@ function soundSub(a, cat) {
   }
   return null;
 }
+
+// ---------- v2.5: una pista de la clasificación, usada para ordenar ----------
+// En un loop, lo que el nombre, la carpeta o el sonido dicen de un instrumento («hh» → Closed hat) no cambia
+// la categoría (sigue siendo un loop): dice qué suena en él, y eso es su subcarpeta. Devuelve el id o null.
+const CONTENT_OF = {
+  dloop: { kick: 'kick', snare: 'clap', clap: 'clap', hat: 'hat', ohat: 'ohat', cymbal: 'cymbal', tom: 'perc', perc: 'perc' },
+  mloop: { bass: 'bass', synth: 'synth', atmos: 'texture', fx: 'texture' },
+};
+const SHAKER_WORDS = new Set(TEXT_SUB.dloop.shaker);
+export function contentSubFor(loopCat, clueCat, tok = '') {
+  const m = CONTENT_OF[loopCat]; if (!m || !m[clueCat]) return null;
+  if (loopCat === 'dloop' && SHAKER_WORDS.has(String(tok).toLowerCase())) return 'shaker';
+  return m[clueCat];
+}
+// etiqueta de fábrica de una subcarpeta (para crearla si tu lista de subcarpetas ya no la tiene)
+export function defaultSubLabel(cat, id) { const x = (SUBTYPES[cat] || []).find(([i]) => i === id); return x ? x[1] : null; }
 
 // ---------- efectos y carácter detectados ----------
 const FX_WORDS = {

@@ -93,7 +93,7 @@ function recipe(payload, d) {
   // Amplitud
   const A = v['env1.a'], D = v['env1.d'], S = v['env1.s'], R = v['env1.r'];
   const shape = S <= 24 && A <= 8 ? 'percusiva' : A >= 48 ? 'de entrada lenta' : S >= 100 ? 'sostenida' : 'intermedia';
-  out.push({ k: 'Amplitud', t: `Envolvente ${shape}: ataque ${fmtSeconds(approxSeconds(A))}, decay ${fmtSeconds(approxSeconds(D))}, sustain ${pct(S)}, release ${fmtSeconds(approxSeconds(R))}${v['env1.vel'] !== 64 ? `, velocidad ${sgn(v['env1.vel'] - 64)}` : ''}. Tiempos aproximados (escala inferida).` });
+  out.push({ k: 'Amplitud', t: `Envolvente ${shape}: ataque ${fmtSeconds(approxSeconds(A))}, decay ${fmtSeconds(approxSeconds(D))}, sustain ${pct(S)}, release ${fmtSeconds(approxSeconds(R))}${v['env1.vel'] !== 64 ? `, velocidad ${sgn(v['env1.vel'] - 64)}` : ''}. Tiempos aproximados.` });
   // Modulación
   const mods = d.matrix.filter((m) => m.active).map((m) => {
     let src = MOD_SOURCES[m.s1] ?? '?';

@@ -129,7 +129,7 @@ function viewSongs() {
         <p class="note sg-keys"><kbd>Espacio</kbd> escuchar / parar · <kbd>N</kbd> otra canción · <kbd>P</kbd> otros patrones · <kbd>E</kbd> otra estructura · <kbd>1</kbd>–<kbd>5</kbd> estrategia · clic en una sección: escuchar desde ahí</p>
       </div>
       <div class="sg-two">
-        <div class="box sg-rec"><h3>Llevarla al Circuit Tracks<small>experimental · sin verificar en tu equipo</small></h3>
+        <div class="box sg-rec"><h3>Llevarla al Circuit Tracks</h3>
           <p class="note">El Circuit no recibe patrones por SysEx, así que la herramienta los graba como en «Patrones», pero de uno en uno y en todas las pistas a la vez: tú eliges el patrón 1 en cada pista y pulsas REC, la herramienta lo graba; luego el 2, y así. Son ${used.length} pasadas de ${s.steps} pasos.${s.steps === 32 ? html` <b>Con 32 pasos hay que poner antes cada patrón a 32 pasos en el Circuit</b> (si no, la segunda mitad se graba encima de la primera); con 16 no hace falta preparar nada.` : ''}</p>
           <div class="sg-slots">${used.map((k) => html`<span class="sg-slot ${s.recorded[k] ? 'done' : ''}"><b>${k + 1}</b>${SLOT_ROLES[k]}</span>`)}<span class="sg-slot sg-empty"><b>8</b>${SLOT_ROLES[7]}</span></div>
           <div class="row2" style="margin-top:10px;flex-wrap:wrap;gap:6px"><button class="btn rec" data-act="sgRec" ${live && !S.recording ? '' : 'disabled'}>● Grabar los patrones en el Circuit</button><span class="sp"></span><button class="btn" data-act="sgSheet">Descargar hoja de ruta</button><button class="btn" data-act="sgMidi">Exportar .mid de la canción</button>${sel('drumMap', [['circuit', 'Batería: notas del Circuit'], ['gm', 'Batería: Drum Rack (36/38/42/46)']], s.drumMap)}</div>

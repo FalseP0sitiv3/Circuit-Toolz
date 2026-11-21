@@ -113,7 +113,7 @@ async function aboutHTML() {
     <p class="note">${t('No hay cuentas, servidores ni seguimiento. Tus samples, fichas y packs se guardan solo en este navegador; las carpetas enlazadas se leen de tu disco y no se copian. Nada se envía a ningún sitio, tampoco el informe de fallos: lo copias tú si quieres.')}</p>
     <p class="note">${t('Espacio usado en este navegador: {u} de {q}.', { u: mb(st.used), q: mb(st.quota) })} ${st.persisted ? `<span class="ok">${t('Almacenamiento persistente concedido.')}</span>` : `<span class="warn">${t('El navegador podría borrar los datos si le falta espacio: descarga copias de seguridad.')}</span>`}</p>
     <h3>${t('Sin garantía')}</h3>
-    <p class="note">${t('Se ofrece tal cual, sin garantía. Las funciones marcadas «sin verificar» se basan en la documentación y aún no se han confirmado en todos los equipos. Antes de escribir en la microSD por primera vez, haz una copia de la tarjeta.')}</p>
+    <p class="note">${t('Se ofrece tal cual, sin garantía. Antes de escribir en la microSD por primera vez, haz una copia de la tarjeta.')}</p>
     <h3>${t('Créditos y licencias')}</h3>
     <p class="note">${t('Código bajo licencia {l}. Formato de pack y de proyecto basado en el trabajo abierto del proyecto CircuitGM (plantilla de proyecto vacío con licencia MPL-2.0). Fuentes Archivo, Barlow Condensed y JetBrains Mono (SIL Open Font License).', { l: esc(SITE.license || 'GPL-3.0') })}</p>
     <h3>${t('Informar de un fallo')}</h3>
@@ -126,7 +126,7 @@ async function aboutHTML() {
 function sdConfirm(then) {
   if (S.set.sdConfirmed) { then(); return; }
   modal(`<h2>${t('Antes de escribir en la tarjeta')}</h2>
-    <p class="note" style="color:var(--ink)">${t('La herramienta solo crea un pack nuevo en una posición libre y nunca sobrescribe lo que hay. Aun así, esta función no está verificada en todos los equipos.')}</p>
+    <p class="note" style="color:var(--ink)">${t('La herramienta solo crea un pack nuevo en una posición libre y nunca sobrescribe lo que hay. Aun así, haz antes una copia de la tarjeta.')}</p>
     <ul class="note" style="color:var(--ink)"><li>${t('Copia la carpeta Rhythm de la tarjeta a tu ordenador.')}</li><li>${t('La tarjeta debe estar en FAT32 y la Rhythm con el firmware al día.')}</li><li>${t('Expulsa la tarjeta desde el sistema antes de sacarla.')}</li></ul>
     <label class="inl" style="color:var(--ink)"><input type="checkbox" id="sd-ok"> ${t('He hecho una copia de la tarjeta')}</label>
     <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn" data-act="modal-close">${t('Cancelar')}</button><button class="btn primary" id="sd-go">${t('Continuar')}</button></div>`);

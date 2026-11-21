@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Circuit Rhythm · Sample Library 2.4.0 · © 2026 FalsePositive · GPL-3.0 · https://ko-fi.com/falsepositive · fingerprint ff7089703edc5b40 -->
+<!-- Circuit Rhythm · Sample Library 2.8.0 · © 2026 FalsePositive · GPL-3.0 · https://ko-fi.com/falsepositive · fingerprint b7da5731ea4b6f10 -->
 <html lang="es">
 <head>
 <meta charset="utf-8">
@@ -433,11 +433,47 @@ table.shopts td.acts .btn + .btn, .shtab td.acts .btn + .btn { margin-left: 4px;
 .tclip .clipin{width:200px}
 .tgrp{display:inline-flex;align-items:center;gap:1px}
 
+.why-list .clue{display:inline;font:inherit;color:inherit;background:none;border:1px dashed transparent;border-radius:5px;padding:0 4px;margin:0 1px 2px 0;cursor:pointer;text-align:left}
+.why-list .clue:hover{border-color:var(--dim);background:#ffffff08}
+.why-list .clue.on{border-color:#3ecf8e55;cursor:default}
+.cluehint{margin:4px 0 0;font-size:12px;color:var(--dim)}
+.tclip .cf{gap:6px}
+.tclip .cf.off{opacity:.45;text-decoration:line-through}
+.tclip .cf b{font-weight:500;color:var(--dim);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase}
+.big-sub{font-family:var(--f-ui);font-size:19px;font-weight:600;letter-spacing:.02em;color:var(--ink);margin-left:-2px}
+.big-sub.dim{color:var(--dim)}
+
+.orgd .dest{margin-bottom:10px}
+.dpath{display:flex;flex-wrap:wrap;align-items:flex-start;gap:4px}
+.dseg{display:inline-flex;flex-direction:column;border:1px solid #4a4a52;background:#232328;border-radius:6px;padding:3px 9px 2px}
+.dseg b{font-family:var(--f-mono);font-weight:400;font-size:13px;color:var(--ink);white-space:nowrap}
+.dseg i{font-style:normal;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.dseg.prop{border-style:dashed;background:none}
+.dseg.warn{border-color:#f0b23288}.dseg.warn b{color:var(--warn)}
+.dseg.file{border-color:transparent;background:none}
+.dsl{color:var(--dim);font-family:var(--f-mono);padding-top:3px}
+.dnote{margin-top:4px;font-size:12px;color:var(--dim)}
+.orgd .lbl small{display:block;text-transform:none;letter-spacing:0;font-size:11px;color:var(--dim);opacity:.8}
+
+.shsplit{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0;padding:10px 0;border-top:1px solid var(--line2);border-bottom:1px solid var(--line2)}
+.shsplit .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.splist{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+.sppart{display:inline-flex;align-items:center;gap:6px;border:1px solid #4a4a52;border-radius:6px;padding:3px 6px 3px 9px;background:#232328}
+.sppart b{font-family:var(--f-mono);font-weight:400}
+.shsplit .note{width:100%;margin:0}
+select.prole{padding:2px 6px;font-size:13px}
+.pad .plink{font-family:var(--f-mono);font-size:10.5px;color:var(--ink);opacity:.8;margin-right:4px}
+
+.prep .monotxt,.prep .monoab,.prep .monostereo{display:block;margin-top:4px}
+.prep .monoab .btn{margin-right:3px}
+.prep .monostereo{font-size:12px}
+.monoab .btn.on{color:var(--ink);border-color:var(--dim)}
+
 </style>
 </head>
 <body>
 <header class="top">
-  <div class="brand"><span class="dev">CIRCUIT⁠​‌​​​​‌‌​‌​‌​‌​​​​‌‌​​​‌​‌‌‌‌‌​​​‌‌​​‌‌​​‌‌​​‌‌​​​‌‌​‌‌‌​​‌‌​​​​​​‌‌‌​​​​​‌‌‌​​‌​​‌‌​‌‌‌​​‌‌​​​​​​‌‌​​‌‌​‌‌​​‌​‌​‌‌​​‌​​​‌‌​​​‌‌​​‌‌​‌​‌​‌‌​​​‌​​​‌‌​‌​​​​‌‌​​​​​‌‌‌‌‌​​​‌​​​‌‌​​‌‌​​​​‌​‌‌​‌‌​​​‌‌‌​​‌‌​‌‌​​‌​‌​‌​‌​​​​​‌‌​‌‌‌‌​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​‌​‌‌‌​‌‌​​‌‌​​‌​‌​‌‌‌‌‌​​​‌​​​​‌‌​‌‌​‌​​‌​‌‌‌​​‌​​‌‌​​​‌‌​‌‌‌​‌​‌​‌‌​‌​​‌​‌‌‌​‌​​​​‌​​​​​​‌​‌​​‌​​‌‌​‌​​​​‌‌‌‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌​‌‌​‌​​‌​​​​​‌‌​​​​‌​‌​‌‌​‌‌‌​​‌​​​​​​‌​‌​​‌‌​‌‌​​​​‌​‌‌​‌‌​‌​‌‌‌​​​​​‌‌​‌‌​​​‌‌​​‌​‌​​‌​​​​​​‌​​‌‌​​​‌‌​‌​​‌​‌‌​​​‌​​‌‌‌​​‌​​‌‌​​​​‌​‌‌‌​​‌​​‌‌‌‌​​‌⁠ <span class="thin">RHYTHM</span></span><span class="sub">Sample Library · Pack Builder</span></div>
+  <div class="brand"><span class="dev">CIRCUIT⁠​‌​​​​‌‌​‌​‌​‌​​​​‌‌​​​‌​‌‌‌‌‌​​​‌‌​​​‌​​​‌‌​‌‌‌​‌‌​​‌​​​‌‌​​​​‌​​‌‌​‌​‌​​‌‌​‌‌‌​​‌‌​​‌‌​​‌‌​​​‌​‌‌​​‌​‌​‌‌​​​​‌​​‌‌​‌​​​‌‌​​​‌​​​‌‌​‌‌​​‌‌​​‌‌​​​‌‌​​​‌​​‌‌​​​​​‌‌‌‌‌​​​‌​​​‌‌​​‌‌​​​​‌​‌‌​‌‌​​​‌‌‌​​‌‌​‌‌​​‌​‌​‌​‌​​​​​‌‌​‌‌‌‌​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​‌​‌‌‌​‌‌​​‌‌​​‌​‌​‌‌‌‌‌​​​‌​​​​‌‌​‌‌​‌​​‌​‌‌‌​​‌​​‌‌​​​‌‌​‌‌‌​‌​‌​‌‌​‌​​‌​‌‌‌​‌​​​​‌​​​​​​‌​‌​​‌​​‌‌​‌​​​​‌‌‌‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌​‌‌​‌​​‌​​​​​‌‌​​​​‌​‌​‌‌​‌‌‌​​‌​​​​​​‌​‌​​‌‌​‌‌​​​​‌​‌‌​‌‌​‌​‌‌‌​​​​​‌‌​‌‌​​​‌‌​​‌​‌​​‌​​​​​​‌​​‌‌​​​‌‌​‌​​‌​‌‌​​​‌​​‌‌‌​​‌​​‌‌​​​​‌​‌‌‌​​‌​​‌‌‌‌​​‌⁠ <span class="thin">RHYTHM</span></span><span class="sub">Sample Library · Pack Builder</span></div>
   <nav class="tabs" id="tabs"></nav>
   <div class="status" id="status"></div>
 </header>
@@ -452,8 +488,8 @@ const __LANG__ = "es";
 const __DICT__ = {};
 const __SITE__ = {"brand":"Circuit Tools","author":"FalsePositive","siteUrl":"","kofiUrl":"https://ko-fi.com/falsepositive","githubUrl":"","issuesUrl":"","license":"GPL-3.0","langFiles":{"es":"Circuit_Rhythm_Sample_Library.html","en":"Circuit_Rhythm_Sample_Library_EN.html"}};
 const __NCS_TPL__ = "7da9ahRRGMfh/86b/SAGTGFhISEBi4AWIhYWwk6KgGCzJOQO0lgoIhZaTeMleL9H1pmAHwTsQtjnYdgzO3Pe7gz8Lq4uz7//6DJL8iDJ+YdPX74d3y5Jvr6swL2xSJZtd9eH+b/vtQEA7BidqBMBAHSiTgQA0Ik6EQBAJ+pEAACdqBMBAHSiTgQA0Ik6EQBAJ+pEAACdqBMBAHSiTgQA0Ik6EQBAJ+pEJwUA0Ik6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6USfqRABAJ+pEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnagTAQCdqBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1ok4EAHSiTtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgCATtSJAAA6UScCAOhEnQgAoBN1IgDATnTiX95Obv4f1I0/th1uf/oMfTL8urau+3/7ysbbNnbXH8eb/ZOhTrY38+3TcdmcZrVOjo6S5Xas7/txejaburWy1yqrVjlolcNWedQqj1vlSasct8rTVjltleet8qJVXrXK61Z508r8fZ/PcjwH83GZvs7pcOxNJ2x8Vr8fnG6c68a5bnzXje/m++8262S+uvj8LFmsN2dnyeL9MAwB7sBP";
-const __ORIGIN__ = {"tool":"Circuit Rhythm · Sample Library","version":"2.4.0","author":"FalsePositive","year":2026,"url":"https://ko-fi.com/falsepositive","license":"GPL-3.0","fp":"ff7089703edc5b40"};
-const __WM__ = "⁠​‌​​​​‌‌​‌​‌​‌​​​​‌‌​​​‌​‌‌‌‌‌​​​‌‌​​‌‌​​‌‌​​‌‌​​​‌‌​‌‌‌​​‌‌​​​​​​‌‌‌​​​​​‌‌‌​​‌​​‌‌​‌‌‌​​‌‌​​​​​​‌‌​​‌‌​‌‌​​‌​‌​‌‌​​‌​​​‌‌​​​‌‌​​‌‌​‌​‌​‌‌​​​‌​​​‌‌​‌​​​​‌‌​​​​​‌‌‌‌‌​​​‌​​​‌‌​​‌‌​​​​‌​‌‌​‌‌​​​‌‌‌​​‌‌​‌‌​​‌​‌​‌​‌​​​​​‌‌​‌‌‌‌​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​‌​‌‌‌​‌‌​​‌‌​​‌​‌​‌‌‌‌‌​​​‌​​​​‌‌​‌‌​‌​​‌​‌‌‌​​‌​​‌‌​​​‌‌​‌‌‌​‌​‌​‌‌​‌​​‌​‌‌‌​‌​​​​‌​​​​​​‌​‌​​‌​​‌‌​‌​​​​‌‌‌‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌​‌‌​‌​​‌​​​​​‌‌​​​​‌​‌​‌‌​‌‌‌​​‌​​​​​​‌​‌​​‌‌​‌‌​​​​‌​‌‌​‌‌​‌​‌‌‌​​​​​‌‌​‌‌​​​‌‌​​‌​‌​​‌​​​​​​‌​​‌‌​​​‌‌​‌​​‌​‌‌​​​‌​​‌‌‌​​‌​​‌‌​​​​‌​‌‌‌​​‌​​‌‌‌‌​​‌⁠";
+const __ORIGIN__ = {"tool":"Circuit Rhythm · Sample Library","version":"2.8.0","author":"FalsePositive","year":2026,"url":"https://ko-fi.com/falsepositive","license":"GPL-3.0","fp":"b7da5731ea4b6f10"};
+const __WM__ = "⁠​‌​​​​‌‌​‌​‌​‌​​​​‌‌​​​‌​‌‌‌‌‌​​​‌‌​​​‌​​​‌‌​‌‌‌​‌‌​​‌​​​‌‌​​​​‌​​‌‌​‌​‌​​‌‌​‌‌‌​​‌‌​​‌‌​​‌‌​​​‌​‌‌​​‌​‌​‌‌​​​​‌​​‌‌​‌​​​‌‌​​​‌​​​‌‌​‌‌​​‌‌​​‌‌​​​‌‌​​​‌​​‌‌​​​​​‌‌‌‌‌​​​‌​​​‌‌​​‌‌​​​​‌​‌‌​‌‌​​​‌‌‌​​‌‌​‌‌​​‌​‌​‌​‌​​​​​‌‌​‌‌‌‌​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​‌​‌‌‌​‌‌​​‌‌​​‌​‌​‌‌‌‌‌​​​‌​​​​‌‌​‌‌​‌​​‌​‌‌‌​​‌​​‌‌​​​‌‌​‌‌‌​‌​‌​‌‌​‌​​‌​‌‌‌​‌​​​​‌​​​​​​‌​‌​​‌​​‌‌​‌​​​​‌‌‌‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌​‌‌​‌​​‌​​​​​‌‌​​​​‌​‌​‌‌​‌‌‌​​‌​​​​​​‌​‌​​‌‌​‌‌​​​​‌​‌‌​‌‌​‌​‌‌‌​​​​​‌‌​‌‌​​​‌‌​​‌​‌​​‌​​​​​​‌​​‌‌​​​‌‌​‌​​‌​‌‌​​​‌​​‌‌‌​​‌​​‌‌​​​​‌​‌‌‌​​‌​​‌‌‌‌​​‌⁠";
 // ---- src/core/wav.js ----
 // core/wav.js — lectura de WAV/AIFF/AIFC y escritura de WAV 16 bit mono.
 // Puro JS (sin Web Audio) para poder probarlo en Node y para conservar la frecuencia original.
@@ -734,7 +770,7 @@ function matchGroup(items, { spread = 6 } = {}) {
 // Todo es no destructivo: el original no se toca; la "preparación" es una receta que se aplica al exportar.
 
 const DEFAULT_RECIPE = Object.freeze({
-  mono: 'auto',        // auto | sum | left | right
+  mono: 'auto',        // auto (repara si se cancela) | sum | repair | left | right
   autoTrim: true,      // quitar silencio inicial y cola por debajo del umbral
   thresholdDb: -60,    // umbral relativo al pico para el recorte automático
   trimStart: null,     // s (manual; null = automático o 0)
@@ -793,22 +829,145 @@ function stereoInfo(channels) {
   return { stereo: true, corr, lossDb, balanceDb: 10 * Math.log10((ll + 1e-12) / (rr + 1e-12)), identical };
 }
 
-// mode auto: suma salvo que la suma cancele (correlación negativa) → canal más fuerte.
-function toMono(channels, mode = 'auto') {
-  if (channels.length === 1) return { data: channels[0], used: 'mono' };
-  const L = channels[0], R = channels[1];
-  let used = mode;
-  if (mode === 'auto') {
-    const s = stereoInfo(channels);
-    if (s.identical) used = 'left';
-    else if (s.corr < 0) used = s.balanceDb >= 0 ? 'left' : 'right';
-    else used = 'sum';
+// ---------- v2.8: mono que repara en vez de elegir un canal ----------
+// Solo afecta a lo que va a la Rhythm (48 kHz · mono). El archivo original y las exportaciones «como el original»
+// siguen en estéreo: esto vive en la receta.
+// auto (por orden, el primero que resuelve):
+//   iguales → un canal · contrafase → se invierte un canal · retardo entre canales (≤ 30 ms) → se alinea ·
+//   aún se pierde nivel → suma alineada por frecuencias (por debajo de 150 Hz, suma normal) · si no, suma.
+const MONO_DELAY_MAX_MS = 30;
+const MONO_BAND_OK = 6;              // dB que puede perder una banda al sumar sin que se considere cancelación
+const MONO_SPLIT_HZ = 150;
+const monoEnergy = (x) => { let e = 0; for (let i = 0; i < x.length; i++) e += x[i] * x[i]; return e; };
+const lossOf = (eRef, x) => { const e = monoEnergy(x) / Math.max(1, x.length); return e > 0 ? 10 * Math.log10(eRef / e) : 99; };
+function sumWith(L, R, sign = 1, lag = 0) {
+  // lag > 0: R va adelantado (se retrasa R); lag < 0: L va adelantado
+  const n = L.length, out = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const l = lag < 0 ? (i + lag >= 0 ? L[i + lag] : 0) : L[i];
+    const r = lag > 0 ? (i - lag >= 0 ? R[i - lag] : 0) : R[i];
+    out[i] = (l + sign * r) * 0.5;
   }
-  if (used === 'left') return { data: L, used };
-  if (used === 'right') return { data: R, used };
-  const out = new Float32Array(L.length);
-  for (let i = 0; i < L.length; i++) out[i] = (L[i] + R[i]) * 0.5;
-  return { data: out, used: 'sum' };
+  return out;
+}
+const nextPow2 = (n) => { let p = 1; while (p < n) p <<= 1; return p; };
+// Retardo entre canales por correlación cruzada (FFT) sobre los primeros segundos. Devuelve { lag, c, c0 }:
+// lag en muestras (> 0: R va por delante), c la correlación normalizada en ese retardo (con signo) y c0 sin retardo.
+function channelDelay(L, R, sr, maxMs = MONO_DELAY_MAX_MS) {
+  const len = Math.min(L.length, Math.round(sr * 6)), maxLag = Math.min(len - 1, Math.round((maxMs / 1000) * sr));
+  if (len < 64) return { lag: 0, c: 1, c0: 1 };
+  const N = nextPow2(len * 2);
+  const ar = new Float64Array(N), ai = new Float64Array(N), br = new Float64Array(N), bi = new Float64Array(N);
+  let el = 0, er = 0;
+  for (let i = 0; i < len; i++) { ar[i] = L[i]; br[i] = R[i]; el += L[i] * L[i]; er += R[i] * R[i]; }
+  if (!el || !er) return { lag: 0, c: 1, c0: 1 };
+  fft(ar, ai); fft(br, bi);
+  // A · conj(B) → correlación L con R desplazada
+  for (let k = 0; k < N; k++) { const xr = ar[k] * br[k] + ai[k] * bi[k], xi = ai[k] * br[k] - ar[k] * bi[k]; ar[k] = xr; ai[k] = -xi; }
+  fft(ar, ai); // IFFT por conjugado: resultado real = ar / N
+  const norm = Math.sqrt(el * er) * N, at = (lag) => ar[(lag + N) % N] / norm;
+  let best = 0, bc = at(0);
+  for (let d = 1; d <= maxLag; d++) for (const lg of [d, -d]) { const c = at(lg); if (Math.abs(c) > Math.abs(bc) + 1e-9) { bc = c; best = lg; } }
+  // at(m) correlaciona L[i + m] con R[i]: m > 0 → R va por delante
+  return { lag: best, c: bc, c0: at(0) };
+}
+// Suma alineada por frecuencias: en cada frecuencia (por encima de MONO_SPLIT_HZ) se suman las magnitudes con la
+// fase de la suma (o del canal más fuerte si la suma se anula). STFT de 2048 con ventana raíz de Hann y salto 1/4.
+function spectralMono(L, R, sr) {
+  const N = 2048, H = N / 4, n = L.length, out = new Float32Array(n + N), win = new Float32Array(N);
+  for (let i = 0; i < N; i++) win[i] = Math.sqrt(0.5 - 0.5 * Math.cos((2 * Math.PI * i) / N));
+  const kSplit = Math.round((MONO_SPLIT_HZ * N) / sr);
+  const lr = new Float64Array(N), li = new Float64Array(N), rr = new Float64Array(N), ri = new Float64Array(N);
+  for (let st = -N + H; st < n; st += H) {
+    for (let i = 0; i < N; i++) { const j = st + i, w = win[i]; lr[i] = j >= 0 && j < n ? L[j] * w : 0; rr[i] = j >= 0 && j < n ? R[j] * w : 0; li[i] = 0; ri[i] = 0; }
+    fft(lr, li); fft(rr, ri);
+    for (let k = 0; k <= N / 2; k++) {
+      const sr2 = lr[k] + rr[k], si2 = li[k] + ri[k];
+      let xr, xi;
+      if (k < kSplit) { xr = sr2 / 2; xi = si2 / 2; }
+      else {
+        const ml = Math.hypot(lr[k], li[k]), mr = Math.hypot(rr[k], ri[k]), ms = Math.hypot(sr2, si2), m = (ml + mr) / 2;
+        let pr, pi;
+        if (ms > 0.1 * (ml + mr) && ms > 1e-12) { pr = sr2 / ms; pi = si2 / ms; }
+        else if (ml >= mr && ml > 1e-12) { pr = lr[k] / ml; pi = li[k] / ml; }
+        else if (mr > 1e-12) { pr = rr[k] / mr; pi = ri[k] / mr; } else { pr = 0; pi = 0; }
+        xr = m * pr; xi = m * pi;
+      }
+      lr[k] = xr; li[k] = xi;
+      if (k > 0 && k < N / 2) { lr[N - k] = xr; li[N - k] = -xi; }
+    }
+    // IFFT: conjugar, FFT, conjugar y dividir
+    for (let k = 0; k < N; k++) li[k] = -li[k];
+    fft(lr, li);
+    for (let i = 0; i < N; i++) { const j = st + i; if (j >= 0 && j < n + N) out[j] += (lr[i] / N) * win[i] / 1.5; }
+  }
+  return out.subarray(0, n);
+}
+// Cuánto se pierde al sumar, por bandas de frecuencia: la suma tal cual frente a la suma alineada. Dos canales sin
+// relación pierden ~2,5 dB por igual en todas; una cancelación (filtro de peine, graves en contrafase) deja huecos
+// profundos en algunas. Devuelve { worstDb, worstHz } de las bandas con energía.
+function monoBands(L, R, sr) {
+  const N = 2048, n = L.length, frames = Math.max(1, Math.floor((n - N) / N) + 1), step = Math.max(1, Math.floor(frames / 120));
+  const edges = []; for (let f = 60; f < Math.min(sr / 2, 16000); f *= 1.41) edges.push(f);
+  const eS = new Float64Array(edges.length), eA = new Float64Array(edges.length);
+  const lr = new Float64Array(N), li = new Float64Array(N), rr = new Float64Array(N), ri = new Float64Array(N);
+  for (let fi = 0; fi < frames; fi += step) {
+    const st = fi * N;
+    for (let i = 0; i < N; i++) { const j = st + i, w = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / N); lr[i] = j < n ? L[j] * w : 0; rr[i] = j < n ? R[j] * w : 0; li[i] = 0; ri[i] = 0; }
+    fft(lr, li); fft(rr, ri);
+    let b = 0;
+    for (let k = 1; k < N / 2; k++) {
+      const f = (k * sr) / N; while (b < edges.length - 1 && f >= edges[b + 1]) b++;
+      if (f < edges[0] || f >= edges[edges.length - 1] * 1.41) continue;
+      const sr2 = lr[k] + rr[k], si2 = li[k] + ri[k], a = Math.hypot(lr[k], li[k]) + Math.hypot(rr[k], ri[k]);
+      eS[b] += sr2 * sr2 + si2 * si2; eA[b] += a * a;
+    }
+  }
+  const top = Math.max(...eA);
+  let worstDb = 0, worstHz = 0;
+  edges.forEach((f, b) => { if (eA[b] > top * 1e-3) { const d = 10 * Math.log10((eA[b] + 1e-20) / (eS[b] + 1e-20)); if (d > worstDb) { worstDb = d; worstHz = f * 1.19; } } });
+  return { worstDb, worstHz };
+}
+const _monoCache = new WeakMap();
+// Devuelve { data, used, fix }: used ∈ mono | left | right | sum | flip | align | spectral;
+// fix = { lossBefore, lossAfter, delayMs, flipped } (pérdida de nivel de la suma tal cual y de lo elegido, en dB).
+function toMono(channels, mode = 'auto', sr = 48000) {
+  if (channels.length === 1) return { data: channels[0], used: 'mono', fix: null };
+  const L = channels[0], R = channels[1];
+  if (mode === 'left') return { data: L, used: 'left', fix: null };
+  if (mode === 'right') return { data: R, used: 'right', fix: null };
+  const plain = () => sumWith(L, R);
+  if (mode === 'sum') return { data: plain(), used: 'sum', fix: null };
+  const key = mode + '|' + sr;
+  let c = _monoCache.get(L); if (c && c.R === R && c[key]) return c[key];
+  const res = monoRepair(L, R, sr, mode === 'repair');
+  if (!c || c.R !== R) { c = { R }; _monoCache.set(L, c); }
+  c[key] = res;
+  return res;
+}
+function monoRepair(L, R, sr, force) {
+  const s = stereoInfo([L, R]);
+  if (s.identical) return { data: L, used: 'left', fix: null };
+  const eRef = (monoEnergy(L) + monoEnergy(R)) / 2 / Math.max(1, L.length);
+  const sum = sumWith(L, R), lossBefore = lossOf(eRef, sum);
+  const bands = monoBands(L, R, sr);
+  const base = { lossBefore, worstDb: bands.worstDb, worstHz: bands.worstHz, delayMs: 0, flipped: false };
+  const done = (data, used, extra = {}) => ({ data, used, fix: { ...base, lossAfter: lossOf(eRef, data), ...extra } });
+  const keepSum = () => ({ data: sum, used: 'sum', fix: { ...base, lossAfter: lossBefore } });
+  // la suma basta: ninguna banda pierde de más (dos canales sin relación pierden ~2,5 dB por igual y no es cancelación)
+  if (!force && s.corr >= 0 && bands.worstDb <= MONO_BAND_OK) return keepSum();
+  const d = channelDelay(L, R, sr);
+  // 1) contrafase sin retardo
+  // (solo si al invertir se conserva casi todo: si no, lo que tienen en común se perdería)
+  if (s.corr <= -0.5 && Math.abs(d.c) <= Math.abs(s.corr) + 0.1) { const fl = sumWith(L, R, -1); if (lossOf(eRef, fl) <= 1) return done(fl, 'flip', { flipped: true }); }
+  // 2) retardo claro entre canales (con o sin contrafase)
+  if (d.lag !== 0 && Math.abs(d.c) >= 0.5 && Math.abs(d.c) - Math.abs(d.c0) >= 0.2) {
+    const sign = d.c < 0 ? -1 : 1;
+    return done(sumWith(L, R, sign, d.lag), 'align', { delayMs: (Math.abs(d.lag) / sr) * 1000, lead: d.lag > 0 ? 'R' : 'L', flipped: sign < 0 });
+  }
+  // 3) cancelación que no es de retardo (chorus, ensanchadores): suma alineada por frecuencias
+  if (force || s.corr < 0 || bands.worstDb > MONO_BAND_OK) return done(spectralMono(L, R, sr), 'spectral');
+  return keepSum();
 }
 
 // ---------- remuestreo: sinc con ventana de Kaiser, tabla interpolada ----------
@@ -912,7 +1071,7 @@ function trimRange(x, sr, r) {
 // compás (sin acortar, sin reverse ni tope de 30 s). Es lo que se analiza para ver si se repite.
 function regionMono(decoded, recipeIn = {}) {
   const r = { ...DEFAULT_RECIPE, ...recipeIn };
-  const sr = decoded.sampleRate, m = toMono(decoded.channels, r.mono);
+  const sr = decoded.sampleRate, m = toMono(decoded.channels, r.mono, decoded.sampleRate);
   const { s, e } = trimRange(m.data, sr, r);
   let x = m.data.subarray(s, e);
   if (r.fitSec) {
@@ -926,8 +1085,8 @@ function regionMono(decoded, recipeIn = {}) {
 function render(decoded, recipeIn = {}, dstRate = 48000) {
   const r = { ...DEFAULT_RECIPE, ...recipeIn };
   const rep = { steps: [] };
-  const m = toMono(decoded.channels, r.mono);
-  rep.monoUsed = m.used;
+  const m = toMono(decoded.channels, r.mono, decoded.sampleRate);
+  rep.monoUsed = m.used; rep.monoFix = m.fix;
   let x = m.data;
   const sr = decoded.sampleRate;
   // recorte (en la frecuencia original)
@@ -1410,11 +1569,11 @@ function analyze(decoded) {
   const sr = decoded.sampleRate;
   const st = stereoInfo(decoded.channels);
   // se mide lo que sonará en la Rhythm: mono automático (la suma, salvo que se cancele)
-  const mono = toMono(decoded.channels, 'auto').data;
+  const mm = toMono(decoded.channels, 'auto', sr), mono = mm.data;
   const totalDur = mono.length / sr;
   const t = autoTrimPoints(mono, sr, -60);
   const out = {
-    v: 4,
+    v: 5,
     sr, ch: decoded.channels.length, bits: decoded.bits,
     dur: totalDur,
     silent: t.silent,
@@ -1486,6 +1645,8 @@ function analyze(decoded) {
   }
   if (st.stereo) { let pk2 = 0; for (const c of decoded.channels) pk2 = Math.max(pk2, peakOf(c)); out.peakChDb = db(pk2); }
   out.stereo = st.stereo; out.corr = st.corr; out.monoLossDb = st.lossDb; out.identicalLR = !!st.identical;
+  // v2.8: cómo se pasa a mono para la Rhythm y cuánto se perdía con la suma tal cual
+  out.mono = { used: mm.used, ...(mm.fix ? { lossBefore: +mm.fix.lossBefore.toFixed(2), lossAfter: +mm.fix.lossAfter.toFixed(2), delayMs: +(mm.fix.delayMs || 0).toFixed(2), flipped: !!mm.fix.flipped, lead: mm.fix.lead || null, worstDb: +(mm.fix.worstDb || 0).toFixed(1), worstHz: Math.round(mm.fix.worstHz || 0) } : {}) };
   return out;
 }
 
@@ -2189,7 +2350,7 @@ const SLICE_MAX_SEC = 30;         // tope por archivo de la Rhythm (solo en form
 function zoneOf(decoded, recipeIn = {}) {
   const r = { ...DEFAULT_RECIPE, ...recipeIn };
   const sr = decoded.sampleRate;
-  const m = toMono(decoded.channels, r.mono);
+  const m = toMono(decoded.channels, r.mono, decoded.sampleRate);
   const { s, e } = trimRange(m.data, sr, r);
   const len = r.fitSec ? Math.round(r.fitSec * sr) : e - s;
   return { s, len, sr };
@@ -3219,9 +3380,11 @@ function kmeansGroups(zmap, k = null, { iters = 40, seed = 7 } = {}) {
 // ---- src/core/organize.js ----
 // core/organize.js — «Ordenar en disco»: plan de copia ordenada de tu colección (los originales no se tocan)
 
-const FOLDER = { kick: 'Kicks', snare: 'Snares', clap: 'Claps', hat: 'Hats Closed', ohat: 'Hats Open', cymbal: 'Cymbals', tom: 'Toms', perc: 'Perc',
-  bass: 'Bass', synth: 'Synth', atmos: 'Atmos', fx: 'FX', vox: 'Vox', dloop: 'Loops Drum', mloop: 'Loops Melodic' };
-const ORDER = Object.keys(FOLDER);
+// v2.6: nombres coherentes con las categorías (en plural) y con las subcarpetas de los loops
+const CAT_FOLDER = { kick: 'Kicks', snare: 'Snares', clap: 'Claps', hat: 'Closed-Hats', ohat: 'Open-Hats', cymbal: 'Cymbals', tom: 'Toms', perc: 'Perc',
+  bass: 'Bass', synth: 'Synth', atmos: 'Atmos', fx: 'FX', vox: 'Vox', dloop: 'Drum Loops', mloop: 'Melodic Loops' };
+const ORDER = Object.keys(CAT_FOLDER);
+const catFolderName = (cat, number = true) => (number ? String(ORDER.indexOf(cat) + 1).padStart(2, '0') + ' ' : '') + CAT_FOLDER[cat];
 const ORG_LOOP_CATS = new Set(['dloop', 'mloop']);
 const KIND_DIR = { loop: 'Loops', oneshot: 'One-shots' };
 
@@ -3241,7 +3404,7 @@ function organizePlan(samples, { by = 'category', subs = true, kinds = false, ta
     if (by === 'category') {
       const ok = s.cat && (rank[s.cert] ?? -1) >= need;
       if (!ok) skipped.uncertain++;
-      dir = ok ? (number ? String(ORDER.indexOf(s.cat) + 1).padStart(2, '0') + ' ' : '') + FOLDER[s.cat] : reviewDir;
+      dir = ok ? (number ? String(ORDER.indexOf(s.cat) + 1).padStart(2, '0') + ' ' : '') + CAT_FOLDER[s.cat] : reviewDir;
       if (ok && kinds && s.kind && !ORG_LOOP_CATS.has(s.cat)) dir += '/' + kindDir[s.kind];
       if (ok && subs && s.sub) dir += '/' + safeName(s.sub, 32);
     } else dir = String(s.path).split('/').slice(0, -1).join('/') || '_';
@@ -3283,8 +3446,11 @@ const SUBTYPES = {
   atmos: [['pad', 'Pads'], ['drone', 'Drones'], ['texture', 'Texturas'], ['field', 'Field recordings']],
   fx: [['riser', 'Subidas'], ['down', 'Bajadas'], ['impact', 'Impactos'], ['noise', 'Ruido'], ['glitch', 'Glitch']],
   vox: [['phrase', 'Frases'], ['chop', 'Chops'], ['shout', 'Gritos y efectos']],
-  dloop: [['full', 'Completos'], ['top', 'Tops'], ['perc', 'Percusión'], ['break', 'Breaks']],
-  mloop: [['bass', 'Bajo'], ['synth', 'Synth'], ['chord', 'Acordes'], ['texture', 'Texturas']],
+  // v2.5: lo que suena en el loop. «Drum loop» dice que es un loop de batería; la subcarpeta dice de qué.
+  dloop: [['full', 'Full'], ['break', 'Breaks'], ['top', 'Tops'], ['kick', 'Kicks'], ['clap', 'Snares & Claps'], ['hat', 'Closed-Hats'],
+    ['ohat', 'Open-Hats'], ['shaker', 'Shakers'], ['perc', 'Perc'], ['cymbal', 'Cymbals']],
+  // v2.6: los loops se ordenan por instrumento, con los mismos nombres que las carpetas de categoría
+  mloop: [['bass', 'Bass'], ['synth', 'Synth'], ['chord', 'Chords'], ['texture', 'Atmos']],
 };
 
 // Paleta rápida de etiquetas: grupos con las más usadas. El usuario la amplía o la recorta.
@@ -3332,7 +3498,12 @@ const TEXT_SUB = {
   atmos: { pad: ['pad', 'pads'], drone: ['drone', 'drones'], texture: ['texture', 'tex', 'noise', 'granular', 'grain'], field: ['field', 'foley', 'rain', 'city', 'street', 'nature', 'birds', 'ambience', 'amb', 'room'] },
   fx: { riser: ['riser', 'rise', 'up', 'uplifter', 'sweepup', 'build'], down: ['down', 'downlifter', 'fall', 'drop', 'sweepdown'], impact: ['impact', 'hit', 'boom', 'slam', 'crash'], noise: ['noise', 'white', 'sweep'], glitch: ['glitch', 'stutter', 'zap', 'laser', 'blip'] },
   vox: { phrase: ['phrase', 'vocal', 'spoken', 'speech', 'word', 'words'], chop: ['chop', 'chops', 'cut', 'slice'], shout: ['shout', 'yeah', 'hey', 'scream', 'breath', 'fx'] },
-  dloop: { top: ['top', 'tops', 'toploop', 'hats', 'hat'], break: ['break', 'breaks', 'breakbeat', 'amen', 'jungle'], perc: ['perc', 'percussion', 'conga', 'bongo', 'shaker'], full: ['full', 'drum', 'drums', 'beat'] },
+  // el orden importa: lo más concreto primero («open hat» antes que «hat», «shaker» antes que «perc»)
+  dloop: { ohat: ['openhat', 'hatopen', 'ohh', 'oh', 'hho', 'open', 'ophat'], shaker: ['shaker', 'shakers', 'shake', 'shk', 'maraca', 'maracas', 'cabasa', 'tamb', 'tambourine'],
+    hat: ['hatloop', 'hihat', 'hh', 'chh', 'ch', 'closedhat', 'hatclosed', 'closed', 'hat', 'hats'], cymbal: ['ride', 'rides', 'crash', 'cym', 'cymbal', 'cymbals'],
+    kick: ['kick', 'kicks', 'kik', 'bd', 'bassdrum', 'kickloop'], clap: ['clap', 'claps', 'snare', 'snares', 'snr', 'sd'],
+    break: ['break', 'breaks', 'breakbeat', 'amen', 'jungle'], top: ['top', 'tops', 'toploop'],
+    perc: ['perc', 'percs', 'percussion', 'percloop', 'conga', 'bongo', 'tom', 'toms'], full: ['full', 'fullbeat'] },
   mloop: { bass: ['bass', 'bassline', 'sub'], chord: ['chord', 'chords', 'keys', 'piano'], texture: ['texture', 'atmos', 'pad', 'ambient', 'drone'], synth: ['synth', 'lead', 'arp', 'melody', 'riff', 'seq'] },
 };
 function nameTokens(s) { return new Set([...tokenize(s.name || ''), ...tokenize(String(s.path || '').split('/').slice(-2, -1)[0] || '')]); }
@@ -3419,6 +3590,11 @@ function soundSub(a, cat) {
       if (fl > 0.3) return R('shout', 'ruidoso');
       return R('chop', 'corto');
     case 'dloop':
+      if (low < 0.08 && hi > 0.55 && a.centroid > 5000) {
+        if ((a.attackMs || 0) > 12 && fl > 0.3) return R('shaker', 'agudos de ataque suave');
+        const t20 = a.t20 == null ? 999 : a.t20;
+        return t20 > 160 ? R('ohat', 'solo agudos, con cola') : R('hat', 'solo agudos, muy cortos');
+      }
       if (low < 0.12) return R('top', 'casi sin graves');
       if ((a.onsetRegularity || 1) < 0.45) return R('break', 'golpes irregulares');
       return R('full', 'graves y agudos');
@@ -3430,6 +3606,22 @@ function soundSub(a, cat) {
   }
   return null;
 }
+
+// ---------- v2.5: una pista de la clasificación, usada para ordenar ----------
+// En un loop, lo que el nombre, la carpeta o el sonido dicen de un instrumento («hh» → Closed hat) no cambia
+// la categoría (sigue siendo un loop): dice qué suena en él, y eso es su subcarpeta. Devuelve el id o null.
+const CONTENT_OF = {
+  dloop: { kick: 'kick', snare: 'clap', clap: 'clap', hat: 'hat', ohat: 'ohat', cymbal: 'cymbal', tom: 'perc', perc: 'perc' },
+  mloop: { bass: 'bass', synth: 'synth', atmos: 'texture', fx: 'texture' },
+};
+const SHAKER_WORDS = new Set(TEXT_SUB.dloop.shaker);
+function contentSubFor(loopCat, clueCat, tok = '') {
+  const m = CONTENT_OF[loopCat]; if (!m || !m[clueCat]) return null;
+  if (loopCat === 'dloop' && SHAKER_WORDS.has(String(tok).toLowerCase())) return 'shaker';
+  return m[clueCat];
+}
+// etiqueta de fábrica de una subcarpeta (para crearla si tu lista de subcarpetas ya no la tiene)
+function defaultSubLabel(cat, id) { const x = (SUBTYPES[cat] || []).find(([i]) => i === id); return x ? x[1] : null; }
 
 // ---------- efectos y carácter detectados ----------
 const FX_WORDS = {
@@ -3758,7 +3950,7 @@ const Player = {
 
 
 
-const APP_VERSION = '2.4.0';
+const APP_VERSION = '2.8.0';
 const MAX_FILE = 200 * 1024 * 1024;
 
 const S = {
@@ -4340,7 +4532,7 @@ function filtered() {
       case 'inpack': if (!inPack.has(s.id)) return false; break;
       case 'discard': if (!s.user?.discard) return false; break;
       case 'long': if (!(rawSeconds(s) > MAX_SAMPLE_S)) return false; break;
-      case 'phase': if (!(a.stereo && a.corr < 0)) return false; break;
+      case 'phase': if (!monoCancels(a)) return false; break;
       case 'problems': if (!(a.error || s.missing || a.clipRuns > 0 || Math.abs(a.dc || 0) > 0.01)) return false; break;
       case 'rated': if (!(s.user?.rating >= 4)) return false; break;
       case 'confirmed': if (!['confirmed', 'user'].includes(c.cert)) return false; break;
@@ -4425,7 +4617,7 @@ function rowHTML(s, i, inPack) {
   const why = c.cert === 'doubt' ? `<span class="warn">${t('Dudoso')}</span>` : c.cert === 'none' ? `<span class="dim">${t('Sin pistas')}</span>` : esc(bl[c.basis] || '');
   const flags = [u.fav ? '<span style="color:var(--m)">♥</span>' : '', inPack.has(s.id) ? '<span class="ok">●</span>' : '',
     a.error || s.missing ? '<span class="bad">!</span>' : '', rawSeconds(s) > MAX_SAMPLE_S ? '<span class="warn">30s</span>' : '', keepActive(s) ? `<span class="dim" title="${t('Acortado')}">✂</span>` : '', kindOf(s) === 'loop' ? `<span class="dim" title="${t('Loop')}">⟳</span>` : '',
-    a.stereo && a.corr < 0 ? '<span class="warn">Φ</span>' : ''].join(' ');
+    monoCancels(a) ? (recipeOf(s).mono === 'sum' ? `<span class="warn" title="${t('La suma se cancela')}">Φ</span>` : `<span class="ok" title="${t('Se cancela al sumar: reparado para la Rhythm')}">Φ</span>`) : ''].join(' ');
   return `<div class="li ${S.sel === s.id ? 'sel' : ''} ${S.multi.has(s.id) ? 'multi' : ''} ${u.discard ? 'discard' : ''}" style="top:${i * ROW_H}px;--c:${catVar(c.cat)}" data-id="${s.id}" data-act="sel" draggable="true">
     <span class="bar"></span><span class="nm">${esc(s.name.replace(/\.(wav|aiff?|mp3|flac|ogg)$/i, ''))}<small>${esc(folderOf(s.path).split('/').slice(-1)[0])}</small></span>
     <span class="why">${c.cat ? `<span style="color:${catVar(c.cat)}">${catLabel(c.cat)}</span>${u.sub ? `<span class="dim"> / ${esc(subName(c.cat, u.sub) || '')}</span>` : ''} · ` : ''}${why}${u.tags?.length ? ` <span class="dim">#${u.tags.length}</span>` : ''}</span>
@@ -4451,19 +4643,29 @@ function scrollToSel() {
   paintList();
 }
 
+// v2.5: la subcarpeta junto a la categoría (la tuya, o la propuesta en gris): «Drum loop › Closed-Hats»
+function subTagHTML(s, cat) {
+  if (!cat) return '';
+  const id = s.user?.sub || propsOf(s).sub?.id; if (!id) return '';
+  const l = subLabelOf(S.set.tax, cat, id); if (!l) return '';
+  return `<span class="big-sub ${s.user?.sub ? '' : 'dim'}">› ${esc(t(l))}</span>`;
+}
 function whyHTML(s, c) {
   const a = s.analysis || {};
   const name = c.reasons.filter((r) => r.src === 'name');
   const fold = c.reasons.filter((r) => r.src === 'folder');
   const snd = c.reasons.filter((r) => r.src === 'sound' && SOUND_WHY[r.tok] && SOUND_WHY[r.tok](a));
   const line = (lbl, items) => `<li><b>${lbl}</b> ${items}</li>`;
-  const tokens = (arr) => arr.map((r) => `«${esc(r.tok)}» → <span style="color:${catVar(r.cat)}">${catLabel(r.cat)}</span>${r.why === 'learned' ? ` <span class="dim">(${t('regla aprendida')})</span>` : ''}`).join(', ');
+  // v2.5: cada pista es un botón: un clic la usa para archivar el sample (categoría o, en un loop, lo que suena en él)
+  const use = (r, inner) => { const u = clueUse(s, r.cat, r.tok); return u ? `<button class="clue ${u.done ? 'on' : ''}" data-act="why-use" data-id="${s.id}" data-cat="${r.cat}" data-tok="${esc(r.tok)}" title="${esc(u.done ? t('Ya está así') : t('Usar') + ': ' + u.label)}">${inner}${u.done ? ' ✓' : ''}</button>` : inner; };
+  const tokens = (arr) => arr.map((r) => use(r, `«${esc(r.tok)}» → <span style="color:${catVar(r.cat)}">${catLabel(r.cat)}</span>${r.why === 'learned' ? ` <span class="dim">(${t('regla aprendida')})</span>` : ''}`)).join(' ');
   let html = '<ul class="why-list">';
   if (c.cert === 'user') html += line(t('Tú'), t('lo decidiste al escuchar') + (c.auto?.cat && c.auto.cat !== c.cat ? ` · <span class="dim">${t('la herramienta proponía {c}', { c: `<span style="color:${catVar(c.auto.cat)}">${catLabel(c.auto.cat)}</span>` })}</span>` : ''));
   html += line(t('Nombre'), name.length ? tokens(name) : `<span class="dim">${t('nada reconocible')}</span>`);
   html += line(t('Carpeta'), fold.length ? tokens(fold) : `<span class="dim">${t('nada reconocible')}</span>`);
-  html += line(t('Sonido'), a.error ? `<span class="bad">${t('no se pudo medir')}</span>` : snd.length ? snd.slice(0, 3).map((r) => `<span style="color:${catVar(r.cat)}">${catLabel(r.cat)}</span>: ${SOUND_WHY[r.tok](a)}`).join(' · ') : `<span class="dim">${t('sin rasgos claros')}</span>`);
+  html += line(t('Sonido'), a.error ? `<span class="bad">${t('no se pudo medir')}</span>` : snd.length ? snd.slice(0, 3).map((r) => use(r, `<span style="color:${catVar(r.cat)}">${catLabel(r.cat)}</span>: ${SOUND_WHY[r.tok](a)}`)).join(' ') : `<span class="dim">${t('sin rasgos claros')}</span>`);
   html += '</ul>';
+  if (c.reasons.length) html += `<p class="cluehint">${t('Haz clic en una pista para usarla. En un loop, el instrumento que nombra va a su subcarpeta: Drum loop › Closed-Hats.')}</p>`;
   if (c.conflict) html += `<div class="conflict">⚠ ${t('El texto dice {a} y suena a {b}. Escúchalo y decide.', { a: `<b>${catLabel(c.conflict.said)}</b>`, b: `<b>${catLabel(c.conflict.heard)}</b>` })}</div>`;
   return html;
 }
@@ -4498,7 +4700,7 @@ function measHTML(s) {
     [t('Tono'), a.f0conf > 0.6 ? `${a.note} ${a.cents ? `<span class="dim">${a.cents > 0 ? '+' : ''}${a.cents} ct</span>` : ''} <span class="dim">· ${nf(a.f0, 1)} Hz · ${t('confianza')} ${nf(a.f0conf * 100, 0)} %</span>` : `<span class="dim">${t('sin tono claro')}</span>`],
     [t('Brillo'), `${nf(a.centroid / 1000, 1)} kHz <span class="dim">· ${t('ruido')} ${nf((a.flatness || 0) * 100, 0)} %</span>`],
     [t('Bandas'), `${bands} <span class="dim mono">sub·low·lmid·mid·high·air</span>`],
-    [t('Estéreo'), !a.stereo ? t('mono') : a.identicalLR ? t('estéreo con canales idénticos') : `${t('correlación')} ${nf(a.corr, 2)} · ${a.corr < 0 ? `<span class="bad">${t('se cancela en mono')}</span>` : t('en mono pierde {d} dB', { d: nf(a.monoLossDb, 1) })}`],
+    [t('Estéreo'), !a.stereo ? t('mono') : a.identicalLR ? t('estéreo con canales idénticos') : `${t('correlación')} ${nf(a.corr, 2)} · ${monoCancels(a) ? `<span class="warn">${t('al sumar se cancela')}</span>${a.mono?.worstDb ? ' ' + t('(hasta −{d} dB hacia {f})', { d: nf(Math.min(40, a.mono.worstDb), 0), f: hzLabel(a.mono.worstHz) }) : ''}` : t('en mono pierde {d} dB', { d: nf(a.monoLossDb, 1) })}`],
     [t('Formato'), `${(a.format || s.ext || '').toUpperCase()} · ${nf(a.sr / 1000, 1)} kHz · ${a.bits ? a.bits + ' bit · ' : ''}${a.ch === 1 ? 'mono' : t('{n} canales', { n: a.ch })}`],
   ];
   if (isLoop || a.loopBpm) rows.push([t('Tempo'), `${a.loopBpm ? `${nf(a.loopBpm, 1)} BPM · ${t('{n} tiempos', { n: a.loopBeats })}` : '—'}${s.info?.bpm ? ` · ${t('el nombre dice {b}', { b: s.info.bpm })}` : ''}`]);
@@ -4506,11 +4708,36 @@ function measHTML(s) {
   if (s.info?.key) rows.push([t('Tonalidad (nombre)'), esc(s.info.key)]);
   return `${revisionHTML(s)}<dl class="meas">${rows.map(([k, val]) => `<dt>${k}</dt><dd>${val}</dd>`).join('')}</dl>`;
 }
+// ---------- v2.8: mono reparado ----------
+// ¿La suma tal cual se cancela? Con el análisis de 2.8 (a.mono) se sabe cómo se repara; con uno anterior, por la correlación.
+function monoCancels(a) { return !!(a && a.stereo && !a.identicalLR && (a.mono ? ['flip', 'align', 'spectral'].includes(a.mono.used) : a.corr < 0)); }
+const hzLabel = (f) => (f >= 1000 ? nf(f / 1000, 1) + ' kHz' : Math.round(f) + ' Hz');
+function monoText(a, r) {
+  if (!a.stereo) return t('el archivo ya es mono');
+  if (r.mono === 'left') return t('solo el canal izquierdo');
+  if (r.mono === 'right') return t('solo el canal derecho');
+  if (r.mono === 'sum') return monoCancels(a) ? `<span class="warn">${t('suma tal cual: se cancela')}</span>` : t('suma L+R');
+  if (a.identicalLR) return t('canal izquierdo (son iguales)');
+  const m = a.mono;
+  if (!m) return a.corr < 0 ? t('la suma se cancela: se repara al exportar') : t('suma L+R');
+  const was = m.worstDb ? t('antes, hasta −{d} dB hacia {f}', { d: nf(Math.min(40, m.worstDb), 0), f: hzLabel(m.worstHz) }) : '';
+  const ok = (txt) => `<span class="ok">✓ ${t('Reparado')}</span>: ${txt}${was ? ` <span class="dim">(${was})</span>` : ''}`;
+  if (m.used === 'flip') return ok(t('un canal estaba invertido; se le da la vuelta'));
+  if (m.used === 'align') return ok(t('el canal {c} va {ms} ms por delante; se alinean', { c: m.lead === 'R' ? t('derecho') : t('izquierdo'), ms: nf(m.delayMs, 1) }) + (m.flipped ? ' ' + t('e invierten') : ''));
+  if (m.used === 'spectral') return ok(t('suma alineada por frecuencias'));
+  return r.mono === 'repair' ? t('suma alineada por frecuencias') : t('suma L+R (no se cancela)');
+}
+// comparar a oído: suma tal cual, reparado, solo L, solo R (siempre como en la Rhythm)
+function monoABHTML(s) {
+  const a = s.analysis || {};
+  if (!a.stereo || a.identicalLR) return '';
+  return `<span class="monoab"><span class="dim">${t('Comparar')}</span> ${[['sum', t('Suma')], ['repair', t('Reparado')], ['left', 'L'], ['right', 'R']].map(([k, l]) => `<button class="btn small ghost" data-act="mono-ab" data-v="${k}" data-id="${s.id}">▶ ${l}</button>`).join('')}</span>`;
+}
 function prepHTML(s) {
   const r = recipeOf(s), a = s.analysis || {};
   const sec = sampleSeconds(s);
   const capped = rawSeconds(s) > MAX_SAMPLE_S;
-  const mono = !a.stereo ? 'mono' : r.mono === 'auto' ? (a.identicalLR ? t('canal izquierdo (son iguales)') : a.corr < 0 ? t('el canal más fuerte (la suma se cancela)') : t('suma L+R')) : { sum: t('suma L+R'), left: t('canal izquierdo'), right: t('canal derecho') }[r.mono];
+  const mono = monoText(a, r);
   return `<div class="prep">
     <span class="lbl">${t('Recorte')}</span><span class="row"><label class="inl"><input type="checkbox" data-rc="autoTrim" ${r.autoTrim ? 'checked' : ''}> ${t('quitar silencio y cola bajo')}</label>
       <input type="number" data-rc="thresholdDb" value="${r.thresholdDb}" step="6" min="-90" max="-24" style="width:64px"> dB</span>
@@ -4518,12 +4745,13 @@ function prepHTML(s) {
     <span class="lbl">${t('Fundidos')}</span><span class="row">${t('entrada')} <input type="number" data-rc="fadeInMs" value="${r.fadeInMs}" min="0" step="1" style="width:64px"> ms · ${t('salida')} <input type="number" data-rc="fadeOutMs" value="${r.fadeOutMs}" min="0" step="5" style="width:64px"> ms</span>
     <span class="lbl">${t('Nivel')}</span><span class="row"><select data-rc="normalize"><option value="peak" ${r.normalize === 'peak' ? 'selected' : ''}>${t('normalizar pico a')}</option><option value="none" ${r.normalize === 'none' ? 'selected' : ''}>${t('ganancia fija')}</option><option value="loud" ${r.normalize === 'loud' ? 'selected' : ''}>${t('volumen percibido a')}</option></select>
       ${r.normalize === 'peak' ? `<input type="number" data-rc="targetDb" value="${r.targetDb}" step="0.5" max="0" min="-24" style="width:64px"> dBFS` : r.normalize === 'loud' ? `<input type="number" data-rc="targetLufs" value="${r.targetLufs}" step="0.5" max="0" min="-40" style="width:64px"> LUFS <span class="dim">${t('sin pasar de {d} dBFS de pico', { d: nf(r.targetDb, 1) })}</span>` : `<input type="number" data-rc="gainDb" value="${r.gainDb || 0}" step="0.5" min="-24" max="24" style="width:64px"> dB`}</span>
-    <span class="lbl">${t('A mono')}</span><span class="row"><select data-rc="mono">${[['auto', t('automático')], ['sum', t('suma L+R')], ['left', t('canal izquierdo')], ['right', t('canal derecho')]].map(([k, l]) => `<option value="${k}" ${r.mono === k ? 'selected' : ''}>${l}</option>`).join('')}</select> <span class="muted">${esc(mono)}</span></span>
+    <span class="lbl">${t('A mono')}</span><span class="row"><span><select data-rc="mono">${[['auto', t('automático: repara si se cancela')], ['sum', t('suma L+R')], ['repair', t('reparar siempre')], ['left', t('canal izquierdo')], ['right', t('canal derecho')]].map(([k, l]) => `<option value="${k}" ${r.mono === k ? 'selected' : ''}>${l}</option>`).join('')}</select><span class="muted monotxt">${mono}</span>${monoABHTML(s)}
+      <span class="dim monostereo">${t('Solo para la Rhythm: tu archivo y lo que exportes «como el original» siguen en estéreo.')}</span></span></span>
     ${fitHTML(s)}
     <span class="lbl">${t('Afinación')}</span><span class="row">${tuneRowHTML(s)}</span>
     <span class="lbl">${t('Reverse')}</span><span><label class="inl"><input type="checkbox" data-rc="reverse" ${r.reverse ? 'checked' : ''}> ${t('guardar al revés')}</label></span>
   </div>
-  <div class="result ${capped || (a.stereo && a.corr < 0 && r.mono === 'sum') ? 'warn' : ''}">${t('En la Rhythm: 48 kHz · mono · 16 bit · {d}', { d: fmtDur(sec) })}${capped ? ' · ' + t('recortado a 30 s') : ''}${a.stereo && a.corr < 0 && r.mono === 'sum' ? ' · ' + t('⚠ la suma se cancela') : ''}
+  <div class="result ${capped || (monoCancels(a) && r.mono === 'sum') ? 'warn' : ''}">${t('En la Rhythm: 48 kHz · mono · 16 bit · {d}', { d: fmtDur(sec) })}${capped ? ' · ' + t('recortado a 30 s') : ''}${monoCancels(a) && r.mono === 'sum' ? ' · ' + t('⚠ la suma se cancela') : ''}
     ${Object.keys(s.recipe || {}).length ? ` · <button class="btn small ghost" data-act="recipe-reset">${t('Restablecer')}</button>` : ''}</div>`;
 }
 function renderDetail() {
@@ -4536,7 +4764,7 @@ function renderDetail() {
   const cl = CERT_LABEL();
   d.innerHTML = `
     <div class="label"><div class="nm">${esc(s.name.replace(/\.(wav|aiff?|mp3|flac|ogg)$/i, ''))}</div>
-      <div class="path">${esc(s.path)}${fromHTML(s)}${s.paths?.length > 1 ? ` <b>+${s.paths.length - 1}</b> ${t('copias idénticas')}` : ''}${s.missing ? ` · <b style="color:#b3261e">${t('no encontrado')}</b>` : ''}</div>
+      <div class="path">${esc(s.path)}${fromHTML(s)}${relHTML(s)}${s.paths?.length > 1 ? ` <b>+${s.paths.length - 1}</b> ${t('copias idénticas')}` : ''}${s.missing ? ` · <b style="color:#b3261e">${t('no encontrado')}</b>` : ''}</div>
       <div class="meta"><span>${fmtDur(sampleSeconds(s))}</span>${a.note && a.f0conf > 0.6 && !['dloop', 'mloop'].includes(c.cat) ? `<span>${s.recipe?.tune && effectiveMidi(s) != null ? '♪ ' + noteName(Math.round(effectiveMidi(s))) : a.note}</span>` : ''}${a.loopBpm && isLoopSample(s) ? `<span>${nf(a.loopBpm, 1)} BPM</span>` : ''}${isLoopSample(s) ? `<span>${t('Loop')}</span>` : ''}${s.info?.key ? `<span>${esc(s.info.key)}</span>` : ''}<span>${s.src?.kind === 'root' ? t('enlazado') : t('copiado en el navegador')}</span></div></div>
     <div class="panel" style="margin-top:12px">
       <canvas class="wave" id="wave" width="900" height="200"></canvas>
@@ -4553,7 +4781,7 @@ function renderDetail() {
     </div>
     ${shortHTML(s)}
     <div class="panel" style="margin-top:12px"><div class="cls">
-      <div class="prop"><span class="big-cat" style="--c:${catVar(c.cat)}">${catLabel(c.cat)}</span><span class="cert ${c.cert}">${cl[c.cert]}</span>
+      <div class="prop"><span class="big-cat" style="--c:${catVar(c.cat)}">${catLabel(c.cat)}</span>${subTagHTML(s, c.cat)}<span class="cert ${c.cert}">${cl[c.cert]}</span>
         <span class="muted" style="font-size:13.5px">${CERT_EXPLAIN()[c.cert]}</span></div>
       ${whyHTML(s, c)}
       ${keysHTML(c, s)}
@@ -4696,7 +4924,7 @@ function renderListen(v) {
         <div class="transport"><button class="btn primary" data-act="play">${Player.playing ? '■' : '▶'} <span class="kbd">${t('Espacio')}</span></button>
           <span class="seg"><button class="${S.set.play === 'rhythm' ? 'on' : ''}" data-act="playmode" data-v="rhythm">${t('Como en la Rhythm')}</button><button class="${S.set.play === 'orig' ? 'on' : ''}" data-act="playmode" data-v="orig">${t('Original')}</button></span>
           <span class="muted">${fmtDur(sampleSeconds(s))}${s.analysis?.note && s.analysis.f0conf > 0.6 ? ' · ' + s.analysis.note : ''}${s.analysis?.loopBpm ? ' · ' + nf(s.analysis.loopBpm, 1) + ' BPM' : ''}</span>${sampleToolsHTML(s)}<span class="grow"></span><button class="btn danger" data-act="trash-del" title="${t('Fuera de la biblioteca (a la papelera; Ctrl Z deshace)')}">${t('Eliminar')} <span class="kbd">${t('Supr')}</span></button></div>
-        <div class="prop" style="margin:12px 0 6px"><span class="muted">${t('Propuesta')}</span><span class="big-cat" style="--c:${catVar(c.cat)}">${catLabel(c.cat)}</span><span class="cert ${c.cert}">${CERT_LABEL()[c.cert]}</span>${rateHTML(s)}${s.user?.fav ? '<span style="color:var(--m)">♥</span>' : ''}</div>
+        <div class="prop" style="margin:12px 0 6px"><span class="muted">${t('Propuesta')}</span><span class="big-cat" style="--c:${catVar(c.cat)}">${catLabel(c.cat)}</span>${subTagHTML(s, c.cat)}<span class="cert ${c.cert}">${CERT_LABEL()[c.cert]}</span>${rateHTML(s)}${s.user?.fav ? '<span style="color:var(--m)">♥</span>' : ''}</div>
         ${whyHTML(s, c)}
         <div style="margin-top:10px">${keysHTML(c, s)}</div>
         <div class="sep"></div>${orgDetailHTML(s, { compact: true })}
@@ -4776,7 +5004,7 @@ function renderPacks(v) {
         <button class="btn" data-act="exp-sdzip">${t('ZIP para la SD')}</button>
         <button class="btn" data-act="exp-wav">${t('WAV numerados + CSV')}</button></div>
       <p class="note"><b>Components</b>: ${t('archivo .circuitrhythmpack para abrir en Components y enviarlo a la Rhythm.')} ${p.extra?.projects?.length ? t('Incluye los {n} proyectos del pack original.', { n: p.extra.projects.length }) : t('Con proyectos vacíos.')}<br>
-        <b>${t('Tarjeta SD')}</b>: ${t('escribe Rhythm/<n>/PCM directamente en la microSD (Chrome/Edge). No sobrescribe packs existentes.')}<span class="tag-unv">${t('sin verificar en tu equipo')}</span></p>
+        <b>${t('Tarjeta SD')}</b>: ${t('escribe Rhythm/<n>/PCM directamente en la microSD (Chrome/Edge). No sobrescribe packs existentes.')}</p>
       ${S.midiOn && S.midi.out ? `<div class="sep"></div><button class="btn" data-act="pack-walk">${t('Recorrer el pack en la Rhythm')}</button> <span class="note">${t('Pista {n}, CC 8 + nota', { n: S.set.track + 1 })}</span>` : ''}
     </div>
   </aside></div>`;
@@ -4796,7 +5024,7 @@ function padHTML(p, i, role, roles, usage) {
   const sec = sampleSeconds(s);
   const off = role.cats && c.cat && !role.cats.includes(c.cat);
   const warn = rawSeconds(s) > MAX_SAMPLE_S ? '<span class="warn">30s</span>' : off ? `<span class="dim" title="${t('No coincide con el papel del slot')}">≠</span>` : '';
-  return `<div class="pad filled ${sel} ${usage[i] ? 'used' : ''}" data-act="slot" data-i="${i}" draggable="true" style="--c:${catVar(c.cat)}" title="${esc(s.name)}"><span class="no">${i + 1}</span><span class="ps">${nf(sec, sec < 10 ? 2 : 1)}</span><span class="pn">${esc(p.names[i] || s.name)}</span><span class="pw">${warn}</span></div>`;
+  return `<div class="pad filled ${sel} ${usage[i] ? 'used' : ''}" data-act="slot" data-i="${i}" draggable="true" style="--c:${catVar(c.cat)}" title="${esc(s.name)}"><span class="no">${i + 1}</span><span class="ps">${nf(sec, sec < 10 ? 2 : 1)}</span><span class="pn">${esc(p.names[i] || s.name)}</span><span class="pw">${padLinkHTML(s)}${warn}</span></div>`;
 }
 function packCandidates(role) {
   const q = S.packQ.trim().toLowerCase();
@@ -4836,7 +5064,6 @@ function renderDevice(v) {
       <h3>${t('Macros de la pista')} <span class="muted" style="text-transform:none;letter-spacing:0">${t('(la pista elegida en Conexión)')}</span></h3>
       <div class="knobs">${names.map((n, i) => `<label class="knob">${n} <span class="mono">CC ${CC.macros[i]}</span><input type="range" min="0" max="127" value="${[64, 0, 127, 64, 0, 0, 127, 0][i]}" data-macro="${i}" ${S.midiOn && m.out ? '' : 'disabled'}></label>`).join('')}</div>
       <button class="btn small" data-act="dev-macro-reset" ${S.midiOn && m.out ? '' : 'disabled'}>${t('Macros a su valor por defecto')}</button>
-      <p class="note">${t('Sin verificar en tu equipo')}: ${t('que el CC 8 cambie el sample activo de la pista y el tiempo que necesita antes de la nota (25 ms).')}</p>
     </section>
     ${trackPanelHTML()}
     <section class="panel"><h2>${t('Registro MIDI')}</h2><div class="log">${m.log.slice(-24).map((l) => new Date(l.t).toLocaleTimeString(LOCALE) + '  ' + l.bytes.map((b) => b.toString(16).padStart(2, '0')).join(' ')).join('\n') || t('Nada enviado todavía.')}</div></section>
@@ -4867,7 +5094,7 @@ function renderData(v) {
         <span class="lbl">${t('Pico al normalizar')}</span><span><input type="number" id="set-target" value="${S.set.targetDb}" step="0.5" max="0" min="-24" style="width:70px"> dBFS</span>
         <span class="lbl">${t('Umbral de recorte')}</span><span><input type="number" id="set-thr" value="${S.set.thresholdDb}" step="6" max="-24" min="-90" style="width:70px"> dB</span>
         <span class="lbl">${t('BPM por defecto')}</span><span><input type="number" id="set-bpm" value="${S.set.bpm}" min="40" max="240" style="width:70px"></span>
-        <span class="lbl">${t('Nombres en la SD')}</span><span><select id="set-sep"><option value="__" ${S.set.sep === '__' ? 'selected' : ''}>00__Kick.wav</option><option value="_" ${S.set.sep === '_' ? 'selected' : ''}>00_Kick.wav</option></select> <span class="tag-unv">${t('Novation escribe «__» y pone de ejemplo «_»')}</span></span>
+        <span class="lbl">${t('Nombres en la SD')}</span><span><select id="set-sep"><option value="__" ${S.set.sep === '__' ? 'selected' : ''}>00__Kick.wav</option><option value="_" ${S.set.sep === '_' ? 'selected' : ''}>00_Kick.wav</option></select> <span class="muted" style="font-size:12px">${t('Novation escribe «__» y pone de ejemplo «_»')}</span></span>
       </div>
     </section>
     <section class="panel"><h2>${t('Ordenar en disco')}</h2>${organizeHTML()}</section>
@@ -4962,9 +5189,17 @@ async function undoPack() {
 async function place(i, id) {
   const p = S.pack, s = S.byId[id]; if (!p || !s || i == null) return;
   pushHist();
+  // v2.7: el original separado en partes se pone como sus partes, desde ese pad
+  if (partsOf(s).length) {
+    const ids = partsOf(s).map((x) => x.id);
+    p.slots.forEach((x, k) => { if (ids.includes(x)) { p.slots[k] = null; p.names[k] = ''; } });
+    const r = placeGroup(p, ids, i); S.packSel = r.at >= 0 ? r.at : i;
+    if (r.at !== i) toast(t('No caben desde ese pad: van juntas en el primer hueco con sitio.'), 'warn', 4000);
+    await savePack(p); renderAll(); return;
+  }
   const old = p.slots.indexOf(id);
   if (old >= 0 && old !== i) { p.slots[old] = p.slots[i]; p.names[old] = p.slots[i] ? p.names[i] : ''; }
-  p.slots[i] = id; p.names[i] = shortName(s.name);
+  p.slots[i] = id; p.names[i] = slotName(s);
   S.packSel = i;
   await savePack(p); renderAll();
 }
@@ -4986,11 +5221,22 @@ async function addToPack(ids) {
   if (!S.pack) await newPack();
   const p = S.pack; pushHist();
   let n = 0, already = 0, full = 0;
+  // v2.7: un sample separado en partes entra con todas sus partes, en pads seguidos
+  const done = new Set();
   for (const id of ids) {
-    const s = S.byId[id]; if (!s) continue;
+    const s = S.byId[id]; if (!s || done.has(id)) continue;
+    // el original separado → todas sus partes; una parte con hermanas también elegidas → esas hermanas juntas
+    const group = partsOf(s).length ? partsOf(s) : relOf(s) ? siblingsOf(s).filter((x) => ids.includes(x.id)) : null;
+    if (group && group.length > 1) {
+      group.forEach((x) => done.add(x.id)); done.add(id);
+      const todo = group.filter((x) => !p.slots.includes(x.id)); already += group.length - todo.length; if (!todo.length) continue;
+      const at = freeSlotFor(todo[0]); const r = placeGroup(p, todo.map((x) => x.id), at >= 0 ? at : null);
+      n += todo.length - r.left; full += r.left; continue;
+    }
+    done.add(id);
     if (p.slots.includes(id)) { already++; continue; }
     const i = freeSlotFor(s); if (i < 0) { full++; continue; }
-    p.slots[i] = id; p.names[i] = shortName(s.name); n++;
+    p.slots[i] = id; p.names[i] = slotName(s); n++;
   }
   await savePack(p);
   toast(t('{n} añadidos a «{p}»', { n, p: esc(p.name) }) + (already ? ' · ' + t('{n} ya estaban', { n: already }) : '') + (full ? ` · <span class="warn">${t('{n} no caben: pack lleno', { n: full })}</span>` : ''), full ? 'warn' : 'ok');
@@ -5009,10 +5255,10 @@ async function runAutoBuild() {
   S.set.loopMax = +document.getElementById('ab-loop').value || 8;
   const keep = document.getElementById('ab-keep').checked;
   saveSettings();
-  const pool = S.samples.filter((s) => !s.analysis?.error && !s.missing).map((s) => ({ ...s, cls: clsOf(s), rating: s.user?.rating, fav: s.user?.fav, discard: s.user?.discard }));
+  const pool = S.samples.filter((s) => !s.analysis?.error && !s.missing && !partsOf(s).length).map((s) => ({ ...s, cls: clsOf(s), rating: s.user?.rating, fav: s.user?.fav, discard: s.user?.discard }));
   const { slots, report } = autoBuild(pool, { layout: p.layout, minCert: S.set.minCert, loopMaxSec: S.set.loopMax, bpm: p.bpm || S.set.bpm, keep: keep ? p.slots : null });
   pushHist();
-  slots.forEach((id, i) => { if (id !== p.slots[i]) { p.slots[i] = id; p.names[i] = id ? shortName(S.byId[id].name) : ''; } });
+  slots.forEach((id, i) => { if (id !== p.slots[i]) { p.slots[i] = id; p.names[i] = id ? slotName(S.byId[id]) : ''; } });
   await savePack(p);
   const empty = Object.entries(report.emptyNoCandidates).map(([r, n]) => `${ROLE_LABEL()[r]} ×${n}`).join(', ');
   toast(t('{n} slots rellenados · {s} s usados.', { n: report.placed, s: nf(report.total) }) + (empty ? '<br>' + t('Sin candidatos con esa certeza: {l}. Escucha más samples o baja la certeza mínima.', { l: empty }) : '') + (report.emptyBudget ? '<br>' + t('{n} slots vacíos por el límite de tiempo.', { n: report.emptyBudget }) : '') + (report.emptySimilar ? '<br>' + t('{n} slots vacíos: los candidatos que quedan son casi idénticos a otros ya elegidos.', { n: report.emptySimilar }) : '') + (report.skippedLong ? '<br>' + t('{n} loops descartados por largos (más de {s} s).', { n: report.skippedLong, s: S.set.loopMax }) : ''), empty || report.emptyBudget || report.emptySimilar ? 'warn' : 'ok', 10000);
@@ -5334,7 +5580,7 @@ async function init() {
   await autoPurge();
   renderAll();
   if (S.samples.length && navigator.storage?.persist) navigator.storage.persist().catch(() => {});
-  window.__crsl = { origin: __ORIGIN__, S, ACT, scanRoot, trashCount, curPat, packKit, recordEvents, revision, calibration, organizePlan, mapPoints, decide, place, play, renderAll, filtered, clsOf, packChecks, exportComponents, importFiles, importComponentsPack, Player, songState, curTimeline, readProject, songEvents, renderSongAudio, renderedOf, wavOf, budget, sampleSeconds, newPack, savePack, repOf };
+  window.__crsl = { origin: __ORIGIN__, S, ACT, scanRoot, trashCount, curPat, packKit, recordEvents, revision, calibration, organizePlan, mapPoints, decide, place, play, renderAll, filtered, clsOf, packChecks, exportComponents, importFiles, importComponentsPack, Player, songState, curTimeline, readProject, songEvents, renderSongAudio, renderedOf, wavOf, budget, sampleSeconds, newPack, savePack, repOf, invalidateAll, addToPack, organizePlanOf: (s) => orgPlan().items.find((x) => x.id === s.id)?.dest };
 }
 init();
 
@@ -5359,7 +5605,7 @@ function revision(s) {
     [t('Sin silencio inicial (o se quita)'), (a.leadMs || 0) <= 2 || r.autoTrim || r.trimStart != null],
     [t('Sin saturación'), !a.clipRuns],
     [t('Sin desplazamiento DC'), Math.abs(a.dc || 0) <= 0.01],
-    [t('En mono no se cancela'), !(a.stereo && a.corr < 0 && r.mono === 'sum')],
+    [t('En mono no se cancela (o se repara)'), !(monoCancels(a) && r.mono === 'sum')],
     [t('Nivel suficiente (pico > −24 dBFS)'), (a.peakChDb ?? a.peakDb ?? -99) > -24],
   ];
   return { ok: checks.filter((c) => c[1]).length, checks, fails: checks.filter((c) => !c[1]) };
@@ -5569,7 +5815,7 @@ function renderPatterns(v) {
     <p class="note" style="margin-top:0">${S.pack ? t('El sample de cada pista sale del pack «{p}». En la Rhythm se elige con CC 8.', { p: esc(S.pack.name) }) : t('Crea un pack en 04 Packs para elegir el sample de cada pista.')}</p>
     ${kit.map((sl, t2) => { const pm = sampleMidiOf(sl); return `<label class="kitrow"><span>${t('Pista {n}', { n: t2 + 1 })}</span><select data-kit="${t2}">${slotOpts(sl)}</select>${pm != null && p.lanes[t2].melodic ? `<span class="mono muted" title="${t('Tono medido: el patrón se transpone para sonar en la tónica')}">${noteLabel(pm)}</span>` : '<span></span>'}</label>`; }).join('')}
     <div class="row" style="margin-top:8px"><button class="btn small" data-act="kit-default">${t('Kit por defecto (página = pista)')}</button><button class="btn small" data-act="kit-send" ${S.midiOn && S.midi.out ? '' : 'disabled'}>${t('Enviar kit a la Rhythm')}</button></div>
-    <p class="note">${t('Escuchar aquí usa los samples preparados del kit (48 kHz · mono), sin el equipo. Bass y Synth se transponen según su tono medido.')}<span class="tag-unv">${t('sin verificar en tu equipo')}</span> ${t('el CC 8 y la grabación de notas que llegan por USB.')}</p>
+    <p class="note">${t('Escuchar aquí usa los samples preparados del kit (48 kHz · mono), sin el equipo. Bass y Synth se transponen según su tono medido.')}</p>
   </aside></div>`;
 }
 
@@ -5630,17 +5876,18 @@ function orgOpts() {
   return { by: document.getElementById('org-by')?.value || 'category', subs: S._orgSubs !== false, kinds: S._orgKinds !== false, tagsInName: !!S._orgTags, converted: document.getElementById('org-conv')?.checked || false, includeDiscarded: false, minCert: document.getElementById('org-cert')?.value || 'onehint', reviewDir: t('_Por revisar'), kindDir: { loop: t('Loops'), oneshot: t('One-shots') } };
 }
 function orgPlan() {
-  return organizePlan(S.samples.filter((s) => !s.analysis?.error).map((s) => { const c = clsOf(s); return { id: s.id, name: s.name, path: s.path, ext: s.ext, cat: c.cat, cert: c.cert, discard: s.user?.discard, sub: s.user?.sub && c.cat ? subName(c.cat, s.user.sub) : null, kind: kindOf(s), tags: (s.user?.tags || []).map(tagName), rating: s.user?.rating || 0, fav: !!s.user?.fav }; }), orgOpts());
+  return organizePlan(S.samples.filter((s) => !s.analysis?.error).map((s) => { const c = clsOf(s); return { id: s.id, name: s.name, path: s.path, ext: s.ext, cat: c.cat, cert: c.cert, discard: s.user?.discard, sub: c.cat && subForOrg(s, c.cat) ? subName(c.cat, subForOrg(s, c.cat)) : null, kind: kindOf(s), tags: (s.user?.tags || []).map(tagName), rating: s.user?.rating || 0, fav: !!s.user?.fav }; }), orgOpts());
 }
 function organizeHTML() {
   if (!S.samples.length) return `<p class="muted">${t('Importa samples primero.')}</p>`;
   const plan = orgPlan();
   return `<div class="prep"><span class="lbl">${t('Ordenar')}</span><select id="org-by"><option value="category">${t('por categoría')}</option><option value="folder" ${S._orgBy === 'folder' ? 'selected' : ''}>${t('por carpeta de origen')}</option></select>
     <span class="lbl">${t('Certeza mínima')}</span><select id="org-cert">${[['user', t('Decidido por ti')], ['confirmed', t('Confirmado o más')], ['onehint', t('Una pista o más')], ['any', t('Cualquiera')]].map(([k, l]) => `<option value="${k}" ${(S._orgCert || 'onehint') === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
-    <span class="lbl">${t('Subcarpetas')}</span><label class="inl"><input type="checkbox" id="org-subs" ${S._orgSubs !== false ? 'checked' : ''}> ${t('dentro de cada categoría, las tuyas (01 Biblioteca → Carpetas y etiquetas)')}</label>
+    <span class="lbl">${t('Subcarpetas')}</span><label class="inl"><input type="checkbox" id="org-subs" ${S._orgSubs !== false ? 'checked' : ''}> ${t('dentro de cada categoría: la que marcaste o, si no, la propuesta')}</label>
     <span class="lbl">${t('Loops')}</span><label class="inl"><input type="checkbox" id="org-kinds" ${S._orgKinds !== false ? 'checked' : ''}> ${t('separar Loops y One-shots dentro de cada categoría')}</label>
     <span class="lbl">${t('Etiquetas')}</span><label class="inl"><input type="checkbox" id="org-tags" ${S._orgTags ? 'checked' : ''}> ${t('añadirlas al nombre del archivo: «Nombre [Oscuro, Analógico].wav»')}</label>
     <span class="lbl">${t('Formato')}</span><label class="inl"><input type="checkbox" id="org-conv" ${S._orgConv ? 'checked' : ''}> ${t('convertidos a 48 kHz · mono · 16 bit (con su preparación)')}</label></div>
+    <p class="note">${t('Cada sample va a Categoría / Tipo / Subcarpeta, como ves en su ficha («Se guarda en»). Las etiquetas no crean carpetas.')}</p>
     <p class="note">${t('{n} archivos en {f} carpetas', { n: plan.items.length, f: Object.keys(plan.folders).length })} · ${Object.entries(plan.folders).slice(0, 8).map(([k, n]) => `${esc(k)} <span class="mono">${n}</span>`).join(' · ')}${plan.skipped.discard ? ' · ' + t('{n} descartados no se copian', { n: plan.skipped.discard }) : ''}</p>
     <div class="row"><button class="btn primary" data-act="org-dir">${t('Escribir en una carpeta')}</button><button class="btn" data-act="org-zip">${t('Descargar ZIP')}</button></div>
     <p class="note">${t('Siempre en una subcarpeta nueva con fecha. El manifiesto CSV lleva la ruta antigua y la nueva, la categoría, la subcarpeta, loop o one-shot, las etiquetas, la valoración y los favoritos. Tus archivos originales no se tocan.')}</p>`;
@@ -5803,7 +6050,7 @@ Object.assign(ACT, {
       <li>${t('Pulsa Record en la Rhythm, sin Play.')}</li>
       <li>${t('Clock Rx activado en Setup View (de fábrica lo está).')}</li>
       ${p.swing > 50 ? `<li>${t('Graba recto. Después pon el swing de la Rhythm en {s} (Tempo/Swing).', { s: p.swing })}</li>` : ''}</ol>
-      <p class="note">${t('La herramienta elige el sample de cada pista (CC 8), hace de reloj maestro (Stop, posición 0, Start y 24 pulsos por negra), toca las notas en el canal de cada pista y para al acabar. La Rhythm graba encima de lo que haya.')}<span class="tag-unv">${t('sin verificar en tu equipo')}</span></p>
+      <p class="note">${t('La herramienta elige el sample de cada pista (CC 8), hace de reloj maestro (Stop, posición 0, Start y 24 pulsos por negra), toca las notas en el canal de cada pista y para al acabar. La Rhythm graba encima de lo que haya.')}</p>
       <div class="row" style="justify-content:flex-end"><button class="btn" data-act="modal-close">${t('Cancelar')}</button><button class="btn primary" data-act="pt-rec-go">● ${t('Grabar ahora')}</button></div>`);
   },
   'pt-rec-go': () => { closeModal(); try { const ms = sendEvents(patEvents(true)); toast(t('Grabando… ({s} s)', { s: nf(ms / 1000, 1) }), 'ok', ms + 500); } catch (e) { toast(esc(errT(e.message)), 'bad'); } },
@@ -5951,7 +6198,7 @@ function renderSong(v) {
       <span class="lbl">${t('Densidad')}</span><input type="range" id="sg-density" min="0" max="1" step="0.05" value="${s.density}">
       <span class="lbl">${t('Tónica')}</span><select id="sg-root">${[...Array(36).keys()].map((k) => 24 + k).map((m) => `<option value="${m}" ${s.root === m ? 'selected' : ''}>${noteLabel(m)}</option>`).join('')}</select>
       <span class="lbl">${t('Escala')}</span><select id="sg-scale">${Object.keys(SCALES).map((k) => `<option value="${k}" ${s.scale === k ? 'selected' : ''}>${k}</option>`).join('')}</select>
-      <span class="lbl">${t('Variación viva')}</span><label class="inl"><input type="checkbox" id="sg-prob" ${s.prob ? 'checked' : ''}> ${t('probabilidad en golpes suaves')}<span class="tag-unv">${t('sin verificar')}</span></label>
+      <span class="lbl">${t('Variación viva')}</span><label class="inl"><input type="checkbox" id="sg-prob" ${s.prob ? 'checked' : ''}> ${t('probabilidad en golpes suaves')}</label>
       <span class="lbl">Sample flip</span><label class="inl"><input type="checkbox" id="sg-flip" ${s.flip ? 'checked' : ''}> ${t('varios sonidos en la percusión (página 4)')}</label>
     </div>
     <p class="note">${t('Los candados de cada pista conservan sus patrones al pedir otra canción u otros patrones.')}</p>
@@ -5972,7 +6219,7 @@ function renderSong(v) {
   </section>
   <aside class="panel"><h2>${t('Llevarla al equipo')}</h2>
     <h3>${t('Proyecto dentro del pack')}</h3>
-    <p class="note" style="margin-top:0">${t('Escribe la canción como proyecto de la Rhythm: 8 patrones por pista, {n} escenas (las secciones largas son varias escenas iguales seguidas) y la cadena de escenas en orden. Viaja en el .circuitrhythmpack (04 Packs → Para Components).', { n: tl.scenes.length })}<span class="tag-unv">${t('experimental · sin verificar en tu equipo')}</span></p>
+    <p class="note" style="margin-top:0">${t('Escribe la canción como proyecto de la Rhythm: 8 patrones por pista, {n} escenas (las secciones largas son varias escenas iguales seguidas) y la cadena de escenas en orden. Viaja en el .circuitrhythmpack (04 Packs → Para Components).', { n: tl.scenes.length })}</p>
     ${S.pack ? `<div class="row"><label class="inl">${t('Proyecto')} <select id="sg-slot">${[...Array(64).keys()].map((i) => `<option value="${i}" ${(S._songSlot ?? 1) === i ? 'selected' : ''}>${i + 1}${occupied.has(i) ? ' ●' : ''}</option>`).join('')}</select></label><button class="btn" data-act="sg-topack">${t('Guardar en «{p}»', { p: esc(S.pack.name) })}</button></div>
       ${songsIn.length ? `<p class="note">${t('Canciones en este pack: proyectos {l}.', { l: songsIn.map((i) => i + 1).join(', ') })} <button class="btn small ghost" data-act="sg-clearpack">${t('Quitarlas')}</button></p>` : ''}` : `<p class="muted">${t('Crea un pack en 04 Packs: el kit de la canción sale de sus slots.')}</p>`}
     <div class="sep"></div>
@@ -5984,7 +6231,7 @@ function renderSong(v) {
     <h3>${t('Hoja de ruta')}</h3>
     <table class="t rm"><tr class="muted"><td>${t('Esc.')}</td><td>${t('Sección')}</td><td>${t('Comp.')}</td><td>${t('Pistas')}</td></tr>${roadmap(s.fam, tl, L, songBpm()).map((r) => `<tr class="${r.same ? 'dup' : ''}"><td class="mono">${r.scene}</td><td>${r.same ? `<span class="muted">= ${r.same}</span>` : esc(r.label)}${r.of > 1 && !r.same ? ` <span class="muted mono">×${r.of}</span>` : ''}${r.end ? ` <span class="muted" title="${t('Última escena de la sección: el groove remata con A\' y fill')}">· ${t('remate')}</span>` : ''}</td><td class="mono">${r.bars}</td><td class="mono muted">${r.tracks}</td></tr>`).join('')}</table>
     <p class="note">${t('Más repetición, como en la pista: en cada sección el groove repite A y las escenas del medio tocan solo A; la última escena remata con A\' (un cambio sutil en el último tiempo) y el fill.')}</p>
-    ${tl.timers ? `<p class="note">${t('Las pistas en silencio tocan el patrón 8, vacío y alargado ({b} compases): marca cuánto dura cada escena aunque las demás cadenas sean más cortas.', { b: [...new Set(tl.timers)].sort((a, b) => a - b).join(' / ') })}<span class="tag-unv">${t('sin verificar')}</span></p>` : ''}
+    ${tl.timers ? `<p class="note">${t('Las pistas en silencio tocan el patrón 8, vacío y alargado ({b} compases): marca cuánto dura cada escena aunque las demás cadenas sean más cortas.', { b: [...new Set(tl.timers)].sort((a, b) => a - b).join(' / ') })}</p>` : ''}
     <button class="btn small" data-act="sg-sheet" style="margin-top:6px">${t('Descargar hoja de ruta')}</button>
   </aside></div>`;
 }
@@ -6216,6 +6463,7 @@ document.addEventListener('keydown', (e) => {
 
 
 
+
 const GROUP_LABEL = () => ({ fx: t('Efectos'), char: t('Carácter'), use: t('Uso') });
 const taxOf = (cat) => taxonomy(S.set.tax, cat);
 const subName = (cat, id) => { const l = subLabelOf(S.set.tax, cat, id); return l == null ? null : t(l); };
@@ -6249,6 +6497,43 @@ async function setSub(list, sub) {
   for (const s of list) { if (sub) s.user.sub = sub; else delete s.user.sub; }
   invalidateAll(); await saveSamples(list);
 }
+// v2.5: categoría y subcarpeta sin pasar por «decidir» (que en Escucha avanza al siguiente).
+// Usado por las pistas clicables y por el portapapeles. Aprende igual que al decidir con una tecla.
+function setCatQuiet(s, cat) {
+  if (!cat || s.user.cat === cat) return false;
+  keepOnDecide(s, s.user.cat || clsOf(s).cat, cat);
+  s.user.cat = cat; s.user.heard = true; learnFrom(S.learned, s, cat); saveLearned();
+  return true;
+}
+// la subcarpeta id de fábrica, recreada si tu lista de subcarpetas de esa categoría ya no la tiene
+function ensureSub(cat, id) {
+  if (taxOf(cat).some((x) => x.id === id)) return false;
+  const label = defaultSubLabel(cat, id); if (!label) return false;
+  S.set.tax = { ...(S.set.tax || {}), [cat]: [...taxOf(cat).map((x) => ({ ...x })), { id, label }] };
+  return true;
+}
+const MELODIC_CLUE = new Set(['bass', 'synth', 'atmos', 'fx', 'vox']);
+// Qué haría usar una pista (cat y palabra o rasgo) en este sample: { cat, sub, label, done }
+function clueUse(s, clueCat, tok) {
+  if (!clueCat) return null;
+  const eff = catFor(s) || clsOf(s).cat;
+  const loopy = ['dloop', 'mloop'].includes(eff) || kindOf(s) === 'loop';
+  let cat = clueCat, sub = null;
+  if (loopy && !['dloop', 'mloop'].includes(clueCat)) {
+    const lc = ['dloop', 'mloop'].includes(eff) ? eff : MELODIC_CLUE.has(clueCat) ? 'mloop' : 'dloop';
+    sub = contentSubFor(lc, clueCat, tok);
+    if (sub) cat = lc;
+  }
+  const label = catLabel(cat) + (sub ? ' › ' + t(subLabelOf(S.set.tax, cat, sub) || defaultSubLabel(cat, sub) || sub) : '');
+  return { cat, sub, label, done: s.user?.cat === cat && (!sub || s.user?.sub === sub) };
+}
+async function applyClue(s, clueCat, tok) {
+  const u = clueUse(s, clueCat, tok); if (!s || !u) return;
+  setCatQuiet(s, u.cat);
+  if (u.sub) { if (ensureSub(u.cat, u.sub)) await saveSettings(); s.user.sub = u.sub; }
+  invalidateAll(); await saveSample(s); refresh();
+  toast(`«${esc(s.name)}» → ${esc(u.label)}`, 'ok', 2500);
+}
 async function addTags(list, tags) {
   const ch = [];
   for (const s of list) { const cur = tagsOf(s); const nx = [...new Set([...cur, ...tags])]; if (nx.length !== cur.length) { s.user.tags = nx; ch.push(s); } }
@@ -6265,6 +6550,29 @@ async function saveTax(tax) { S.set.tax = tax; await saveSettings(); invalidateA
 let _tagKey = '';
 function refresh() { if (S.view === 'library' && (S.libMode || 'list') === 'list' && allTags().map((x) => x[0]).join('|') === _tagKey) { renderHeader(); paintList(); renderDetail(); } else renderView(); if (typeof paintDock === 'function') paintDock(); }
 
+// ---------- v2.6: dónde acabará el sample ----------
+// La misma regla que «Ordenar en disco»: Categoría / (Loops | One-shots) / Subcarpeta / nombre. Cada tramo dice
+// qué lo decide, así se ve de un vistazo qué hace cada cosa que marcas. Las etiquetas no crean carpetas.
+function subForOrg(s, cat) { const id = s.user?.sub || propsOf(s).sub?.id; return id && cat && taxOf(cat).some((x) => x.id === id) ? id : null; }
+function destSegments(s) {
+  const cat = catFor(s), segs = [];
+  if (!cat) return [{ v: t('_Por revisar'), cap: t('Categoría'), warn: true, hint: t('Elige la categoría con su tecla') }];
+  segs.push({ v: catFolderName(cat), cap: t('Categoría'), prop: !s.user?.cat });
+  if (S._orgKinds !== false && !['dloop', 'mloop'].includes(cat)) segs.push({ v: kindOf(s) === 'loop' ? t('Loops') : t('One-shots'), cap: t('Tipo'), prop: !s.user?.kind });
+  const sub = S._orgSubs !== false ? subForOrg(s, cat) : null;
+  if (sub) segs.push({ v: subName(cat, sub), cap: t('Subcarpeta'), prop: !s.user?.sub });
+  return segs;
+}
+function destHTML(s) {
+  const segs = destSegments(s), tags = tagsOf(s);
+  const file = esc(String(s.name).replace(/\.[^.]+$/, '')) + (S._orgTags && tags.length ? ` <span class="dim">[${tags.map(tagName).map(esc).join(', ')}]</span>` : '');
+  const anyProp = segs.some((x) => x.prop);
+  return `<div class="orow dest"><span class="lbl">${t('Se guarda en')}</span><div>
+    <div class="dpath">${segs.map((x) => `<span class="dseg ${x.prop ? 'prop' : ''} ${x.warn ? 'warn' : ''}" title="${esc(x.hint || '')}"><b>${esc(x.v)}</b><i>${x.cap}</i></span><span class="dsl">/</span>`).join('')}<span class="dseg file"><b>${file}</b><i>${t('Archivo')}</i></span></div>
+    <div class="dnote">${t('Así lo deja «Ordenar en disco» (08 Datos): la categoría es la carpeta, el tipo y la subcarpeta van dentro. Las etiquetas no crean carpetas: sirven para buscar y filtrar.')}${anyProp ? ' ' + t('Lo discontinuo es propuesta: se usa tal cual si no lo cambias.') : ''}</div>
+  </div></div>`;
+}
+
 // ---------- ficha: carpeta y etiquetas ----------
 function orgDetailHTML(s, { compact = false } = {}) {
   const cat = catFor(s) || clsOf(s).cat;
@@ -6279,9 +6587,10 @@ function orgDetailHTML(s, { compact = false } = {}) {
   const palHTML = PALETTE_GROUPS.map((g) => `<div class="palg"><span class="lbl">${GL[g]}</span>${pal[g].map((x) => { const qn = qt.indexOf(x); return `<button class="chip2 ${tags.includes(x) ? 'on' : ''}" data-act="o-tag-tog" data-v="${esc(x)}" data-id="${s.id}" ${qn >= 0 ? `title="Alt+${qn + 1}"` : ''}>${esc(tagName(x))}${qn >= 0 ? `<sup>${qn + 1}</sup>` : ''}</button>`; }).join('')}</div>`).join('');
   const quick = `<div class="quick"><span class="lbl">${t('Etiquetas rápidas')}</span>${qt.map((x, i) => `<button class="chip2 ${tags.includes(x) ? 'on' : ''}" data-act="o-tag-tog" data-v="${esc(x)}" data-id="${s.id}" title="Alt+${i + 1}">${esc(tagName(x))}<sup>${i + 1}</sup></button>`).join('')}</div>`;
   return `<div class="orgd ${compact ? 'compact' : ''}">
+    ${destHTML(s)}
     ${kindHTML(s)}
     <div class="orow"><span class="lbl">${t('Subcarpeta')}</span><div>${subRow}${propLine}</div></div>
-    <div class="orow"><span class="lbl">${t('Etiquetas')}</span><div><span class="chips">${mine}</span>${det}
+    <div class="orow"><span class="lbl">${t('Etiquetas')}<small>${t('no crean carpetas')}</small></span><div><span class="chips">${mine}</span>${det}
       ${compact ? quick : `<div class="pal">${palHTML}</div>`}
       <input type="text" class="otag" data-id="${s.id}" placeholder="${t('Otra etiqueta y Intro')}" maxlength="24" list="o-taglist"><datalist id="o-taglist">${allTags().slice(0, 60).map(([x]) => `<option value="${esc(x)}">`).join('')}</datalist></div></div>
     ${tagClipHTML(s)}
@@ -6439,6 +6748,7 @@ function rebulk(msg) { if (msg) toast(msg, 'ok', 2200); modal(bulkHTML()); paint
 const sOf = (el) => S.byId[el.dataset.id] || current();
 async function tagAdd(s, tag) { tag = String(tag || '').trim().slice(0, 24); if (!s || !tag) return; await addTags([s], [tag]); refresh(); }
 Object.assign(ACT, {
+  'why-use': (el) => applyClue(sOf(el) || current(), el.dataset.cat, el.dataset.tok),
   'o-mode': (el) => { S.libMode = el.dataset.v; Player.stop(); renderView(); },
   'o-sub': async (el) => { const s = sOf(el); await setSub([s], s.user.sub === el.dataset.v ? null : el.dataset.v); refresh(); },
   'o-sub-accept': async (el) => { const s = sOf(el); const p = s && propsOf(s); if (p?.sub) { await setSub([s], p.sub.id); refresh(); } },
@@ -7183,35 +7493,101 @@ document.addEventListener('change', async (ev) => {
 
 // ---- src/ui/app_tagclip.js ----
 // ui/app_tagclip.js — v2.4: portapapeles de etiquetas, como en la herramienta de Tracks (3.9).
-// Copiar las etiquetas de un sample (Alt Mayús V), pegarlas en el que escuchas o en la selección (Alt V; la V sola
-// ya es «Vox» al decidir) y guardar conjuntos como grupos para cargarlos con un clic. Viven en los ajustes
-// (S.set.tagClip, S.set.tagGroups), así que viajan en la copia de seguridad.
+// v2.5: también copia la categoría, el tipo (loop / one-shot) y la subcarpeta. Cada campo se puede apagar
+// para pegar solo lo que quieras. Copiar un sample (Alt Mayús V) y pegarlo en el que escuchas o en la
+// selección (Alt V; la V sola ya es «Vox» al decidir). Los grupos guardan un conjunto para cargarlo con un clic.
+// Vive en los ajustes: S.set.tagClip (etiquetas, como en 2.4), S.set.clipF ({ cat, kind, sub, off: [] }) y S.set.tagGroups.
 const clipList = () => (Array.isArray(S.set.tagClip) ? S.set.tagClip : []);
-const clipGroups = () => (Array.isArray(S.set.tagGroups) ? S.set.tagGroups : []);
-async function clipSet(tags) { S.set.tagClip = [...new Set(tags.map((x) => String(x).trim().slice(0, 24)).filter(Boolean))].slice(0, 12); await saveSettings(); }
+const clipF = () => (S.set.clipF && typeof S.set.clipF === 'object' ? S.set.clipF : {});
+const clipOn = (k) => !(clipF().off || []).includes(k);
+// un grupo de 2.4 era una lista de etiquetas; desde 2.5 es { tags, cat, kind, sub }
+const groupOf = (g) => (Array.isArray(g) ? { tags: g } : g && typeof g === 'object' ? { tags: Array.isArray(g.tags) ? g.tags : [], cat: g.cat, kind: g.kind, sub: g.sub } : { tags: [] });
+const clipGroups = () => (Array.isArray(S.set.tagGroups) ? S.set.tagGroups : []).map(groupOf);
+const cleanTags = (tags) => [...new Set(tags.map((x) => String(x).trim().slice(0, 24)).filter(Boolean))].slice(0, 12);
+async function clipSet(tags) { S.set.tagClip = cleanTags(tags); await saveSettings(); }
+async function clipSetAll({ tags = [], cat = null, kind = null, sub = null }) {
+  S.set.tagClip = cleanTags(tags);
+  S.set.clipF = { ...(cat ? { cat } : {}), ...(kind ? { kind } : {}), ...(cat && sub ? { sub } : {}), off: clipF().off || [] };
+  await saveSettings();
+}
+const clipEmpty = () => !clipList().length && !clipF().cat && !clipF().kind;
 function clipTargetsOf(s) { return S.view === 'library' && S.multi.size > 1 ? [...S.multi].map((id) => S.byId[id]).filter(Boolean) : s ? [s] : []; }
+const subLabel = (cat, id) => { const l = subLabelOf(S.set.tax, cat, id) || defaultSubLabel(cat, id); return l ? t(l) : id; };
+const kindLabel = (k) => (k === 'loop' ? t('Loop') : t('One-shot'));
+// lo que se copia de un sample: lo que ves en su ficha (tu decisión o, si no hay, la propuesta)
+function fieldsOf(s) {
+  const cat = catFor(s) || clsOf(s).cat || null;
+  const sub = cat ? s.user?.sub || propsOf(s).sub?.id || null : null;
+  return { tags: tagsOf(s), cat, kind: kindOf(s), sub };
+}
+// la subcarpeta del portapapeles en la categoría que acabará teniendo el sample: el mismo id si es la misma
+// categoría; si no, una con el mismo nombre; si no hay, nada
+function subFor(fromCat, sub, toCat) {
+  if (!sub || !toCat) return null;
+  if (fromCat === toCat) return sub;
+  const l = String(subLabelOf(S.set.tax, fromCat, sub) || defaultSubLabel(fromCat, sub) || '').toLowerCase();
+  const x = l && taxonomy(S.set.tax, toCat).find((y) => String(y.label).toLowerCase() === l);
+  return x ? x.id : null;
+}
+function pendingIn(s) {
+  const f = clipF(), cur = fieldsOf(s);
+  if (clipOn('cat') && f.cat && s.user?.cat !== f.cat) return true;
+  if (clipOn('kind') && f.kind && s.user?.kind !== f.kind && cur.kind !== f.kind) return true;
+  const to = clipOn('cat') && f.cat ? f.cat : cur.cat, sb = clipOn('sub') ? subFor(f.cat, f.sub, to) : null;
+  if (sb && s.user?.sub !== sb) return true;
+  return clipOn('tags') && clipList().some((x) => !tagsOf(s).includes(x));
+}
+function groupLabel(g) {
+  return [g.cat ? catLabel(g.cat) + (g.sub ? ' › ' + subLabel(g.cat, g.sub) : '') : '', g.kind ? kindLabel(g.kind) : '', ...g.tags.map(tagName)].filter(Boolean).map(esc).join(' + ');
+}
 function tagClipHTML(s) {
-  const c = clipList(), g = clipGroups(), has = s ? tagsOf(s) : [], multi = S.view === 'library' && S.multi.size > 1;
-  const pending = c.filter((x) => !has.includes(x)).length;
+  const c = clipList(), f = clipF(), g = clipGroups(), multi = S.view === 'library' && S.multi.size > 1;
+  const pending = s ? pendingIn(s) : false, empty = clipEmpty();
+  const field = (k, lbl, val) => `<span class="chip2 on cf ${clipOn(k) ? '' : 'off'}"><button data-act="clip-tog" data-v="${k}" title="${clipOn(k) ? t('No pegar esto') : t('Pegar también esto')}" style="all:unset;cursor:pointer;display:inline-flex;gap:6px;align-items:center"><b>${lbl}</b>${val}</button><button data-act="clip-fdel" data-v="${k}" aria-label="${t('Quitar')}">✕</button></span>`;
+  const fields = [f.cat ? field('cat', t('Categoría'), `<span style="color:${catVar(f.cat)}">${catLabel(f.cat)}</span>`) : '',
+    f.kind ? field('kind', t('Tipo'), kindLabel(f.kind)) : '',
+    f.cat && f.sub ? field('sub', t('Subcarpeta'), esc(subLabel(f.cat, f.sub))) : ''].join('');
+  const tagsOff = c.length && !clipOn('tags');
   return `<div class="orow tclip"><span class="lbl">${t('Portapapeles')}</span><div>
-    <span class="chips">${c.map((x) => `<span class="chip2 on clip">${esc(tagName(x))}<button data-act="clip-del" data-v="${esc(x)}" aria-label="${t('Quitar')}">✕</button></span>`).join('')}
-      <input type="text" class="clipin" placeholder="${c.length ? t('Añadir…') : t('Escribe una etiqueta, o copia las de un sample')}" maxlength="24" list="o-taglist"></span>
+    <span class="chips">${fields}${c.map((x) => `<span class="chip2 on clip ${tagsOff ? 'cf off' : ''}">${esc(tagName(x))}<button data-act="clip-del" data-v="${esc(x)}" aria-label="${t('Quitar')}">✕</button></span>`).join('')}
+      ${c.length ? `<button class="btn small ghost" data-act="clip-tog" data-v="tags" title="${t('Pegar o no las etiquetas')}">${clipOn('tags') ? t('Sin etiquetas') : t('Con etiquetas')}</button>` : ''}
+      <input type="text" class="clipin" placeholder="${empty ? t('Escribe una etiqueta, o copia un sample') : t('Añadir…')}" maxlength="24" list="o-taglist"></span>
     <div class="row" style="gap:5px;margin-top:5px;flex-wrap:wrap">
-      <button class="btn small" data-act="clip-copy" data-id="${s ? s.id : ''}" ${s && has.length ? '' : 'disabled'} title="${t('Las etiquetas de este sample al portapapeles')} (Alt ${t('Mayús')} V)">${t('Copiar de este')}</button>
-      <button class="btn small ${c.length && (pending || multi) ? 'primary' : ''}" data-act="clip-paste" data-id="${s ? s.id : ''}" ${c.length && s ? '' : 'disabled'} title="${t('Añadir las del portapapeles')} (Alt V)">${multi ? t('Pegar en {n}', { n: S.multi.size }) : pending || !c.length ? t('Pegar en este') : '✓ ' + t('Ya las tiene')}</button>
-      ${c.length ? `<button class="btn small ghost" data-act="clip-group" title="${t('Guardar este conjunto para cargarlo con un clic')}">${t('Guardar como grupo')}</button><button class="btn small ghost" data-act="clip-clear">${t('Vaciar')}</button>` : ''}
+      <button class="btn small" data-act="clip-copy" data-id="${s ? s.id : ''}" ${s ? '' : 'disabled'} title="${t('Categoría, tipo, subcarpeta y etiquetas de este sample al portapapeles')} (Alt ${t('Mayús')} V)">${t('Copiar de este')}</button>
+      <button class="btn small ${!empty && (pending || multi) ? 'primary' : ''}" data-act="clip-paste" data-id="${s ? s.id : ''}" ${!empty && s ? '' : 'disabled'} title="${t('Pegar lo que está encendido en el portapapeles')} (Alt V)">${multi ? t('Pegar en {n}', { n: S.multi.size }) : pending || empty ? t('Pegar en este') : '✓ ' + t('Ya lo tiene')}</button>
+      ${!empty ? `<button class="btn small ghost" data-act="clip-group" title="${t('Guardar este conjunto para cargarlo con un clic')}">${t('Guardar como grupo')}</button><button class="btn small ghost" data-act="clip-clear">${t('Vaciar')}</button>` : ''}
       <span class="muted" style="font-size:12px"><span class="kbd">Alt V</span> ${t('pegar')} · <span class="kbd">Alt ${t('Mayús')} V</span> ${t('copiar')}</span></div>
-    ${g.length ? `<div class="chips" style="margin-top:5px">${g.map((x, i) => `<span class="tgrp"><button class="chip2" data-act="clip-load" data-i="${i}" title="${t('Cargar en el portapapeles')}">${x.map((y) => esc(tagName(y))).join(' + ')}</button><button class="btn small ghost" data-act="clip-group-del" data-i="${i}" aria-label="${t('Quitar el grupo')}">✕</button></span>`).join('')}</div>` : ''}
+    ${g.length ? `<div class="chips" style="margin-top:5px">${g.map((x, i) => `<span class="tgrp"><button class="chip2" data-act="clip-load" data-i="${i}" title="${t('Cargar en el portapapeles')}">${groupLabel(x)}</button><button class="btn small ghost" data-act="clip-group-del" data-i="${i}" aria-label="${t('Quitar el grupo')}">✕</button></span>`).join('')}</div>` : ''}
   </div></div>`;
 }
 async function clipPaste(s) {
-  const c = clipList(), list = clipTargetsOf(s); if (!c.length || !list.length) return;
-  await addTags(list, c); refresh();
-  toast(`${c.map(tagName).map(esc).join(', ')} → ${list.length === 1 ? '«' + esc(list[0].name) + '»' : t('{n} samples', { n: list.length })}`, 'ok', 2500);
+  const list = clipTargetsOf(s); if (clipEmpty() || !list.length) return;
+  const f = clipF(), tags = clipOn('tags') ? clipList() : [], parts = [];
+  let noSub = 0, ensured = false;
+  for (const x of list) {
+    if (clipOn('cat') && f.cat) setCatQuiet(x, f.cat);
+    if (clipOn('kind') && f.kind) x.user.kind = f.kind;
+    if (clipOn('sub') && f.cat && f.sub) {
+      const to = x.user.cat || catFor(x) || clsOf(x).cat;
+      let sb = subFor(f.cat, f.sub, to);
+      if (!sb && to === f.cat) { ensured = ensureSub(f.cat, f.sub) || ensured; sb = f.sub; }
+      if (sb) x.user.sub = sb; else noSub++;
+    }
+    if (tags.length) x.user.tags = [...new Set([...tagsOf(x), ...tags])];
+  }
+  if (ensured) await saveSettings();
+  invalidateAll(); await saveSamples(list); refresh();
+  if (clipOn('cat') && f.cat) parts.push(catLabel(f.cat));
+  if (clipOn('sub') && f.cat && f.sub) parts.push(subLabel(f.cat, f.sub));
+  if (clipOn('kind') && f.kind) parts.push(kindLabel(f.kind));
+  parts.push(...tags.map(tagName));
+  toast(`${parts.map(esc).join(', ')} → ${list.length === 1 ? '«' + esc(list[0].name) + '»' : t('{n} samples', { n: list.length })}${noSub ? ' · ' + t('{n} sin esa subcarpeta en su categoría', { n: noSub }) : ''}`, noSub ? 'warn' : 'ok', 3000);
 }
 async function clipCopy(s) {
-  const tg = s ? tagsOf(s) : []; if (!tg.length) { toast(t('Este sample no tiene etiquetas'), 'warn', 2500); return; }
-  await clipSet(tg); refresh(); toast(t('Copiadas: {t}', { t: tg.map(tagName).map(esc).join(', ') }), 'ok', 2500);
+  if (!s) return;
+  const fl = fieldsOf(s); await clipSetAll(fl); refresh();
+  const parts = [fl.cat ? catLabel(fl.cat) + (fl.sub ? ' › ' + subLabel(fl.cat, fl.sub) : '') : '', kindLabel(fl.kind), ...fl.tags.map(tagName)].filter(Boolean);
+  toast(t('Copiado: {t}', { t: parts.map(esc).join(', ') }), 'ok', 2500);
 }
 document.addEventListener('keydown', (ev) => {
   if (ev.target.classList?.contains('clipin') && ev.key === 'Enter') {
@@ -7224,14 +7600,22 @@ document.addEventListener('keydown', (ev) => {
   ev.preventDefault(); ev.stopImmediatePropagation();
   if (ev.shiftKey) clipCopy(s); else clipPaste(s);
 }, true);
+async function clipFieldsSet(patch) { S.set.clipF = { ...clipF(), ...patch }; await saveSettings(); refresh(); }
 Object.assign(ACT, {
   'clip-copy': (el) => clipCopy(sOf(el) || current()),
   'clip-paste': (el) => clipPaste(sOf(el) || current()),
   'clip-del': async (el) => { await clipSet(clipList().filter((x) => x !== el.dataset.v)); refresh(); },
-  'clip-clear': async () => { await clipSet([]); refresh(); },
-  'clip-group': async () => { const c = clipList(); if (!c.length) return; S.set.tagGroups = [c, ...clipGroups().filter((x) => x.join('|') !== c.join('|'))].slice(0, 12); await saveSettings(); refresh(); },
-  'clip-load': async (el) => { const g = clipGroups()[+el.dataset.i]; if (g) { await clipSet(g); refresh(); } },
-  'clip-group-del': async (el) => { const g = clipGroups().slice(); g.splice(+el.dataset.i, 1); S.set.tagGroups = g; await saveSettings(); refresh(); },
+  'clip-tog': (el) => { const k = el.dataset.v, off = new Set(clipF().off || []); if (off.has(k)) off.delete(k); else off.add(k); return clipFieldsSet({ off: [...off] }); },
+  'clip-fdel': (el) => { const f = { ...clipF() }, k = el.dataset.v; delete f[k]; if (k === 'cat') delete f.sub; S.set.clipF = f; return saveSettings().then(refresh); },
+  'clip-clear': async () => { S.set.tagClip = []; S.set.clipF = { off: clipF().off || [] }; await saveSettings(); refresh(); },
+  'clip-group': async () => {
+    if (clipEmpty()) return; const f = clipF();
+    const g = { tags: clipList(), ...(f.cat ? { cat: f.cat } : {}), ...(f.kind ? { kind: f.kind } : {}), ...(f.cat && f.sub ? { sub: f.sub } : {}) };
+    const key = JSON.stringify(g);
+    S.set.tagGroups = [g, ...clipGroups().filter((x) => JSON.stringify(x) !== key)].slice(0, 12); await saveSettings(); refresh();
+  },
+  'clip-load': async (el) => { const g = clipGroups()[+el.dataset.i]; if (g) { await clipSetAll(g); refresh(); } },
+  'clip-group-del': async (el) => { const g = clipGroups(); g.splice(+el.dataset.i, 1); S.set.tagGroups = g; await saveSettings(); refresh(); },
 });
 
 // ---- src/ui/app_short.js ----
@@ -7383,7 +7767,7 @@ function shortInner(s) {
     <span class="shchips">${chips}</span>
     <label class="inl">${t('Orden')} <input type="text" data-sh="txt" value="${esc(E.txt ?? selText(E.sel))}" style="width:120px" placeholder="1-4, 7 8" spellcheck="false"></label>
     ${ed && !ident ? `${loopBtn(s, ed, t('Escuchar'))}<button class="btn small" data-act="sh-apply" data-id="${s.id}" ${sameKeep(k, ed) ? 'disabled' : ''}>${t('Usar estas slices')}</button> <span class="dim">${fmtDur(now * E.sel.length / E.n)}</span>` : `<span class="dim">${valid ? t('todas las slices: queda igual') : t('elige al menos una slice')}</span>`}</div>`;
-  return `${head}${cur}${props}${manual}
+  return `${head}${cur}${splitHTML(s)}${props}${manual}
     <p class="note" style="margin-bottom:0">${t('Las slices se cuentan sobre la zona útil del loop, como en la Rhythm. En cada unión y al volver al principio hay un fundido cruzado de 2–3 ms para que no haga clic. El original no se toca: se aplica al exportar.')} ${k && rep?.bpm ? t('En la Rhythm, el Beat Match pasa a {s} pasos.', { s: Math.round((sampleSeconds(s) * rep.bpm) / 15) }) : ''}</p>
     ${loopBtn(s, null, t('Original en bucle'), 'style="margin-top:6px"')}`;
 }
@@ -7394,6 +7778,7 @@ function paintShort() {
 }
 // llamado tras pintar la ficha
 function afterDetail(s) {
+  if (s) monoEnsure(s);
   if (!s || !canShorten(s)) return;
   if (s.rep && s.rep.key === repKey(s)) return;
   repOf(s).then(() => { if (current() === s) { if (S.kEdit?.id === s.id && !keepOf(s)) S.kEdit = null; paintShort(); } }).catch((e) => {
@@ -7405,6 +7790,7 @@ async function setKeep(s, keep) {
   if (keep && validKeep(keep) && !keepIsIdentity(keep)) s.recipe.keep = { n: keep.n, sel: keep.sel.slice() }; else delete s.recipe.keep;
   S.kEdit = null; Player.stop();
   await saveSample(s);
+  await afterKeepChange(s);
   if (S.view === 'library' && (S.libMode || 'list') === 'list' && typeof paintList === 'function') paintList();
 }
 
@@ -7529,6 +7915,182 @@ document.addEventListener('change', (ev) => {
   if (k === 'n') { E.n = +el.value; E.sel = Array.from({ length: E.n }, (_, i) => i); E.txt = null; paintShort(); }
   else if (k === 'txt') { const sel = parseSel(el.value, E.n); if (sel) { E.sel = sel; E.txt = null; } else { E.txt = el.value; toast(t('Escribe números de slice del 1 al {n}, p. ej. «1-4» o «1 2 1 3»', { n: E.n }), 'warn'); } paintShort(); }
 });
+
+// ---- src/ui/app_parts.js ----
+// ui/app_parts.js — v2.7: las slices que eliges, como samples separados y relacionados.
+// En «Acortar» eliges slices (p. ej. 1 y 2 de 4). «Al exportar» decide cómo salen: unidas en un sample (como
+// hasta ahora) o cada slice por separado. Por separado, cada slice pasa a ser un sample de la biblioteca
+// (Partes/<nombre>/<nombre> 1.wav…, con el formato del original), con la categoría, la subcarpeta y las
+// etiquetas del original y un papel (Loop, Fill, Break…). Quedan relacionadas: user.rel = { of, i, n, slice, role, base }
+// en cada parte y user.split = [ids] en el original. En los packs ocupan pads seguidos, así en la Rhythm están juntas.
+
+
+const PART_ROLES = ['Loop', 'Fill', 'Break', 'Variación', 'Intro', 'Build', 'Outro'];
+const partsOf = (s) => (s && Array.isArray(s.user?.split) ? s.user.split.map((id) => S.byId[id]).filter(Boolean) : []);
+const relOf = (s) => (s && s.user?.rel && s.user.rel.of ? s.user.rel : null);
+const parentOf = (s) => { const r = relOf(s); return r ? S.byId[r.of] || null : null; };
+const siblingsOf = (s) => { const par = parentOf(s); return par ? partsOf(par) : []; };
+const baseOf = (s) => String(s.name || '').replace(/\.(wav|aiff?|mp3|flac|ogg)$/i, '');
+// nombre en el pack (y en la tarjeta): «Top Loop Fill» o «Top Loop 2»
+function partLabel(p) {
+  const r = relOf(p); if (!r) return shortName(p.name);
+  const suf = ' ' + (r.role ? t(r.role) : String(r.i + 1));
+  return safeName(shortName(r.base || baseOf(p)).slice(0, Math.max(4, 32 - suf.length)).trim() + suf, 32);
+}
+const slotName = (s) => (relOf(s) ? partLabel(s) : shortName(s.name));
+
+// ---------- separar y volver a unir ----------
+async function splitSample(s, roles = null) {
+  const k = keepOf(s); if (!s || !k) return false;
+  const order = [...new Set(k.sel)];
+  if (order.length < 2) { toast(t('Elige al menos dos slices para separarlas.'), 'warn', 4000); return false; }
+  const prev = partsOf(s).map((x) => relOf(x)?.role || '');
+  if (partsOf(s).length) await unsplit(s, { quiet: true });
+  roles = roles || prev;
+  let d; try { d = await decodedOf(s); } catch (e) { toast(esc(e.message || e), 'bad', 6000); return false; }
+  const of = originalFormat(d), all = slicesOriginal(d, { ...recipeOf(s), keep: null }, k.n);
+  const base = baseOf(s), folder = t('Partes') + '/' + base;
+  const entries = order.map((idx, j) => {
+    const name = `${base} ${j + 1}.wav`, u8 = encodeOriginal(all[idx], of);
+    return { name, path: `${folder}/${name}`, getFile: async () => new File([u8], name) };
+  });
+  // si alguna parte se eliminó antes, se vuelve a admitir: la estás creando a propósito
+  for (const e of entries) { const sha = await sha256hex(new Uint8Array(await (await e.getFile()).arrayBuffer())); delete S.excluded[sha]; }
+  const res = await importEntries(entries, t('Separando slices'));
+  const recs = entries.map((e) => S.samples.find((x) => x.path === e.path || (x.paths || []).includes(e.path)) || null);
+  if (recs.some((r) => !r)) { toast(t('No se pudieron separar las slices.') + (res.failed[0] ? ' ' + esc(res.failed[0].why) : ''), 'bad', 6000); return false; }
+  const cat = s.user?.cat || catFor(s) || clsOf(s).cat || null;
+  const sub = cat ? s.user?.sub || propsOf(s).sub?.id || null : null;
+  const rc = { ...(s.recipe || {}) }; for (const x of ['keep', 'trimStart', 'trimEnd', 'fitSec']) delete rc[x]; rc.autoTrim = false;
+  recs.forEach((r, j) => {
+    r.user = { ...(r.user || {}), kind: 'loop', ...(cat ? { cat } : {}), ...(sub ? { sub } : {}), ...(tagsOf(s).length ? { tags: tagsOf(s).slice() } : {}),
+      rel: { of: s.id, i: j, n: recs.length, slice: order[j] + 1, role: roles[j] || '', base } };
+    r.recipe = { ...rc };
+  });
+  s.user.split = recs.map((r) => r.id);
+  await saveSamples([...recs, s]);
+  // en los packs donde estaba el original, sus partes en pads seguidos
+  let moved = 0, out = 0;
+  for (const p of S.packs) {
+    const i = p.slots.indexOf(s.id); if (i < 0) continue;
+    p.slots[i] = null; p.names[i] = '';
+    const r = placeGroup(p, recs.map((x) => x.id), i); moved++; out += r.left;
+    await savePack(p);
+  }
+  invalidateAll();
+  toast(t('{n} samples relacionados en «{f}».', { n: recs.length, f: esc(folder) }) + (moved ? ' ' + t('En el pack ocupan pads seguidos.') : '') + (out ? ` <span class="warn">${t('{n} no caben: pack lleno', { n: out })}</span>` : ''), out ? 'warn' : 'ok', 6000);
+  return true;
+}
+// coloca un grupo en pads seguidos: desde «at» si está libre, si no en el primer hueco con sitio para todos
+function placeGroup(p, ids, at = null) {
+  const n = ids.length, free = (i) => i >= 0 && i < p.slots.length && !p.slots[i];
+  const fits = (i) => { for (let k = 0; k < n; k++) if (!free(i + k)) return false; return true; };
+  let st = at != null && fits(at) ? at : -1;
+  if (st < 0) { const pg = at != null ? Math.floor(at / 16) * 16 : 0; for (let i = pg; i < p.slots.length && st < 0; i++) if (fits(i)) st = i; }
+  if (st < 0) for (let i = 0; i < p.slots.length && st < 0; i++) if (fits(i)) st = i;
+  let left = 0;
+  ids.forEach((id, k) => {
+    let i = st >= 0 ? st + k : (at != null && free(at) ? at : p.slots.findIndex((x) => !x));
+    if (i < 0) { left++; return; }
+    p.slots[i] = id; p.names[i] = slotName(S.byId[id]);
+  });
+  return { left, at: st };
+}
+async function unsplit(s, { quiet = false } = {}) {
+  const parts = partsOf(s); if (!s) return;
+  const ids = new Set(parts.map((x) => x.id));
+  for (const p of S.packs) {
+    const first = p.slots.findIndex((x) => ids.has(x)); if (first < 0) continue;
+    p.slots.forEach((x, i) => { if (ids.has(x)) { p.slots[i] = null; p.names[i] = ''; } });
+    if (!p.slots.includes(s.id)) { p.slots[first] = s.id; p.names[first] = shortName(s.name); }
+    await savePack(p);
+  }
+  // las partes se pueden volver a crear: se borran del todo (no van a la papelera ni se excluyen)
+  for (const x of parts) { await S.lib.del('samples', x.id); try { await S.lib.del('blobs', x.sha); } catch {} delete S.byId[x.id]; S.multi.delete(x.id); }
+  S.samples = S.samples.filter((x) => !ids.has(x.id));
+  if (S.listen.queue.length) S.listen.queue = S.listen.queue.filter((id) => !ids.has(id));
+  if (ids.has(S.sel)) S.sel = s.id;
+  delete s.user.split; await saveSample(s); invalidateAll();
+  if (!quiet) toast(t('Vuelven a ser un solo sample.'), 'ok', 3000);
+}
+// al cambiar las slices elegidas de un sample separado: se vuelven a separar (o se unen si queda una)
+async function afterKeepChange(s) {
+  if (!partsOf(s).length) return;
+  const k = keepOf(s);
+  if (k && new Set(k.sel).size >= 2) await splitSample(s); else await unsplit(s);
+}
+async function setRole(p, role) {
+  const r = relOf(p); if (!r) return;
+  r.role = PART_ROLES.includes(role) ? role : ''; await saveSample(p);
+  for (const pk of S.packs) { let ch = false; pk.slots.forEach((x, i) => { if (x === p.id) { pk.names[i] = partLabel(p); ch = true; } }); if (ch) await savePack(pk); }
+  invalidateAll();
+}
+
+// ---------- interfaz ----------
+function roleSelect(p) {
+  const r = relOf(p);
+  return `<select class="prole" data-part="${p.id}" title="${t('Papel de esta parte')}"><option value="">${t('Parte {i}', { i: r.i + 1 })}</option>${PART_ROLES.map((x) => `<option value="${x}" ${r.role === x ? 'selected' : ''}>${t(x)}</option>`).join('')}</select>`;
+}
+// bloque «Al exportar» dentro de «Acortar» (solo con slices elegidas)
+function splitHTML(s) {
+  const k = keepOf(s); if (!k) return '';
+  const parts = partsOf(s), n = new Set(k.sel).size, on = parts.length > 0;
+  const list = on ? `<div class="splist">${parts.map((p) => `<span class="sppart"><b>${relOf(p).i + 1}</b> <span class="dim">${t('slice {i}', { i: relOf(p).slice })}</span> ${roleSelect(p)}
+      <button class="btn small ghost" data-act="play" data-id="${p.id}" title="${t('Escuchar')}">▶</button><button class="btn small ghost" data-act="sel" data-id="${p.id}">${t('Ver')}</button></span>`).join('')}</div>
+    <p class="note">${t('Son samples de la biblioteca, en «{f}», con la categoría, la subcarpeta y las etiquetas de este. En los packs van en pads seguidos y se exportan cada uno con su nombre: «{a}», «{b}»…', { f: esc(t('Partes') + '/' + baseOf(s)), a: esc(partLabel(parts[0])), b: esc(partLabel(parts[1])) })}</p>` : '';
+  return `<div class="shsplit"><span class="lbl">${t('Al exportar')}</span>
+    <span class="seg"><button class="${on ? '' : 'on'}" data-act="sp-join" data-id="${s.id}">${t('Unidas en un sample')}</button><button class="${on ? 'on' : ''}" data-act="sp-split" data-id="${s.id}" ${n < 2 ? 'disabled' : ''}>${t('Cada slice por separado ({n})', { n })}</button></span>
+    <span class="dim">${on ? t('Relacionadas: el papel de cada una le da nombre.') : n < 2 ? t('Con una sola slice no hay nada que separar.') : t('Por separado, cada slice será un sample (p. ej. el loop y el loop con fill), juntas en el pack.')}</span>
+    ${list}</div>`;
+}
+// en la ficha de una parte: de dónde sale y sus hermanas
+function relHTML(s) {
+  const r = relOf(s); if (!r) return '';
+  const par = parentOf(s), sib = siblingsOf(s);
+  return ` · ${t('parte {i} de {n} de', { i: r.i + 1, n: r.n })} ${par ? `<button class="btn small ghost" data-act="sel" data-id="${par.id}">«${esc(baseOf(par))}»</button>` : `«${esc(r.base || '')}»`}
+    ${sib.filter((x) => x.id !== s.id).map((x) => `<button class="btn small ghost" data-act="sel" data-id="${x.id}" title="${esc(partLabel(x))}">${relOf(x).i + 1}${relOf(x).role ? ' · ' + esc(t(relOf(x).role)) : ''}</button>`).join('')} ${roleSelect(s)}`;
+}
+// en el pad del pack
+function padLinkHTML(s) { const r = relOf(s); return r ? `<span class="plink" title="${esc(t('parte {i} de {n} de', { i: r.i + 1, n: r.n }) + ' «' + (r.base || '') + '»')}">⛓ ${r.i + 1}/${r.n}</span>` : ''; }
+
+document.addEventListener('change', (ev) => {
+  const el = ev.target; if (!el.classList?.contains('prole')) return;
+  const p = S.byId[el.dataset.part]; if (!p) return;
+  setRole(p, el.value).then(() => { if (S.view === 'packs') renderAll(); else renderDetail(); });
+});
+Object.assign(ACT, {
+  'sp-split': async (el) => { const s = S.byId[el.dataset.id]; if (s && !partsOf(s).length && await splitSample(s)) renderAll(); },
+  'sp-join': async (el) => { const s = S.byId[el.dataset.id]; if (s && partsOf(s).length) { await unsplit(s); renderAll(); } },
+});
+
+// ---- src/ui/app_mono.js ----
+// ui/app_mono.js — v2.8: mono reparado para la Rhythm (core/dsp.js · toMono / monoRepair).
+// Solo cambia lo que va a la Rhythm (48 kHz · mono). El archivo y las exportaciones «como el original» siguen en estéreo.
+
+// Las fichas analizadas antes de 2.8 no saben cómo se repara: se calcula al abrirlas, una vez, y se guarda.
+const _monoBusy = new Set();
+async function monoEnsure(s) {
+  const a = s?.analysis;
+  if (!a || a.error || !a.stereo || a.identicalLR || a.mono || _monoBusy.has(s.id)) return;
+  _monoBusy.add(s.id);
+  try {
+    const d = await decodedOf(s), m = toMono(d.channels, 'auto', d.sampleRate);
+    a.mono = { used: m.used, ...(m.fix ? { lossBefore: +m.fix.lossBefore.toFixed(2), lossAfter: +m.fix.lossAfter.toFixed(2), delayMs: +(m.fix.delayMs || 0).toFixed(2), flipped: !!m.fix.flipped, lead: m.fix.lead || null, worstDb: +(m.fix.worstDb || 0).toFixed(1), worstHz: Math.round(m.fix.worstHz || 0) } : {}) };
+    await saveSample(s); invalidateAll();
+    if (current() === s) renderDetail();
+  } catch { /* sin audio a mano (carpeta sin reconectar): se queda como estaba */ }
+  finally { _monoBusy.delete(s.id); }
+}
+// ▶ Suma / Reparado / L / R: lo que sonaría en la Rhythm con cada forma de pasar a mono
+async function monoAB(s, mode) {
+  if (!s) return;
+  try {
+    const d = await decodedOf(s), r = render(d, { ...recipeOf(s), mono: mode });
+    Player.play([r.data], 48000, { key: s.id + '|mono|' + mode, playbackRate: Math.pow(2, S.tune / 12), onEnd: repaintTransport });
+    document.querySelectorAll('[data-act="mono-ab"]').forEach((b) => b.classList.toggle('on', b.dataset.v === mode));
+  } catch (e) { toast(esc(e.message || e), 'bad', 5000); }
+}
+Object.assign(ACT, { 'mono-ab': (el) => monoAB(S.byId[el.dataset.id], el.dataset.v) });
 
 // ---- src/ui/app_trash.js ----
 // ui/app_trash.js — v1.5: eliminar sin preguntar (Supr) con deshacer, papelera, atajos (?) y etiquetas rápidas (Alt+1…9).
@@ -7890,7 +8452,7 @@ async function aboutHTML() {
     <p class="note">${t('No hay cuentas, servidores ni seguimiento. Tus samples, fichas y packs se guardan solo en este navegador; las carpetas enlazadas se leen de tu disco y no se copian. Nada se envía a ningún sitio, tampoco el informe de fallos: lo copias tú si quieres.')}</p>
     <p class="note">${t('Espacio usado en este navegador: {u} de {q}.', { u: mb(st.used), q: mb(st.quota) })} ${st.persisted ? `<span class="ok">${t('Almacenamiento persistente concedido.')}</span>` : `<span class="warn">${t('El navegador podría borrar los datos si le falta espacio: descarga copias de seguridad.')}</span>`}</p>
     <h3>${t('Sin garantía')}</h3>
-    <p class="note">${t('Se ofrece tal cual, sin garantía. Las funciones marcadas «sin verificar» se basan en la documentación y aún no se han confirmado en todos los equipos. Antes de escribir en la microSD por primera vez, haz una copia de la tarjeta.')}</p>
+    <p class="note">${t('Se ofrece tal cual, sin garantía. Antes de escribir en la microSD por primera vez, haz una copia de la tarjeta.')}</p>
     <h3>${t('Créditos y licencias')}</h3>
     <p class="note">${t('Código bajo licencia {l}. Formato de pack y de proyecto basado en el trabajo abierto del proyecto CircuitGM (plantilla de proyecto vacío con licencia MPL-2.0). Fuentes Archivo, Barlow Condensed y JetBrains Mono (SIL Open Font License).', { l: esc(SITE.license || 'GPL-3.0') })}</p>
     <h3>${t('Informar de un fallo')}</h3>
@@ -7903,7 +8465,7 @@ async function aboutHTML() {
 function sdConfirm(then) {
   if (S.set.sdConfirmed) { then(); return; }
   modal(`<h2>${t('Antes de escribir en la tarjeta')}</h2>
-    <p class="note" style="color:var(--ink)">${t('La herramienta solo crea un pack nuevo en una posición libre y nunca sobrescribe lo que hay. Aun así, esta función no está verificada en todos los equipos.')}</p>
+    <p class="note" style="color:var(--ink)">${t('La herramienta solo crea un pack nuevo en una posición libre y nunca sobrescribe lo que hay. Aun así, haz antes una copia de la tarjeta.')}</p>
     <ul class="note" style="color:var(--ink)"><li>${t('Copia la carpeta Rhythm de la tarjeta a tu ordenador.')}</li><li>${t('La tarjeta debe estar en FAT32 y la Rhythm con el firmware al día.')}</li><li>${t('Expulsa la tarjeta desde el sistema antes de sacarla.')}</li></ul>
     <label class="inl" style="color:var(--ink)"><input type="checkbox" id="sd-ok"> ${t('He hecho una copia de la tarjeta')}</label>
     <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn" data-act="modal-close">${t('Cancelar')}</button><button class="btn primary" id="sd-go">${t('Continuar')}</button></div>`);

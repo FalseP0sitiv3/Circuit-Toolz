@@ -1,8 +1,9 @@
 // ui/app_org.js — v1.4: carpetas y subcarpetas, etiquetas, efectos detectados, palabras del nombre y reanálisis
 // «por parecido». Vive dentro de 01 Biblioteca (Muestras · Reanalizar · Carpetas y etiquetas) y en la ficha del sample.
-import { taxonomy, addSubfolder, renameSubfolder, moveSubfolder, removeSubfolder, resetTax, subLabelOf, proposeSub, detectTags, wordIndex, wordsOf, neighbourGuess, vecDist, TAG_PALETTE, PALETTE_GROUPS } from '../core/taxonomy.js';
+import { taxonomy, addSubfolder, renameSubfolder, moveSubfolder, removeSubfolder, resetTax, subLabelOf, proposeSub, contentSubFor, defaultSubLabel, detectTags, wordIndex, wordsOf, neighbourGuess, vecDist, TAG_PALETTE, PALETTE_GROUPS } from '../core/taxonomy.js';
 import { featureVec } from '../core/map.js';
 import { CATS } from '../core/classify.js';
+import { catFolderName } from '../core/organize.js';
 
 const GROUP_LABEL = () => ({ fx: t('Efectos'), char: t('Carácter'), use: t('Uso') });
 const taxOf = (cat) => taxonomy(S.set.tax, cat);
@@ -37,6 +38,43 @@ async function setSub(list, sub) {
   for (const s of list) { if (sub) s.user.sub = sub; else delete s.user.sub; }
   invalidateAll(); await saveSamples(list);
 }
+// v2.5: categoría y subcarpeta sin pasar por «decidir» (que en Escucha avanza al siguiente).
+// Usado por las pistas clicables y por el portapapeles. Aprende igual que al decidir con una tecla.
+function setCatQuiet(s, cat) {
+  if (!cat || s.user.cat === cat) return false;
+  keepOnDecide(s, s.user.cat || clsOf(s).cat, cat);
+  s.user.cat = cat; s.user.heard = true; learnFrom(S.learned, s, cat); saveLearned();
+  return true;
+}
+// la subcarpeta id de fábrica, recreada si tu lista de subcarpetas de esa categoría ya no la tiene
+function ensureSub(cat, id) {
+  if (taxOf(cat).some((x) => x.id === id)) return false;
+  const label = defaultSubLabel(cat, id); if (!label) return false;
+  S.set.tax = { ...(S.set.tax || {}), [cat]: [...taxOf(cat).map((x) => ({ ...x })), { id, label }] };
+  return true;
+}
+const MELODIC_CLUE = new Set(['bass', 'synth', 'atmos', 'fx', 'vox']);
+// Qué haría usar una pista (cat y palabra o rasgo) en este sample: { cat, sub, label, done }
+function clueUse(s, clueCat, tok) {
+  if (!clueCat) return null;
+  const eff = catFor(s) || clsOf(s).cat;
+  const loopy = ['dloop', 'mloop'].includes(eff) || kindOf(s) === 'loop';
+  let cat = clueCat, sub = null;
+  if (loopy && !['dloop', 'mloop'].includes(clueCat)) {
+    const lc = ['dloop', 'mloop'].includes(eff) ? eff : MELODIC_CLUE.has(clueCat) ? 'mloop' : 'dloop';
+    sub = contentSubFor(lc, clueCat, tok);
+    if (sub) cat = lc;
+  }
+  const label = catLabel(cat) + (sub ? ' › ' + t(subLabelOf(S.set.tax, cat, sub) || defaultSubLabel(cat, sub) || sub) : '');
+  return { cat, sub, label, done: s.user?.cat === cat && (!sub || s.user?.sub === sub) };
+}
+async function applyClue(s, clueCat, tok) {
+  const u = clueUse(s, clueCat, tok); if (!s || !u) return;
+  setCatQuiet(s, u.cat);
+  if (u.sub) { if (ensureSub(u.cat, u.sub)) await saveSettings(); s.user.sub = u.sub; }
+  invalidateAll(); await saveSample(s); refresh();
+  toast(`«${esc(s.name)}» → ${esc(u.label)}`, 'ok', 2500);
+}
 async function addTags(list, tags) {
   const ch = [];
   for (const s of list) { const cur = tagsOf(s); const nx = [...new Set([...cur, ...tags])]; if (nx.length !== cur.length) { s.user.tags = nx; ch.push(s); } }
@@ -53,6 +91,29 @@ async function saveTax(tax) { S.set.tax = tax; await saveSettings(); invalidateA
 let _tagKey = '';
 function refresh() { if (S.view === 'library' && (S.libMode || 'list') === 'list' && allTags().map((x) => x[0]).join('|') === _tagKey) { renderHeader(); paintList(); renderDetail(); } else renderView(); if (typeof paintDock === 'function') paintDock(); }
 
+// ---------- v2.6: dónde acabará el sample ----------
+// La misma regla que «Ordenar en disco»: Categoría / (Loops | One-shots) / Subcarpeta / nombre. Cada tramo dice
+// qué lo decide, así se ve de un vistazo qué hace cada cosa que marcas. Las etiquetas no crean carpetas.
+function subForOrg(s, cat) { const id = s.user?.sub || propsOf(s).sub?.id; return id && cat && taxOf(cat).some((x) => x.id === id) ? id : null; }
+function destSegments(s) {
+  const cat = catFor(s), segs = [];
+  if (!cat) return [{ v: t('_Por revisar'), cap: t('Categoría'), warn: true, hint: t('Elige la categoría con su tecla') }];
+  segs.push({ v: catFolderName(cat), cap: t('Categoría'), prop: !s.user?.cat });
+  if (S._orgKinds !== false && !['dloop', 'mloop'].includes(cat)) segs.push({ v: kindOf(s) === 'loop' ? t('Loops') : t('One-shots'), cap: t('Tipo'), prop: !s.user?.kind });
+  const sub = S._orgSubs !== false ? subForOrg(s, cat) : null;
+  if (sub) segs.push({ v: subName(cat, sub), cap: t('Subcarpeta'), prop: !s.user?.sub });
+  return segs;
+}
+function destHTML(s) {
+  const segs = destSegments(s), tags = tagsOf(s);
+  const file = esc(String(s.name).replace(/\.[^.]+$/, '')) + (S._orgTags && tags.length ? ` <span class="dim">[${tags.map(tagName).map(esc).join(', ')}]</span>` : '');
+  const anyProp = segs.some((x) => x.prop);
+  return `<div class="orow dest"><span class="lbl">${t('Se guarda en')}</span><div>
+    <div class="dpath">${segs.map((x) => `<span class="dseg ${x.prop ? 'prop' : ''} ${x.warn ? 'warn' : ''}" title="${esc(x.hint || '')}"><b>${esc(x.v)}</b><i>${x.cap}</i></span><span class="dsl">/</span>`).join('')}<span class="dseg file"><b>${file}</b><i>${t('Archivo')}</i></span></div>
+    <div class="dnote">${t('Así lo deja «Ordenar en disco» (08 Datos): la categoría es la carpeta, el tipo y la subcarpeta van dentro. Las etiquetas no crean carpetas: sirven para buscar y filtrar.')}${anyProp ? ' ' + t('Lo discontinuo es propuesta: se usa tal cual si no lo cambias.') : ''}</div>
+  </div></div>`;
+}
+
 // ---------- ficha: carpeta y etiquetas ----------
 function orgDetailHTML(s, { compact = false } = {}) {
   const cat = catFor(s) || clsOf(s).cat;
@@ -67,9 +128,10 @@ function orgDetailHTML(s, { compact = false } = {}) {
   const palHTML = PALETTE_GROUPS.map((g) => `<div class="palg"><span class="lbl">${GL[g]}</span>${pal[g].map((x) => { const qn = qt.indexOf(x); return `<button class="chip2 ${tags.includes(x) ? 'on' : ''}" data-act="o-tag-tog" data-v="${esc(x)}" data-id="${s.id}" ${qn >= 0 ? `title="Alt+${qn + 1}"` : ''}>${esc(tagName(x))}${qn >= 0 ? `<sup>${qn + 1}</sup>` : ''}</button>`; }).join('')}</div>`).join('');
   const quick = `<div class="quick"><span class="lbl">${t('Etiquetas rápidas')}</span>${qt.map((x, i) => `<button class="chip2 ${tags.includes(x) ? 'on' : ''}" data-act="o-tag-tog" data-v="${esc(x)}" data-id="${s.id}" title="Alt+${i + 1}">${esc(tagName(x))}<sup>${i + 1}</sup></button>`).join('')}</div>`;
   return `<div class="orgd ${compact ? 'compact' : ''}">
+    ${destHTML(s)}
     ${kindHTML(s)}
     <div class="orow"><span class="lbl">${t('Subcarpeta')}</span><div>${subRow}${propLine}</div></div>
-    <div class="orow"><span class="lbl">${t('Etiquetas')}</span><div><span class="chips">${mine}</span>${det}
+    <div class="orow"><span class="lbl">${t('Etiquetas')}<small>${t('no crean carpetas')}</small></span><div><span class="chips">${mine}</span>${det}
       ${compact ? quick : `<div class="pal">${palHTML}</div>`}
       <input type="text" class="otag" data-id="${s.id}" placeholder="${t('Otra etiqueta y Intro')}" maxlength="24" list="o-taglist"><datalist id="o-taglist">${allTags().slice(0, 60).map(([x]) => `<option value="${esc(x)}">`).join('')}</datalist></div></div>
     ${tagClipHTML(s)}
@@ -227,6 +289,7 @@ function rebulk(msg) { if (msg) toast(msg, 'ok', 2200); modal(bulkHTML()); paint
 const sOf = (el) => S.byId[el.dataset.id] || current();
 async function tagAdd(s, tag) { tag = String(tag || '').trim().slice(0, 24); if (!s || !tag) return; await addTags([s], [tag]); refresh(); }
 Object.assign(ACT, {
+  'why-use': (el) => applyClue(sOf(el) || current(), el.dataset.cat, el.dataset.tok),
   'o-mode': (el) => { S.libMode = el.dataset.v; Player.stop(); renderView(); },
   'o-sub': async (el) => { const s = sOf(el); await setSub([s], s.user.sub === el.dataset.v ? null : el.dataset.v); refresh(); },
   'o-sub-accept': async (el) => { const s = sOf(el); const p = s && propsOf(s); if (p?.sub) { await setSub([s], p.sub.id); refresh(); } },

@@ -92,7 +92,7 @@ function filtered() {
       case 'inpack': if (!inPack.has(s.id)) return false; break;
       case 'discard': if (!s.user?.discard) return false; break;
       case 'long': if (!(rawSeconds(s) > MAX_SAMPLE_S)) return false; break;
-      case 'phase': if (!(a.stereo && a.corr < 0)) return false; break;
+      case 'phase': if (!monoCancels(a)) return false; break;
       case 'problems': if (!(a.error || s.missing || a.clipRuns > 0 || Math.abs(a.dc || 0) > 0.01)) return false; break;
       case 'rated': if (!(s.user?.rating >= 4)) return false; break;
       case 'confirmed': if (!['confirmed', 'user'].includes(c.cert)) return false; break;
@@ -177,7 +177,7 @@ function rowHTML(s, i, inPack) {
   const why = c.cert === 'doubt' ? `<span class="warn">${t('Dudoso')}</span>` : c.cert === 'none' ? `<span class="dim">${t('Sin pistas')}</span>` : esc(bl[c.basis] || '');
   const flags = [u.fav ? '<span style="color:var(--m)">♥</span>' : '', inPack.has(s.id) ? '<span class="ok">●</span>' : '',
     a.error || s.missing ? '<span class="bad">!</span>' : '', rawSeconds(s) > MAX_SAMPLE_S ? '<span class="warn">30s</span>' : '', keepActive(s) ? `<span class="dim" title="${t('Acortado')}">✂</span>` : '', kindOf(s) === 'loop' ? `<span class="dim" title="${t('Loop')}">⟳</span>` : '',
-    a.stereo && a.corr < 0 ? '<span class="warn">Φ</span>' : ''].join(' ');
+    monoCancels(a) ? (recipeOf(s).mono === 'sum' ? `<span class="warn" title="${t('La suma se cancela')}">Φ</span>` : `<span class="ok" title="${t('Se cancela al sumar: reparado para la Rhythm')}">Φ</span>`) : ''].join(' ');
   return `<div class="li ${S.sel === s.id ? 'sel' : ''} ${S.multi.has(s.id) ? 'multi' : ''} ${u.discard ? 'discard' : ''}" style="top:${i * ROW_H}px;--c:${catVar(c.cat)}" data-id="${s.id}" data-act="sel" draggable="true">
     <span class="bar"></span><span class="nm">${esc(s.name.replace(/\.(wav|aiff?|mp3|flac|ogg)$/i, ''))}<small>${esc(folderOf(s.path).split('/').slice(-1)[0])}</small></span>
     <span class="why">${c.cat ? `<span style="color:${catVar(c.cat)}">${catLabel(c.cat)}</span>${u.sub ? `<span class="dim"> / ${esc(subName(c.cat, u.sub) || '')}</span>` : ''} · ` : ''}${why}${u.tags?.length ? ` <span class="dim">#${u.tags.length}</span>` : ''}</span>
@@ -203,19 +203,29 @@ function scrollToSel() {
   paintList();
 }
 
+// v2.5: la subcarpeta junto a la categoría (la tuya, o la propuesta en gris): «Drum loop › Closed-Hats»
+function subTagHTML(s, cat) {
+  if (!cat) return '';
+  const id = s.user?.sub || propsOf(s).sub?.id; if (!id) return '';
+  const l = subLabelOf(S.set.tax, cat, id); if (!l) return '';
+  return `<span class="big-sub ${s.user?.sub ? '' : 'dim'}">› ${esc(t(l))}</span>`;
+}
 function whyHTML(s, c) {
   const a = s.analysis || {};
   const name = c.reasons.filter((r) => r.src === 'name');
   const fold = c.reasons.filter((r) => r.src === 'folder');
   const snd = c.reasons.filter((r) => r.src === 'sound' && SOUND_WHY[r.tok] && SOUND_WHY[r.tok](a));
   const line = (lbl, items) => `<li><b>${lbl}</b> ${items}</li>`;
-  const tokens = (arr) => arr.map((r) => `«${esc(r.tok)}» → <span style="color:${catVar(r.cat)}">${catLabel(r.cat)}</span>${r.why === 'learned' ? ` <span class="dim">(${t('regla aprendida')})</span>` : ''}`).join(', ');
+  // v2.5: cada pista es un botón: un clic la usa para archivar el sample (categoría o, en un loop, lo que suena en él)
+  const use = (r, inner) => { const u = clueUse(s, r.cat, r.tok); return u ? `<button class="clue ${u.done ? 'on' : ''}" data-act="why-use" data-id="${s.id}" data-cat="${r.cat}" data-tok="${esc(r.tok)}" title="${esc(u.done ? t('Ya está así') : t('Usar') + ': ' + u.label)}">${inner}${u.done ? ' ✓' : ''}</button>` : inner; };
+  const tokens = (arr) => arr.map((r) => use(r, `«${esc(r.tok)}» → <span style="color:${catVar(r.cat)}">${catLabel(r.cat)}</span>${r.why === 'learned' ? ` <span class="dim">(${t('regla aprendida')})</span>` : ''}`)).join(' ');
   let html = '<ul class="why-list">';
   if (c.cert === 'user') html += line(t('Tú'), t('lo decidiste al escuchar') + (c.auto?.cat && c.auto.cat !== c.cat ? ` · <span class="dim">${t('la herramienta proponía {c}', { c: `<span style="color:${catVar(c.auto.cat)}">${catLabel(c.auto.cat)}</span>` })}</span>` : ''));
   html += line(t('Nombre'), name.length ? tokens(name) : `<span class="dim">${t('nada reconocible')}</span>`);
   html += line(t('Carpeta'), fold.length ? tokens(fold) : `<span class="dim">${t('nada reconocible')}</span>`);
-  html += line(t('Sonido'), a.error ? `<span class="bad">${t('no se pudo medir')}</span>` : snd.length ? snd.slice(0, 3).map((r) => `<span style="color:${catVar(r.cat)}">${catLabel(r.cat)}</span>: ${SOUND_WHY[r.tok](a)}`).join(' · ') : `<span class="dim">${t('sin rasgos claros')}</span>`);
+  html += line(t('Sonido'), a.error ? `<span class="bad">${t('no se pudo medir')}</span>` : snd.length ? snd.slice(0, 3).map((r) => use(r, `<span style="color:${catVar(r.cat)}">${catLabel(r.cat)}</span>: ${SOUND_WHY[r.tok](a)}`)).join(' ') : `<span class="dim">${t('sin rasgos claros')}</span>`);
   html += '</ul>';
+  if (c.reasons.length) html += `<p class="cluehint">${t('Haz clic en una pista para usarla. En un loop, el instrumento que nombra va a su subcarpeta: Drum loop › Closed-Hats.')}</p>`;
   if (c.conflict) html += `<div class="conflict">⚠ ${t('El texto dice {a} y suena a {b}. Escúchalo y decide.', { a: `<b>${catLabel(c.conflict.said)}</b>`, b: `<b>${catLabel(c.conflict.heard)}</b>` })}</div>`;
   return html;
 }
@@ -250,7 +260,7 @@ function measHTML(s) {
     [t('Tono'), a.f0conf > 0.6 ? `${a.note} ${a.cents ? `<span class="dim">${a.cents > 0 ? '+' : ''}${a.cents} ct</span>` : ''} <span class="dim">· ${nf(a.f0, 1)} Hz · ${t('confianza')} ${nf(a.f0conf * 100, 0)} %</span>` : `<span class="dim">${t('sin tono claro')}</span>`],
     [t('Brillo'), `${nf(a.centroid / 1000, 1)} kHz <span class="dim">· ${t('ruido')} ${nf((a.flatness || 0) * 100, 0)} %</span>`],
     [t('Bandas'), `${bands} <span class="dim mono">sub·low·lmid·mid·high·air</span>`],
-    [t('Estéreo'), !a.stereo ? t('mono') : a.identicalLR ? t('estéreo con canales idénticos') : `${t('correlación')} ${nf(a.corr, 2)} · ${a.corr < 0 ? `<span class="bad">${t('se cancela en mono')}</span>` : t('en mono pierde {d} dB', { d: nf(a.monoLossDb, 1) })}`],
+    [t('Estéreo'), !a.stereo ? t('mono') : a.identicalLR ? t('estéreo con canales idénticos') : `${t('correlación')} ${nf(a.corr, 2)} · ${monoCancels(a) ? `<span class="warn">${t('al sumar se cancela')}</span>${a.mono?.worstDb ? ' ' + t('(hasta −{d} dB hacia {f})', { d: nf(Math.min(40, a.mono.worstDb), 0), f: hzLabel(a.mono.worstHz) }) : ''}` : t('en mono pierde {d} dB', { d: nf(a.monoLossDb, 1) })}`],
     [t('Formato'), `${(a.format || s.ext || '').toUpperCase()} · ${nf(a.sr / 1000, 1)} kHz · ${a.bits ? a.bits + ' bit · ' : ''}${a.ch === 1 ? 'mono' : t('{n} canales', { n: a.ch })}`],
   ];
   if (isLoop || a.loopBpm) rows.push([t('Tempo'), `${a.loopBpm ? `${nf(a.loopBpm, 1)} BPM · ${t('{n} tiempos', { n: a.loopBeats })}` : '—'}${s.info?.bpm ? ` · ${t('el nombre dice {b}', { b: s.info.bpm })}` : ''}`]);
@@ -258,11 +268,36 @@ function measHTML(s) {
   if (s.info?.key) rows.push([t('Tonalidad (nombre)'), esc(s.info.key)]);
   return `${revisionHTML(s)}<dl class="meas">${rows.map(([k, val]) => `<dt>${k}</dt><dd>${val}</dd>`).join('')}</dl>`;
 }
+// ---------- v2.8: mono reparado ----------
+// ¿La suma tal cual se cancela? Con el análisis de 2.8 (a.mono) se sabe cómo se repara; con uno anterior, por la correlación.
+function monoCancels(a) { return !!(a && a.stereo && !a.identicalLR && (a.mono ? ['flip', 'align', 'spectral'].includes(a.mono.used) : a.corr < 0)); }
+const hzLabel = (f) => (f >= 1000 ? nf(f / 1000, 1) + ' kHz' : Math.round(f) + ' Hz');
+function monoText(a, r) {
+  if (!a.stereo) return t('el archivo ya es mono');
+  if (r.mono === 'left') return t('solo el canal izquierdo');
+  if (r.mono === 'right') return t('solo el canal derecho');
+  if (r.mono === 'sum') return monoCancels(a) ? `<span class="warn">${t('suma tal cual: se cancela')}</span>` : t('suma L+R');
+  if (a.identicalLR) return t('canal izquierdo (son iguales)');
+  const m = a.mono;
+  if (!m) return a.corr < 0 ? t('la suma se cancela: se repara al exportar') : t('suma L+R');
+  const was = m.worstDb ? t('antes, hasta −{d} dB hacia {f}', { d: nf(Math.min(40, m.worstDb), 0), f: hzLabel(m.worstHz) }) : '';
+  const ok = (txt) => `<span class="ok">✓ ${t('Reparado')}</span>: ${txt}${was ? ` <span class="dim">(${was})</span>` : ''}`;
+  if (m.used === 'flip') return ok(t('un canal estaba invertido; se le da la vuelta'));
+  if (m.used === 'align') return ok(t('el canal {c} va {ms} ms por delante; se alinean', { c: m.lead === 'R' ? t('derecho') : t('izquierdo'), ms: nf(m.delayMs, 1) }) + (m.flipped ? ' ' + t('e invierten') : ''));
+  if (m.used === 'spectral') return ok(t('suma alineada por frecuencias'));
+  return r.mono === 'repair' ? t('suma alineada por frecuencias') : t('suma L+R (no se cancela)');
+}
+// comparar a oído: suma tal cual, reparado, solo L, solo R (siempre como en la Rhythm)
+function monoABHTML(s) {
+  const a = s.analysis || {};
+  if (!a.stereo || a.identicalLR) return '';
+  return `<span class="monoab"><span class="dim">${t('Comparar')}</span> ${[['sum', t('Suma')], ['repair', t('Reparado')], ['left', 'L'], ['right', 'R']].map(([k, l]) => `<button class="btn small ghost" data-act="mono-ab" data-v="${k}" data-id="${s.id}">▶ ${l}</button>`).join('')}</span>`;
+}
 function prepHTML(s) {
   const r = recipeOf(s), a = s.analysis || {};
   const sec = sampleSeconds(s);
   const capped = rawSeconds(s) > MAX_SAMPLE_S;
-  const mono = !a.stereo ? 'mono' : r.mono === 'auto' ? (a.identicalLR ? t('canal izquierdo (son iguales)') : a.corr < 0 ? t('el canal más fuerte (la suma se cancela)') : t('suma L+R')) : { sum: t('suma L+R'), left: t('canal izquierdo'), right: t('canal derecho') }[r.mono];
+  const mono = monoText(a, r);
   return `<div class="prep">
     <span class="lbl">${t('Recorte')}</span><span class="row"><label class="inl"><input type="checkbox" data-rc="autoTrim" ${r.autoTrim ? 'checked' : ''}> ${t('quitar silencio y cola bajo')}</label>
       <input type="number" data-rc="thresholdDb" value="${r.thresholdDb}" step="6" min="-90" max="-24" style="width:64px"> dB</span>
@@ -270,12 +305,13 @@ function prepHTML(s) {
     <span class="lbl">${t('Fundidos')}</span><span class="row">${t('entrada')} <input type="number" data-rc="fadeInMs" value="${r.fadeInMs}" min="0" step="1" style="width:64px"> ms · ${t('salida')} <input type="number" data-rc="fadeOutMs" value="${r.fadeOutMs}" min="0" step="5" style="width:64px"> ms</span>
     <span class="lbl">${t('Nivel')}</span><span class="row"><select data-rc="normalize"><option value="peak" ${r.normalize === 'peak' ? 'selected' : ''}>${t('normalizar pico a')}</option><option value="none" ${r.normalize === 'none' ? 'selected' : ''}>${t('ganancia fija')}</option><option value="loud" ${r.normalize === 'loud' ? 'selected' : ''}>${t('volumen percibido a')}</option></select>
       ${r.normalize === 'peak' ? `<input type="number" data-rc="targetDb" value="${r.targetDb}" step="0.5" max="0" min="-24" style="width:64px"> dBFS` : r.normalize === 'loud' ? `<input type="number" data-rc="targetLufs" value="${r.targetLufs}" step="0.5" max="0" min="-40" style="width:64px"> LUFS <span class="dim">${t('sin pasar de {d} dBFS de pico', { d: nf(r.targetDb, 1) })}</span>` : `<input type="number" data-rc="gainDb" value="${r.gainDb || 0}" step="0.5" min="-24" max="24" style="width:64px"> dB`}</span>
-    <span class="lbl">${t('A mono')}</span><span class="row"><select data-rc="mono">${[['auto', t('automático')], ['sum', t('suma L+R')], ['left', t('canal izquierdo')], ['right', t('canal derecho')]].map(([k, l]) => `<option value="${k}" ${r.mono === k ? 'selected' : ''}>${l}</option>`).join('')}</select> <span class="muted">${esc(mono)}</span></span>
+    <span class="lbl">${t('A mono')}</span><span class="row"><span><select data-rc="mono">${[['auto', t('automático: repara si se cancela')], ['sum', t('suma L+R')], ['repair', t('reparar siempre')], ['left', t('canal izquierdo')], ['right', t('canal derecho')]].map(([k, l]) => `<option value="${k}" ${r.mono === k ? 'selected' : ''}>${l}</option>`).join('')}</select><span class="muted monotxt">${mono}</span>${monoABHTML(s)}
+      <span class="dim monostereo">${t('Solo para la Rhythm: tu archivo y lo que exportes «como el original» siguen en estéreo.')}</span></span></span>
     ${fitHTML(s)}
     <span class="lbl">${t('Afinación')}</span><span class="row">${tuneRowHTML(s)}</span>
     <span class="lbl">${t('Reverse')}</span><span><label class="inl"><input type="checkbox" data-rc="reverse" ${r.reverse ? 'checked' : ''}> ${t('guardar al revés')}</label></span>
   </div>
-  <div class="result ${capped || (a.stereo && a.corr < 0 && r.mono === 'sum') ? 'warn' : ''}">${t('En la Rhythm: 48 kHz · mono · 16 bit · {d}', { d: fmtDur(sec) })}${capped ? ' · ' + t('recortado a 30 s') : ''}${a.stereo && a.corr < 0 && r.mono === 'sum' ? ' · ' + t('⚠ la suma se cancela') : ''}
+  <div class="result ${capped || (monoCancels(a) && r.mono === 'sum') ? 'warn' : ''}">${t('En la Rhythm: 48 kHz · mono · 16 bit · {d}', { d: fmtDur(sec) })}${capped ? ' · ' + t('recortado a 30 s') : ''}${monoCancels(a) && r.mono === 'sum' ? ' · ' + t('⚠ la suma se cancela') : ''}
     ${Object.keys(s.recipe || {}).length ? ` · <button class="btn small ghost" data-act="recipe-reset">${t('Restablecer')}</button>` : ''}</div>`;
 }
 function renderDetail() {
@@ -288,7 +324,7 @@ function renderDetail() {
   const cl = CERT_LABEL();
   d.innerHTML = `
     <div class="label"><div class="nm">${esc(s.name.replace(/\.(wav|aiff?|mp3|flac|ogg)$/i, ''))}</div>
-      <div class="path">${esc(s.path)}${fromHTML(s)}${s.paths?.length > 1 ? ` <b>+${s.paths.length - 1}</b> ${t('copias idénticas')}` : ''}${s.missing ? ` · <b style="color:#b3261e">${t('no encontrado')}</b>` : ''}</div>
+      <div class="path">${esc(s.path)}${fromHTML(s)}${relHTML(s)}${s.paths?.length > 1 ? ` <b>+${s.paths.length - 1}</b> ${t('copias idénticas')}` : ''}${s.missing ? ` · <b style="color:#b3261e">${t('no encontrado')}</b>` : ''}</div>
       <div class="meta"><span>${fmtDur(sampleSeconds(s))}</span>${a.note && a.f0conf > 0.6 && !['dloop', 'mloop'].includes(c.cat) ? `<span>${s.recipe?.tune && effectiveMidi(s) != null ? '♪ ' + noteName(Math.round(effectiveMidi(s))) : a.note}</span>` : ''}${a.loopBpm && isLoopSample(s) ? `<span>${nf(a.loopBpm, 1)} BPM</span>` : ''}${isLoopSample(s) ? `<span>${t('Loop')}</span>` : ''}${s.info?.key ? `<span>${esc(s.info.key)}</span>` : ''}<span>${s.src?.kind === 'root' ? t('enlazado') : t('copiado en el navegador')}</span></div></div>
     <div class="panel" style="margin-top:12px">
       <canvas class="wave" id="wave" width="900" height="200"></canvas>
@@ -305,7 +341,7 @@ function renderDetail() {
     </div>
     ${shortHTML(s)}
     <div class="panel" style="margin-top:12px"><div class="cls">
-      <div class="prop"><span class="big-cat" style="--c:${catVar(c.cat)}">${catLabel(c.cat)}</span><span class="cert ${c.cert}">${cl[c.cert]}</span>
+      <div class="prop"><span class="big-cat" style="--c:${catVar(c.cat)}">${catLabel(c.cat)}</span>${subTagHTML(s, c.cat)}<span class="cert ${c.cert}">${cl[c.cert]}</span>
         <span class="muted" style="font-size:13.5px">${CERT_EXPLAIN()[c.cert]}</span></div>
       ${whyHTML(s, c)}
       ${keysHTML(c, s)}
@@ -448,7 +484,7 @@ function renderListen(v) {
         <div class="transport"><button class="btn primary" data-act="play">${Player.playing ? '■' : '▶'} <span class="kbd">${t('Espacio')}</span></button>
           <span class="seg"><button class="${S.set.play === 'rhythm' ? 'on' : ''}" data-act="playmode" data-v="rhythm">${t('Como en la Rhythm')}</button><button class="${S.set.play === 'orig' ? 'on' : ''}" data-act="playmode" data-v="orig">${t('Original')}</button></span>
           <span class="muted">${fmtDur(sampleSeconds(s))}${s.analysis?.note && s.analysis.f0conf > 0.6 ? ' · ' + s.analysis.note : ''}${s.analysis?.loopBpm ? ' · ' + nf(s.analysis.loopBpm, 1) + ' BPM' : ''}</span>${sampleToolsHTML(s)}<span class="grow"></span><button class="btn danger" data-act="trash-del" title="${t('Fuera de la biblioteca (a la papelera; Ctrl Z deshace)')}">${t('Eliminar')} <span class="kbd">${t('Supr')}</span></button></div>
-        <div class="prop" style="margin:12px 0 6px"><span class="muted">${t('Propuesta')}</span><span class="big-cat" style="--c:${catVar(c.cat)}">${catLabel(c.cat)}</span><span class="cert ${c.cert}">${CERT_LABEL()[c.cert]}</span>${rateHTML(s)}${s.user?.fav ? '<span style="color:var(--m)">♥</span>' : ''}</div>
+        <div class="prop" style="margin:12px 0 6px"><span class="muted">${t('Propuesta')}</span><span class="big-cat" style="--c:${catVar(c.cat)}">${catLabel(c.cat)}</span>${subTagHTML(s, c.cat)}<span class="cert ${c.cert}">${CERT_LABEL()[c.cert]}</span>${rateHTML(s)}${s.user?.fav ? '<span style="color:var(--m)">♥</span>' : ''}</div>
         ${whyHTML(s, c)}
         <div style="margin-top:10px">${keysHTML(c, s)}</div>
         <div class="sep"></div>${orgDetailHTML(s, { compact: true })}
@@ -528,7 +564,7 @@ function renderPacks(v) {
         <button class="btn" data-act="exp-sdzip">${t('ZIP para la SD')}</button>
         <button class="btn" data-act="exp-wav">${t('WAV numerados + CSV')}</button></div>
       <p class="note"><b>Components</b>: ${t('archivo .circuitrhythmpack para abrir en Components y enviarlo a la Rhythm.')} ${p.extra?.projects?.length ? t('Incluye los {n} proyectos del pack original.', { n: p.extra.projects.length }) : t('Con proyectos vacíos.')}<br>
-        <b>${t('Tarjeta SD')}</b>: ${t('escribe Rhythm/<n>/PCM directamente en la microSD (Chrome/Edge). No sobrescribe packs existentes.')}<span class="tag-unv">${t('sin verificar en tu equipo')}</span></p>
+        <b>${t('Tarjeta SD')}</b>: ${t('escribe Rhythm/<n>/PCM directamente en la microSD (Chrome/Edge). No sobrescribe packs existentes.')}</p>
       ${S.midiOn && S.midi.out ? `<div class="sep"></div><button class="btn" data-act="pack-walk">${t('Recorrer el pack en la Rhythm')}</button> <span class="note">${t('Pista {n}, CC 8 + nota', { n: S.set.track + 1 })}</span>` : ''}
     </div>
   </aside></div>`;
@@ -548,7 +584,7 @@ function padHTML(p, i, role, roles, usage) {
   const sec = sampleSeconds(s);
   const off = role.cats && c.cat && !role.cats.includes(c.cat);
   const warn = rawSeconds(s) > MAX_SAMPLE_S ? '<span class="warn">30s</span>' : off ? `<span class="dim" title="${t('No coincide con el papel del slot')}">≠</span>` : '';
-  return `<div class="pad filled ${sel} ${usage[i] ? 'used' : ''}" data-act="slot" data-i="${i}" draggable="true" style="--c:${catVar(c.cat)}" title="${esc(s.name)}"><span class="no">${i + 1}</span><span class="ps">${nf(sec, sec < 10 ? 2 : 1)}</span><span class="pn">${esc(p.names[i] || s.name)}</span><span class="pw">${warn}</span></div>`;
+  return `<div class="pad filled ${sel} ${usage[i] ? 'used' : ''}" data-act="slot" data-i="${i}" draggable="true" style="--c:${catVar(c.cat)}" title="${esc(s.name)}"><span class="no">${i + 1}</span><span class="ps">${nf(sec, sec < 10 ? 2 : 1)}</span><span class="pn">${esc(p.names[i] || s.name)}</span><span class="pw">${padLinkHTML(s)}${warn}</span></div>`;
 }
 function packCandidates(role) {
   const q = S.packQ.trim().toLowerCase();
@@ -588,7 +624,6 @@ function renderDevice(v) {
       <h3>${t('Macros de la pista')} <span class="muted" style="text-transform:none;letter-spacing:0">${t('(la pista elegida en Conexión)')}</span></h3>
       <div class="knobs">${names.map((n, i) => `<label class="knob">${n} <span class="mono">CC ${CC.macros[i]}</span><input type="range" min="0" max="127" value="${[64, 0, 127, 64, 0, 0, 127, 0][i]}" data-macro="${i}" ${S.midiOn && m.out ? '' : 'disabled'}></label>`).join('')}</div>
       <button class="btn small" data-act="dev-macro-reset" ${S.midiOn && m.out ? '' : 'disabled'}>${t('Macros a su valor por defecto')}</button>
-      <p class="note">${t('Sin verificar en tu equipo')}: ${t('que el CC 8 cambie el sample activo de la pista y el tiempo que necesita antes de la nota (25 ms).')}</p>
     </section>
     ${trackPanelHTML()}
     <section class="panel"><h2>${t('Registro MIDI')}</h2><div class="log">${m.log.slice(-24).map((l) => new Date(l.t).toLocaleTimeString(LOCALE) + '  ' + l.bytes.map((b) => b.toString(16).padStart(2, '0')).join(' ')).join('\n') || t('Nada enviado todavía.')}</div></section>
@@ -619,7 +654,7 @@ function renderData(v) {
         <span class="lbl">${t('Pico al normalizar')}</span><span><input type="number" id="set-target" value="${S.set.targetDb}" step="0.5" max="0" min="-24" style="width:70px"> dBFS</span>
         <span class="lbl">${t('Umbral de recorte')}</span><span><input type="number" id="set-thr" value="${S.set.thresholdDb}" step="6" max="-24" min="-90" style="width:70px"> dB</span>
         <span class="lbl">${t('BPM por defecto')}</span><span><input type="number" id="set-bpm" value="${S.set.bpm}" min="40" max="240" style="width:70px"></span>
-        <span class="lbl">${t('Nombres en la SD')}</span><span><select id="set-sep"><option value="__" ${S.set.sep === '__' ? 'selected' : ''}>00__Kick.wav</option><option value="_" ${S.set.sep === '_' ? 'selected' : ''}>00_Kick.wav</option></select> <span class="tag-unv">${t('Novation escribe «__» y pone de ejemplo «_»')}</span></span>
+        <span class="lbl">${t('Nombres en la SD')}</span><span><select id="set-sep"><option value="__" ${S.set.sep === '__' ? 'selected' : ''}>00__Kick.wav</option><option value="_" ${S.set.sep === '_' ? 'selected' : ''}>00_Kick.wav</option></select> <span class="muted" style="font-size:12px">${t('Novation escribe «__» y pone de ejemplo «_»')}</span></span>
       </div>
     </section>
     <section class="panel"><h2>${t('Ordenar en disco')}</h2>${organizeHTML()}</section>

@@ -19,7 +19,7 @@ function revision(s) {
     [t('Sin silencio inicial (o se quita)'), (a.leadMs || 0) <= 2 || r.autoTrim || r.trimStart != null],
     [t('Sin saturación'), !a.clipRuns],
     [t('Sin desplazamiento DC'), Math.abs(a.dc || 0) <= 0.01],
-    [t('En mono no se cancela'), !(a.stereo && a.corr < 0 && r.mono === 'sum')],
+    [t('En mono no se cancela (o se repara)'), !(monoCancels(a) && r.mono === 'sum')],
     [t('Nivel suficiente (pico > −24 dBFS)'), (a.peakChDb ?? a.peakDb ?? -99) > -24],
   ];
   return { ok: checks.filter((c) => c[1]).length, checks, fails: checks.filter((c) => !c[1]) };
@@ -229,7 +229,7 @@ function renderPatterns(v) {
     <p class="note" style="margin-top:0">${S.pack ? t('El sample de cada pista sale del pack «{p}». En la Rhythm se elige con CC 8.', { p: esc(S.pack.name) }) : t('Crea un pack en 04 Packs para elegir el sample de cada pista.')}</p>
     ${kit.map((sl, t2) => { const pm = sampleMidiOf(sl); return `<label class="kitrow"><span>${t('Pista {n}', { n: t2 + 1 })}</span><select data-kit="${t2}">${slotOpts(sl)}</select>${pm != null && p.lanes[t2].melodic ? `<span class="mono muted" title="${t('Tono medido: el patrón se transpone para sonar en la tónica')}">${noteLabel(pm)}</span>` : '<span></span>'}</label>`; }).join('')}
     <div class="row" style="margin-top:8px"><button class="btn small" data-act="kit-default">${t('Kit por defecto (página = pista)')}</button><button class="btn small" data-act="kit-send" ${S.midiOn && S.midi.out ? '' : 'disabled'}>${t('Enviar kit a la Rhythm')}</button></div>
-    <p class="note">${t('Escuchar aquí usa los samples preparados del kit (48 kHz · mono), sin el equipo. Bass y Synth se transponen según su tono medido.')}<span class="tag-unv">${t('sin verificar en tu equipo')}</span> ${t('el CC 8 y la grabación de notas que llegan por USB.')}</p>
+    <p class="note">${t('Escuchar aquí usa los samples preparados del kit (48 kHz · mono), sin el equipo. Bass y Synth se transponen según su tono medido.')}</p>
   </aside></div>`;
 }
 
@@ -290,17 +290,18 @@ function orgOpts() {
   return { by: document.getElementById('org-by')?.value || 'category', subs: S._orgSubs !== false, kinds: S._orgKinds !== false, tagsInName: !!S._orgTags, converted: document.getElementById('org-conv')?.checked || false, includeDiscarded: false, minCert: document.getElementById('org-cert')?.value || 'onehint', reviewDir: t('_Por revisar'), kindDir: { loop: t('Loops'), oneshot: t('One-shots') } };
 }
 function orgPlan() {
-  return organizePlan(S.samples.filter((s) => !s.analysis?.error).map((s) => { const c = clsOf(s); return { id: s.id, name: s.name, path: s.path, ext: s.ext, cat: c.cat, cert: c.cert, discard: s.user?.discard, sub: s.user?.sub && c.cat ? subName(c.cat, s.user.sub) : null, kind: kindOf(s), tags: (s.user?.tags || []).map(tagName), rating: s.user?.rating || 0, fav: !!s.user?.fav }; }), orgOpts());
+  return organizePlan(S.samples.filter((s) => !s.analysis?.error).map((s) => { const c = clsOf(s); return { id: s.id, name: s.name, path: s.path, ext: s.ext, cat: c.cat, cert: c.cert, discard: s.user?.discard, sub: c.cat && subForOrg(s, c.cat) ? subName(c.cat, subForOrg(s, c.cat)) : null, kind: kindOf(s), tags: (s.user?.tags || []).map(tagName), rating: s.user?.rating || 0, fav: !!s.user?.fav }; }), orgOpts());
 }
 function organizeHTML() {
   if (!S.samples.length) return `<p class="muted">${t('Importa samples primero.')}</p>`;
   const plan = orgPlan();
   return `<div class="prep"><span class="lbl">${t('Ordenar')}</span><select id="org-by"><option value="category">${t('por categoría')}</option><option value="folder" ${S._orgBy === 'folder' ? 'selected' : ''}>${t('por carpeta de origen')}</option></select>
     <span class="lbl">${t('Certeza mínima')}</span><select id="org-cert">${[['user', t('Decidido por ti')], ['confirmed', t('Confirmado o más')], ['onehint', t('Una pista o más')], ['any', t('Cualquiera')]].map(([k, l]) => `<option value="${k}" ${(S._orgCert || 'onehint') === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
-    <span class="lbl">${t('Subcarpetas')}</span><label class="inl"><input type="checkbox" id="org-subs" ${S._orgSubs !== false ? 'checked' : ''}> ${t('dentro de cada categoría, las tuyas (01 Biblioteca → Carpetas y etiquetas)')}</label>
+    <span class="lbl">${t('Subcarpetas')}</span><label class="inl"><input type="checkbox" id="org-subs" ${S._orgSubs !== false ? 'checked' : ''}> ${t('dentro de cada categoría: la que marcaste o, si no, la propuesta')}</label>
     <span class="lbl">${t('Loops')}</span><label class="inl"><input type="checkbox" id="org-kinds" ${S._orgKinds !== false ? 'checked' : ''}> ${t('separar Loops y One-shots dentro de cada categoría')}</label>
     <span class="lbl">${t('Etiquetas')}</span><label class="inl"><input type="checkbox" id="org-tags" ${S._orgTags ? 'checked' : ''}> ${t('añadirlas al nombre del archivo: «Nombre [Oscuro, Analógico].wav»')}</label>
     <span class="lbl">${t('Formato')}</span><label class="inl"><input type="checkbox" id="org-conv" ${S._orgConv ? 'checked' : ''}> ${t('convertidos a 48 kHz · mono · 16 bit (con su preparación)')}</label></div>
+    <p class="note">${t('Cada sample va a Categoría / Tipo / Subcarpeta, como ves en su ficha («Se guarda en»). Las etiquetas no crean carpetas.')}</p>
     <p class="note">${t('{n} archivos en {f} carpetas', { n: plan.items.length, f: Object.keys(plan.folders).length })} · ${Object.entries(plan.folders).slice(0, 8).map(([k, n]) => `${esc(k)} <span class="mono">${n}</span>`).join(' · ')}${plan.skipped.discard ? ' · ' + t('{n} descartados no se copian', { n: plan.skipped.discard }) : ''}</p>
     <div class="row"><button class="btn primary" data-act="org-dir">${t('Escribir en una carpeta')}</button><button class="btn" data-act="org-zip">${t('Descargar ZIP')}</button></div>
     <p class="note">${t('Siempre en una subcarpeta nueva con fecha. El manifiesto CSV lleva la ruta antigua y la nueva, la categoría, la subcarpeta, loop o one-shot, las etiquetas, la valoración y los favoritos. Tus archivos originales no se tocan.')}</p>`;
@@ -463,7 +464,7 @@ Object.assign(ACT, {
       <li>${t('Pulsa Record en la Rhythm, sin Play.')}</li>
       <li>${t('Clock Rx activado en Setup View (de fábrica lo está).')}</li>
       ${p.swing > 50 ? `<li>${t('Graba recto. Después pon el swing de la Rhythm en {s} (Tempo/Swing).', { s: p.swing })}</li>` : ''}</ol>
-      <p class="note">${t('La herramienta elige el sample de cada pista (CC 8), hace de reloj maestro (Stop, posición 0, Start y 24 pulsos por negra), toca las notas en el canal de cada pista y para al acabar. La Rhythm graba encima de lo que haya.')}<span class="tag-unv">${t('sin verificar en tu equipo')}</span></p>
+      <p class="note">${t('La herramienta elige el sample de cada pista (CC 8), hace de reloj maestro (Stop, posición 0, Start y 24 pulsos por negra), toca las notas en el canal de cada pista y para al acabar. La Rhythm graba encima de lo que haya.')}</p>
       <div class="row" style="justify-content:flex-end"><button class="btn" data-act="modal-close">${t('Cancelar')}</button><button class="btn primary" data-act="pt-rec-go">● ${t('Grabar ahora')}</button></div>`);
   },
   'pt-rec-go': () => { closeModal(); try { const ms = sendEvents(patEvents(true)); toast(t('Grabando… ({s} s)', { s: nf(ms / 1000, 1) }), 'ok', ms + 500); } catch (e) { toast(esc(errT(e.message)), 'bad'); } },

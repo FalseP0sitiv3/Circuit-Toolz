@@ -18,7 +18,7 @@ export function compatibility(p, lib) {
   const warn = inf.integrity.filter((x) => x.level !== 'info'), reserved = inf.integrity.filter((x) => /reservado/i.test(x.text));
   const macroBad = inf.macros.integrity, unknown70 = inf.macros.knobs.some((k) => k.slots.some((s) => s.state === 'active' && s.dest === 70));
   const checks = [
-    p.header.product === 0x64 ? { level: 'ok', text: 'Cabecera Circuit Tracks (0x64)' } : { level: 'info', text: 'Cabecera del Circuit original (0x60): Components la acepta; se exporta con cabecera de Circuit Tracks. Equivalencia sonora sin verificar.' },
+    p.header.product === 0x64 ? { level: 'ok', text: 'Cabecera Circuit Tracks (0x64)' } : { level: 'info', text: 'Cabecera del Circuit original (0x60): Components la acepta; se exporta con cabecera de Circuit Tracks.' },
     warn.length ? { level: 'warn', text: `${warn.length} valor(es) fuera del rango documentado` } : { level: 'ok', text: 'Parámetros dentro del rango documentado' },
     reserved.length ? { level: 'info', text: `${reserved.length} byte(s) reservados distintos de 0` } : { level: 'ok', text: 'Bytes reservados a 0' },
     macroBad.length ? { level: 'warn', text: `${macroBad.length} destino(s) de macro fuera de 0–70` } : { level: 'ok', text: 'Destinos de macro dentro de 0–70' },

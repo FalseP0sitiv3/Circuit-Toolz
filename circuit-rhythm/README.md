@@ -25,4 +25,4 @@ Edit `src/site.json` and rebuild: brand name, site URL, Ko-fi, GitHub and issues
 The SD-card layout, `.circuitrhythmpack` for Components, sample selection by CC 8, pattern recording by MIDI clock and the song projects written by *06 Songs* follow Novation's documentation and the community's format notes. If something behaves differently on your unit, please open an issue.
 
 ## Credits
-Pack and project format notes: the open-source CircuitGM project; the empty project template in `third_party/circuitgm/` comes from it under the Mozilla Public License 2.0. Fonts: Archivo, Barlow Condensed, JetBrains Mono (SIL OFL, see `licenses/`). Design notes: `DISENO_Sample_Library_Pack_Builder.md` (Spanish).
+Pack and project format notes: the open-source CircuitGM project; the empty project template in `third_party/circuitgm/` comes from it under the Mozilla Public License 2.0. Fonts: Archivo, Barlow Condensed, JetBrains Mono (SIL OFL, see `licenses/`).

@@ -1,4 +1,4 @@
-"""Recorrido exhaustivo: pulsa cada control [data-act] de cada vista con una colección real y un Circuit Tracks SIMULADO.
+"""Recorrido exhaustivo: pulsa cada control [data-act] de cada vista con una carpeta de patches y un Circuit Tracks SIMULADO.
 Registra errores de JavaScript y de consola por vista y acción. No valida hardware ni sonido.
 Uso: python3 tests/monkey_ui.py CARPETA_DE_PATCHES"""
 import sys, os, re, time, threading, http.server, functools, json

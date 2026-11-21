@@ -25,4 +25,4 @@ Edit `src/site.json` and rebuild: brand name, site URL, Ko-fi, GitHub and issues
 Pattern and song recording by MIDI clock and Drum/MIDI track recording over USB follow Novation's Programmer's Reference. If something behaves differently on your unit, please open an issue.
 
 ## Credits
-Protocol per Novation's Circuit Tracks Programmer's Reference. Fonts: Archivo, Barlow Condensed, JetBrains Mono (SIL OFL, see `licenses/`). Design notes: `docs/DISENO.md` (Spanish).
+Protocol per Novation's Circuit Tracks Programmer's Reference. Fonts: Archivo, Barlow Condensed, JetBrains Mono (SIL OFL, see `licenses/`).

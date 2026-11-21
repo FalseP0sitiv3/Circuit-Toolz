@@ -1,5 +1,5 @@
 """Flujos completos que el recorrido automático no puede probar a ciegas (borran, escriben en disco o restauran).
-Colección real + Circuit Tracks SIMULADO + carpeta de disco SIMULADA (File System Access en memoria).
+Carpeta de patches + Circuit Tracks SIMULADO + carpeta de disco SIMULADA (File System Access en memoria).
 No valida hardware ni sonido. Uso: python3 tests/flows_ui.py CARPETA"""
 import sys, os, re, threading, http.server, functools, json, tempfile
 from playwright.sync_api import sync_playwright

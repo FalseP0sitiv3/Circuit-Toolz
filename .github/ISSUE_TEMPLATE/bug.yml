@@ -1,0 +1,40 @@
+name: Bug report / Error
+description: Something doesn't work as expected · Algo no funciona como esperabas
+labels: [bug]
+body:
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Tool / Herramienta
+      options:
+        - Circuit Rhythm · Sample Library / Pack Builder
+        - Circuit Tracks · Patch Library / Editor
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Tool version / Versión
+      description: Shown in About · Aparece en «Acerca de»
+      placeholder: "2.8.0"
+    validations:
+      required: true
+  - type: input
+    id: setup
+    attributes:
+      label: Unit, firmware, browser and OS / Equipo, firmware, navegador y sistema
+      placeholder: "Circuit Rhythm fw 1.x · Chrome 131 · Windows 11"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What happened? / ¿Qué ha pasado?
+      description: Steps to reproduce, what you expected and what you got · Pasos, lo que esperabas y lo que pasó
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshot or console messages (optional) / Captura o mensajes de la consola (opcional)
+      description: Please don't attach samples or patches you don't own · No adjuntes samples ni patches que no sean tuyos

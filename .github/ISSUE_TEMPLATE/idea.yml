@@ -1,0 +1,21 @@
+name: Idea / Sugerencia
+description: Something that would help your workflow · Algo que te ayudaría al trabajar
+labels: [idea]
+body:
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Tool / Herramienta
+      options:
+        - Circuit Rhythm · Sample Library / Pack Builder
+        - Circuit Tracks · Patch Library / Editor
+        - Both / Las dos
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to do? / ¿Qué te gustaría hacer?
+      description: Describe the situation, not only the feature · Cuenta la situación, no solo la función
+    validations:
+      required: true

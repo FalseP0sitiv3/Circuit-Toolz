@@ -22,11 +22,13 @@ Thousands of samples with useless names, and only 128 slots and 228 seconds per 
 ![Library: every sample measured and classified, with the folder it will be sorted into](media/rhythm-library.jpg)
 
 **Sort your collection**
+
 - Every sample is measured (length, pitch, tempo, brightness, attack, stereo…) and given one of 15 categories **with the reason**: what the name says, what the folder says and what it sounds like. Contradictions are shown, not hidden.
 - Loop or one-shot, a subfolder (for drum loops, the instrument in it: Closed-Hats, Shakers, Breaks…) and your own tags. The card shows exactly where the sample will be saved: `14 Drum Loops / Closed-Hats / hatloop 128`.
 - **Organise on disk** copies your collection into that folder structure. Your original files are never touched.
 
 **Listen and decide**
+
 - One key per category, and the next sample plays. Copy a sample's category, type, subfolder and tags and paste them on the next ones (Alt Shift V / Alt V).
 - Click any detected clue to use it. Collection map, similar sounds, word filters, saved filters, bin with undo.
 
@@ -35,6 +37,7 @@ Thousands of samples with useless names, and only 128 slots and 228 seconds per 
 | ![Listen](media/rhythm-listen.jpg) | ![Hits from a loop](media/rhythm-hits.jpg) |
 
 **Work the sound for the Rhythm** (non-destructive: a recipe applied on export)
+
 - **Hits from a loop**: every hit found, cleanly cut and classified; repeated hits are grouped so you keep the best one.
 - **Shorten loops** that repeat, and export the slices you keep **joined or as separate, linked samples** (the loop and the loop with the fill, side by side in the pack).
 - **Mono that repairs**: if a stereo sample cancels when summed, it's fixed (inverted channel, channels a few ms apart, or a frequency-aligned sum). Your file and anything exported "as the original" stay in stereo.
@@ -45,6 +48,7 @@ Thousands of samples with useless names, and only 128 slots and 228 seconds per 
 | ![Separate, linked slices](media/rhythm-slices.jpg) | ![Mono repair](media/rhythm-mono.jpg) |
 
 **Build packs and make music**
+
 - 8 pages × 16 pads, the 228-second budget always in view, Beat Match per loop, automatic build without duplicates.
 - Export for Components (`.circuitrhythmpack`), straight to the microSD card, as a ZIP or as numbered WAVs.
 - Pattern generator for the 8 tracks (9 styles) and a **song generator**: arrangement strategies written as a Rhythm project inside the pack, plus song .mid, WAV mix and stems.
@@ -64,6 +68,7 @@ Hundreds of patches, random names, no idea how they sound. This tool reads them,
 ![Library: anatomy of a patch, its category and why](media/tracks-library.jpg)
 
 **Hear and sort**
+
 - **Audition**: every patch is sent to the unit's RAM and played with a test phrase that suits it (bassline, acid, chords, arpeggio…). One key per category; too high or too low? Alt ↓ / Alt ↑ moves it an octave.
 - Explainable classification from the name, the folder, the synth settings and, optionally, a measurement through your audio interface. Folders, subfolders and quick tags.
 - Families of duplicates and variants, collection analysis and map.
@@ -73,6 +78,7 @@ Hundreds of patches, random names, no idea how they sound. This tool reads them,
 | ![Audition](media/tracks-audition.jpg) | ![Sound Lab](media/tracks-lab.jpg) |
 
 **Understand and edit**
+
 - **Anatomy**: the signal flow of every patch; click a block to edit it, and a plain-language recipe generated from the bytes.
 - **Macros**: what each knob moves, turned live on the unit. Templates for all 8 macros.
 - **Sound Lab**: mutate (8 variations per click), cross two patches block by block, or morph from A to B live.
@@ -83,6 +89,7 @@ Hundreds of patches, random names, no idea how they sound. This tool reads them,
 | ![Macros](media/tracks-macros.jpg) | ![Patterns](media/tracks-patterns.jpg) |
 
 **Play**
+
 - Pattern generator recorded into the sequencer with the tool as master clock, and a song generator with a scene plan and a guided recording.
 - Packs of 128 sorted into the four pages of Patch View, exported as numbered .syx + CSV for Components.
 
@@ -127,12 +134,14 @@ Independent project, not affiliated with Novation or Focusrite. Novation, Circui
 <summary><b>Qué hace cada herramienta</b></summary>
 
 **Circuit Rhythm · Sample Library / Pack Builder**
+
 - Mide cada sample y le propone una de 15 categorías explicando por qué (nombre, carpeta y sonido). Decides con una tecla mientras escuchas.
 - Loop o one-shot, subcarpeta (en los loops, el instrumento que suena: Closed-Hats, Shakers, Breaks…) y etiquetas. La ficha muestra la carpeta exacta donde se guardará, y «Ordenar en disco» copia tu colección así, sin tocar los originales.
 - Saca los golpes de un loop, acorta loops que se repiten y exporta sus slices unidas o por separado y relacionadas, repara el mono de los estéreos que se cancelan (tu archivo sigue en estéreo), afina al tono del pack e iguala el volumen por página.
 - Packs de 128 con el límite de 228 s a la vista, exportación a Components, a la microSD, ZIP o WAV numerados. Generador de patrones y de canciones completas.
 
 **Circuit Tracks · Patch Library / Editor**
+
 - Escucha cada patch en tu equipo (solo en la RAM) con una frase de prueba adecuada y decide con una tecla; Alt ↓ / Alt ↑ para cambiar de octava.
 - Clasificación explicada por nombre, carpeta, ajustes y medición opcional; carpetas, subcarpetas y etiquetas; familias de duplicados y variantes.
 - Anatomía del patch, macros en directo, Laboratorio de sonido (mutar, cruzar, mezclar de A a B) y variantes que nunca tocan la memoria del equipo.

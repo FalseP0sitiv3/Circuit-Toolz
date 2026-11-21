@@ -4,6 +4,10 @@
 Sort a big collection, hear every sound on your own unit, fix what's wrong and build packs ready to play.
 Each tool is a single HTML file: no install, no account, nothing leaves your computer.
 
+[![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20the%20project-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/falsepositive)
+[![Report a bug or idea](https://img.shields.io/badge/Issues-Bugs%20%26%20ideas-7c3aed?style=for-the-badge&logo=github&logoColor=white)](../../issues)
+![Interface ES · EN](https://img.shields.io/badge/Interface-ES%20%C2%B7%20EN-22d3ee?style=for-the-badge)
+
 *Herramientas gratuitas y locales para la Circuit Rhythm y la Circuit Tracks. Interfaz en español y en inglés. [Resumen en español ↓](#en-español)*
 
 | Tool | Version | Download (ES · EN) | Video |
@@ -11,7 +15,18 @@ Each tool is a single HTML file: no install, no account, nothing leaves your com
 | [Circuit Rhythm · Sample Library / Pack Builder](#circuit-rhythm--sample-library--pack-builder) | 2.8.0 | [ES](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library.html) · [EN](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library_EN.html) | [1 min](media/circuit-rhythm-video.mp4) |
 | [Circuit Tracks · Patch Library / Editor](#circuit-tracks--patch-library--editor) | 3.9.2 | [ES](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html) · [EN](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html) | [1 min](media/circuit-tracks-video.mp4) |
 
-Support the project / Apoya el proyecto: **https://ko-fi.com/falsepositive**
+| Circuit Rhythm in 1 minute | Circuit Tracks in 1 minute |
+|---|---|
+| [![Watch the Circuit Rhythm video](media/rhythm-video-poster.jpg)](media/circuit-rhythm-video.mp4) | [![Watch the Circuit Tracks video](media/tracks-video-poster.jpg)](media/circuit-tracks-video.mp4) |
+
+> ### ♥ Support the project
+> These tools are free and will stay free. If they save you time or end up in your music, you can keep them going:
+>
+> - **[Buy me a coffee on Ko-fi](https://ko-fi.com/falsepositive)**: it pays for the hours of testing on real hardware.
+> - **[Report a bug or suggest an idea](../../issues)**: tell me your unit, firmware and browser, and what you expected.
+> - **Share it** with other Circuit users, or show what you made with it.
+>
+> *Apoya el proyecto: [Ko-fi](https://ko-fi.com/falsepositive) · [errores e ideas](../../issues) · compártelo.*
 
 ---
 
@@ -120,6 +135,10 @@ Nothing is uploaded. Your library, decisions and packs stay in your browser. The
 
 Node 18+. In each tool folder: `npm test` and `npm run build` (outputs `dist/`). Builds are reproducible: the result matches `SHA256SUMS.txt`.
 
+## Contributing
+
+Bug reports and ideas are welcome in [Issues](../../issues). For a bug, include the tool and version (shown in *About*), your unit and firmware, your browser and the steps to reproduce it. Pull requests: run `npm test` in the tool folder first. If you'd rather support the work directly, there's [Ko-fi](https://ko-fi.com/falsepositive).
+
 ## Licence
 
 © 2026 FalsePositive · GPL-3.0 (`LICENSE`). Modified versions must keep the authorship notice and publish their source under the same licence. Fonts: SIL OFL (`licenses/`). Circuit Rhythm project template from CircuitGM, MPL-2.0 (`circuit-rhythm/third_party/circuitgm/`).
@@ -146,6 +165,8 @@ Independent project, not affiliated with Novation or Focusrite. Novation, Circui
 - Clasificación explicada por nombre, carpeta, ajustes y medición opcional; carpetas, subcarpetas y etiquetas; familias de duplicados y variantes.
 - Anatomía del patch, macros en directo, Laboratorio de sonido (mutar, cruzar, mezclar de A a B) y variantes que nunca tocan la memoria del equipo.
 - Patrones y canciones grabados en el secuenciador con la herramienta como reloj maestro, y packs de 128 para Components.
+
+**Colabora:** invítame a un café en [Ko-fi](https://ko-fi.com/falsepositive), cuenta errores o ideas en [Issues](../../issues) (con la versión, tu equipo, firmware y navegador) o compártelo con otros usuarios de Circuit.
 
 **Cómo empezar:** descarga el HTML en tu idioma, ábrelo en Chrome o Edge de escritorio, enlaza la carpeta de tus samples o patches y conecta el equipo por USB para escuchar. Nada sale de tu ordenador.
 

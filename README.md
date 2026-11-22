@@ -1,14 +1,13 @@
 # Circuit Tools
 
-**Free, local browser tools for the Novation Circuit Rhythm and Circuit Tracks.**
-Sort a big collection, hear every sound on your own unit, fix what's wrong and build packs ready to play.
-Each tool is a single HTML file: no install, no account, nothing leaves your computer.
+**Free tools for the Novation Circuit Rhythm and Circuit Tracks.**
+Sort your samples and patches while you listen, prepare them for the unit and build packs.
+Each tool is a single HTML file that you open in Chrome or Edge.
 
 [![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20the%20project-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/falsepositive)
 [![Report a bug or idea](https://img.shields.io/badge/Issues-Bugs%20%26%20ideas-7c3aed?style=for-the-badge&logo=github&logoColor=white)](../../issues)
-![Interface ES · EN](https://img.shields.io/badge/Interface-ES%20%C2%B7%20EN-22d3ee?style=for-the-badge)
 
-*Herramientas gratuitas y locales para la Circuit Rhythm y la Circuit Tracks. Interfaz en español y en inglés. [Resumen en español ↓](#en-español)*
+*Herramientas gratuitas para la Circuit Rhythm y la Circuit Tracks. [Resumen en español ↓](#en-español)*
 
 | Tool | Version | Download (ES · EN) | Video |
 |---|---|---|---|

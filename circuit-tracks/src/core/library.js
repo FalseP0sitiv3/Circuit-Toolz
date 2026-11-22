@@ -9,7 +9,7 @@ import { auditMacros } from './macros.js';
 import { buildFamilies, vectorize, pca2, affinity } from './families.js';
 import { measuredFeatures } from './acoustic.js';
 
-export const APP_VERSION = '3.10.0';
+export const APP_VERSION = '3.10.1';
 export const STORES = ['files', 'patches', 'collections', 'banks', 'rules', 'history', 'settings'];
 const MAX_SYX = 2 * 1024 * 1024;
 

@@ -12,8 +12,8 @@ Each tool is a single HTML file: no install, no account, nothing leaves your com
 
 | Tool | Version | Download (ES · EN) | Video |
 |---|---|---|---|
-| [Circuit Rhythm · Sample Library / Pack Builder](#circuit-rhythm--sample-library--pack-builder) | 2.8.0 | [ES](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library.html) · [EN](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library_EN.html) | [1 min](media/circuit-rhythm-video.mp4) |
-| [Circuit Tracks · Patch Library / Editor](#circuit-tracks--patch-library--editor) | 3.10.0 | [ES](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html) · [EN](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html) | [1 min](media/circuit-tracks-video.mp4) |
+| [Circuit Rhythm · Sample Library / Pack Builder](#circuit-rhythm--sample-library--pack-builder) | 2.8.1 | [ES](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library.html) · [EN](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library_EN.html) | [1 min](media/circuit-rhythm-video.mp4) |
+| [Circuit Tracks · Patch Library / Editor](#circuit-tracks--patch-library--editor) | 3.10.1 | [ES](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html) · [EN](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html) | [1 min](media/circuit-tracks-video.mp4) |
 
 | Circuit Rhythm in 1 minute | Circuit Tracks in 1 minute |
 |---|---|

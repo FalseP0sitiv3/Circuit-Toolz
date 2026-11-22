@@ -62,9 +62,10 @@ const S = {
 const toast = (msg, ms = 3200) => { document.querySelectorAll('.toast').forEach((x) => x.remove()); const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.append(t); setTimeout(() => t.remove(), ms); };
 // Aviso con un botón (Deshacer): dura más y no se lleva el foco
 const toastAct = (msg, label, fn, ms = 8000) => { document.querySelectorAll('.toast').forEach((x) => x.remove()); const t = document.createElement('div'); t.className = 'toast act'; const sp = document.createElement('span'); sp.textContent = msg; const b = document.createElement('button'); b.textContent = label; b.addEventListener('click', () => { t.remove(); fn(); }); t.append(sp, b); document.body.append(t); setTimeout(() => t.remove(), ms); };
+const LT = '<'; // la tecla «<» (se escribe aparte para que la traducción no la tome por HTML)
 // Atajos (la tecla ? los muestra)
 const KEYS_HELP = [
-  ['Siempre', [['Ctrl K', 'paleta: ir a, hacer o buscar un patch'], ['Alt ↓ / Alt ↑', 'bajar / subir una octava el patch (Escucha y Biblioteca)'], ['V', 'pegar las etiquetas del portapapeles'], ['Mayús V', 'copiar las etiquetas del patch'], ['.', 'abrir o cerrar «Patch actual»'], ['/', 'buscar'], ['Ctrl Z', 'deshacer lo último (también una eliminación)'], ['?', 'esta ayuda']]],
+  ['Siempre', [['Ctrl K', 'paleta: ir a, hacer o buscar un patch'], ['Alt ↓ / Alt ↑', 'bajar / subir una octava el patch (Escucha y Biblioteca)'], [`${LT} / Mayús ${LT}`, 'la frase de prueba una octava abajo / arriba (no cambia el patch)'], ['V', 'pegar las etiquetas del portapapeles'], ['Mayús V', 'copiar las etiquetas del patch'], ['.', 'abrir o cerrar «Patch actual»'], ['/', 'buscar'], ['Ctrl Z', 'deshacer lo último (también una eliminación)'], ['?', 'esta ayuda']]],
   ['Escucha', [['Espacio', 'escuchar'], ['Esc', 'parar'], ['← →', 'anterior / siguiente'], ['B L P K C U S A Q X D T R W G E', 'categoría'], ['Intro', 'aceptar la propuesta'], ['1–5', 'valorar'], ['F', 'favorito'], ['M', 'medir'], ['Supr', 'eliminar (a la papelera) y pasar al siguiente'], ['Mayús Supr', 'marcar «Descartar» sin eliminar'], ['Alt 1–9', 'poner o quitar una etiqueta rápida'], ['Mayús 1–8', 'barrer una macro']]],
   ['Biblioteca', [['↑ ↓', 'moverse por la lista'], ['Espacio', 'escuchar'], ['Supr', 'eliminar el patch o la selección (a la papelera)'], ['Alt 1–9', 'etiqueta rápida'], ['G', 'patrón generado: otro'], ['A', 'adjuntar el patrón generado']]],
   ['Organizar · octava', [['Esc', 'volver al plan'], ['1 / 2', 'original / corregido'], ['Intro', 'aceptar'], ['Supr', 'descartar la corrección'], ['K', 'estaba bien'], ['← →', 'anterior / siguiente']]],
@@ -104,26 +105,27 @@ async function saveSettings() {
     { id: 'phrases', value: S.customPhrases }, { id: 'templates', value: S.templates }]);
 }
 const findPattern = (id) => (lib.settings.patterns || []).find((x) => x.id === id);
-// Patrón de un patch: el suyo o, si no tiene, el de su original (las variantes lo heredan).
+// Patrón de un patch: el de su sonido (lo comparten el original y su versión).
 function patternOf(p) { for (let q = p, i = 0; q && i < 8; q = q.parentId && lib.byId(q.parentId), i++) { const x = q.meta.patternId && findPattern(q.meta.patternId); if (x) return x; } return null; }
-const phraseObj = (k) => (k && k.startsWith?.('gen:') ? (lib.byId(k.slice(4)) ? patternToPhrase(autoPat(lib.byId(k.slice(4)))) : PHRASES.test) : k && k.startsWith?.('pat:') ? (findPattern(k.slice(4)) ? patternToPhrase(findPattern(k.slice(4))) : PHRASES.test) : PHRASES[k] || S.customPhrases[k] || PHRASES.test);
-// Frase automática: el patrón adjunto al patch si lo tiene; si no, la frase de su categoría.
-// ---------- Patrón generado para cada patch (se puede adjuntar si funciona) ----------
-// Estilo según la subcarpeta o la categoría; misma semilla para el mismo patch, «Otro» la cambia.
-const SUB_STYLE = { bass: { sub: 'sub', acid: 'acid', rolling: 'rolling', reese: 'rolling', groovy: 'offbeat', wobble: 'offbeat', pluck: 'perc', drone: 'drone', b808: 'sub' }, lead: { acid: 'acid' }, pad: {}, stab: { chord: 'stab', dub: 'stab' }, chords: { stab: 'stab', dub: 'stab', pad: 'pad' } };
-function autoStyleFor(p) { const c = lib.info(p).cls, cat = p.meta.category || c.category, sub = p.meta.category ? p.meta.subtype : c.subtype; return SUB_STYLE[cat]?.[sub] || STYLE_FOR_CAT[cat] || 'offbeat'; }
-function autoSeedOf(p) { let h = 7; for (const ch of String(p.fp?.payload || p.id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return (h % 9973) + 1 + (S.autoSeed[p.id] || 0) * 7919; }
+// Frases fijas, capturadas o patrones guardados, por clave (el selector de frase de Escucha).
+const phraseObj = (k) => (k && k.startsWith?.('pat:') ? (findPattern(k.slice(4)) ? patternToPhrase(findPattern(k.slice(4))) : PHRASES.test) : PHRASES[k] || S.customPhrases[k] || PHRASES.test);
+// ---------- Patrón generado para cada sonido (se puede adjuntar si funciona) ----------
+// v3.10: es la frase de prueba de toda la herramienta (ver ui/listen_ui.js). Estilo según la subcarpeta o la categoría
+// (testStyle); semilla del sonido (su original), así sus versiones suenan con lo mismo; «Otro» la cambia.
+function autoStyleFor(p) { const g = phraseGroupOf(p); return testStyle(g.cat, g.sub); }
+function autoSeedOf(p) { const r = lib.rootOf(p); let h = 7; for (const ch of String(r.fp?.payload || r.id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return (h % 9973) + 1 + (S.autoSeed[r.id] || 0) * 7919; }
 function autoPat(p) {
-  const key = `${p.id}|${S.autoSeed[p.id] || 0}|${autoStyleFor(p)}|${S.dev.root}|${tempoNow()}`;
+  const r = lib.rootOf(p), style = autoStyleFor(r), g = phraseGroupOf(r), oct = testOctave(style, g.cat, g.sub) + phraseShiftOf(g);
+  const key = `${r.id}|${S.autoSeed[r.id] || 0}|${style}|${S.dev.root}|${tempoNow()}|${oct}`;
   if (S.autoCache?.key === key) return S.autoCache.pat;
-  const style = autoStyleFor(p), pat = generatePattern({ style, root: S.dev.root || 0, scale: 'minor', steps: 16, tempo: tempoNow(), seed: autoSeedOf(p) });
+  const pat = generatePattern({ style, root: S.dev.root || 0, scale: 'minor', steps: 16, tempo: tempoNow(), seed: autoSeedOf(r), octave: oct });
   S.autoCache = { key, pat }; return pat;
 }
 // Rejilla mínima del patrón (SVG): una barra por nota, altura por tono, opacidad por velocidad
 function miniRoll(pt) {
   const N = pt.steps || 16, ns = pt.notes || []; if (!ns.length) return html`<div class="mroll empty">sin notas</div>`;
   const lo = Math.min(...ns.map((x) => x.n)), hi = Math.max(...ns.map((x) => x.n)), span = Math.max(12, hi - lo + 1), H = 44;
-  return html`<svg class="mroll" viewBox="0 0 ${N * 10} ${H}" preserveAspectRatio="none" aria-hidden="true">${[...Array(N / 4).keys()].map((b) => html`<line x1="${b * 40}" x2="${b * 40}" y1="0" y2="${H}"/>`)}${ns.map((x) => html`<rect x="${x.t * 10 + 0.5}" y="${((hi - x.n) / span) * (H - 4) + 1}" width="${Math.max(2, Math.min(x.d, N - x.t) * 10 - 1)}" height="3" opacity="${(0.45 + (x.v || 100) / 254).toFixed(2)}"/>`)}</svg>`;
+  return html`<svg class="mroll" viewBox="0 0 ${N * 10} ${H}" preserveAspectRatio="none" aria-hidden="true">${[...Array(Math.ceil(N / 4)).keys()].map((b) => html`<line x1="${b * 40}" x2="${b * 40}" y1="0" y2="${H}"/>`)}${ns.map((x) => html`<rect x="${x.t * 10 + 0.5}" y="${((hi - x.n) / span) * (H - 4) + 1}" width="${Math.max(2, Math.min(x.d, N - x.t) * 10 - 1)}" height="3" opacity="${(0.45 + (x.v || 100) / 254).toFixed(2)}"/>`)}</svg>`;
 }
 // Parecido con lo que ya has clasificado: ayuda a decidir sin escuchar
 function nnHint(p, compact = false) {
@@ -131,24 +133,15 @@ function nnHint(p, compact = false) {
   const g = lib.neighbourGuess(p); if (!g || g.share < 0.5) return '';
   return html`<p class="note nnhint" style="margin-top:6px">Se parece a tus <b>${catName(g.cat, g.sub)}</b>: ${g.n} de los ${g.k} más parecidos que ya clasificaste${g.exact ? ' (uno es casi idéntico)' : ''}.${compact ? '' : html` <button class="btn small" data-act="nnUse" data-c="${g.cat}" data-s="${g.sub || ''}">Usar</button>`}</p>`;
 }
-function inspPattern(p) {
-  const att = patternOf(p), own = !!p.meta.patternId, pt = att || autoPat(p), live = !!S.dev.session;
-  const st = STYLES[pt.style]?.label || pt.style;
-  return html`<div class="isec"><div class="mlabel"><span>Patrón</span><span>${att ? (own ? 'adjuntado' : 'del original') : 'generado · sin adjuntar'}</span></div>
-    <button class="mroll-w ${att ? 'att' : ''}" data-act="${att ? 'patOpenFor' : 'autoOpen'}" data-id="${p.id}" title="Abrir en Patrones para editarlo">${miniRoll(pt)}</button>
-    <p class="note" style="margin-top:4px">${att ? html`<b>${att.name}</b>` : html`${st} · ${NOTE_NAMES_ES[pt.root]} menor · ${pt.steps} pasos`}${att ? '' : html` <span class="dimc">· elegido por ${p.meta.subtype || lib.info(p).cls.subtype ? 'su subcarpeta' : 'su categoría'}</span>`}</p>
-    <div class="row2" style="margin-top:6px;flex-wrap:wrap;gap:5px"><button class="btn small" data-act="listenSel" ${live ? '' : 'disabled'} title="${live ? 'Espacio' : 'Conecta el equipo en Equipo'}">${raw(IC.play)}Escuchar</button>
-      ${att ? html`${own ? html`<button class="btn small" data-act="autoDetach">Quitar</button>` : ''}<button class="btn small" data-act="patOpenFor" data-id="${p.id}">Editar</button>` : html`<button class="btn small" data-act="autoNext" title="Otra variación (G)">Otro</button><button class="btn small accent" data-act="autoAttach" title="A">Adjuntar al patch</button>`}</div>
-    ${att ? '' : html`<p class="note" style="margin-top:6px">Si te convence cómo suena, adjúntalo: se guarda en tus patrones, sonará al escuchar este patch (también en Escucha) y «Ordenar en disco» pondrá su .mid al lado del .syx.</p>`}</div>`;
-}
+// Ficha y patch acoplado: la frase de prueba del sonido (la misma que en Escucha).
+function inspPattern(p) { return html`<div class="isec">${testBox(p, 'insp')}</div>`; }
 async function autoAttach(p) {
   const pt = autoPat(p), name = `${p.name || 'Patch'} · ${STYLES[pt.style]?.label || pt.style}`.slice(0, 60);
-  const rec = { ...pt, name, id: 'pat' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), opts: { ...DEFAULTS, style: pt.style, root: pt.root, scale: pt.scale, steps: pt.steps, tempo: pt.tempo, seed: autoSeedOf(p) }, savedAt: Date.now(), auto: true };
+  const rec = { ...pt, name, id: 'pat' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), opts: { ...DEFAULTS, style: pt.style, root: pt.root, scale: pt.scale, steps: pt.steps, tempo: pt.tempo, seed: autoSeedOf(p), octave: pt.octave }, savedAt: Date.now(), auto: true };
   await lib.setSetting('patterns', [...(lib.settings.patterns || []), rec]);
-  await lib.updateMeta([p.id], { patternId: rec.id }, `Patrón «${name}» adjuntado a ${p.name}`);
+  await lib.updateMeta([lib.rootOf(p).id], { patternId: rec.id }, `Patrón «${name}» adjuntado a ${p.name}`);
   return rec;
 }
-function phraseKeyFor(p) { const pt = patternOf(p); if (pt) return 'pat:' + pt.id; const inf = lib.info(p); return phraseFor(p.meta.category || inf.cls.category, p.meta.subtype || inf.cls.subtype); }
 const tempoNow = () => (S.followClock && S.dev.session?.clockTempo()) || S.dev.tempo;
 let _la = null;
 const LA = () => { if (!_la || _la.v !== S.version + ':' + S.profile) _la = { v: S.version + ':' + S.profile, d: libraryAnalysis(lib, S.profile) }; return _la.d; };
@@ -185,7 +178,7 @@ function computeRows() {
   const key = S.version + JSON.stringify(S.q) + JSON.stringify(S.sort) + S.groupBy + [...S.openFam].join() + S.profile;
   if (key === S.rowsKey) return S.rows;
   const q = { ...S.q, features: S.q.features?.length ? S.q.features : undefined };
-  let rows = lib.patches.filter((p) => lib.matches(p, q) && (!S.q.compat || compatOf(p).status === S.q.compat) && (!S.q.macroIssues || (() => { const a = lib.info(p).macros; return a.integrity.length || a.shared.length; })()));
+  let rows = lib.faces().filter((p) => lib.matches(p, q) && (!S.q.compat || compatOf(p).status === S.q.compat) && (!S.q.macroIssues || (() => { const a = lib.info(p).macros; return a.integrity.length || a.shared.length; })()));
   const cmp = { name: (p) => p.name.toLowerCase(), category: (p) => effCat(p) || 'zz', rating: (p) => -(p.meta.rating || 0), imported: (p) => p.importedAt, source: (p) => (p.folderPath || '').toLowerCase() }[S.sort.by] || ((p) => p.name.toLowerCase());
   rows.sort((a, b) => { const x = cmp(a), y = cmp(b); return (x < y ? -1 : x > y ? 1 : 0) * S.sort.dir; });
   let out = [];
@@ -212,6 +205,9 @@ function filteredPatches() { computeRows(); return S.rowsAll || []; }
 // ---------- render ----------
 const TABS = [['library', 'Biblioteca'], ['audition', 'Escucha'], ['patterns', 'Patrones'], ['songs', 'Canciones'], ['organize', 'Organizar'], ['macros', 'Macros'], ['changes', 'Cambios'], ['analyze', 'Análisis'], ['banks', 'Packs'], ['device', 'Equipo'], ['data', 'Datos']];
 function render() {
+  // la selección apunta siempre a la versión vigente del sonido (tras editar, aceptar o volver al original)
+  if (S.sel) { const f = faceOf(lib.byId(S.sel)); S.sel = f ? f.id : null; }
+  if (S.multi.size && [...S.multi].some((id) => faceOf(lib.byId(id))?.id !== id)) S.multi = new Set([...S.multi].map((id) => faceOf(lib.byId(id))?.id).filter(Boolean));
   const app = $('#app'), lib3 = S.view === 'library', d = S.dev.session;
   app.innerHTML = html`
   <header class="top">
@@ -222,7 +218,7 @@ function render() {
     ${pubLangSwitch('hdr')}
   </header>
   <div class="specline" aria-hidden="true"></div>
-  <nav class="tabs-main" aria-label="Secciones">${TABS.map(([id, l], i) => html`<button class="${S.view === id ? 'on' : ''}" data-act="view" data-v="${id}"><small>${String(i + 1).padStart(2, '0')}</small>${l}</button>`)}${(() => { const b = lib.backupStatus(); return lib.patches.length && b.pending && (b.days === null || b.days >= 3) ? html`<button class="count warnbk" data-act="view" data-v="data" title="Tu biblioteca solo vive en este navegador">⚠ ${b.last ? 'Copia: ' + b.days + ' d' : 'Sin copia'}</button>` : ''; })()}${(() => { const n = lib.patches.filter((p) => p.kind === 'variant' && lib.changeState(p) === 'draft').length; return n ? html`<button class="count chgpill" data-act="view" data-v="changes" title="${n} variante(s) en borrador: escúchalas y acéptalas en Cambios para que sustituyan al original al exportar">● ${n} por revisar</button>` : ''; })()}<span class="count">${lib.patches.length} patches · ${storeKind === 'indexeddb' ? 'guardado local' : 'memoria temporal'}</span></nav>
+  <nav class="tabs-main" aria-label="Secciones">${TABS.map(([id, l], i) => html`<button class="${S.view === id ? 'on' : ''}" data-act="view" data-v="${id}"><small>${String(i + 1).padStart(2, '0')}</small>${l}</button>`)}${(() => { const b = lib.backupStatus(); return lib.patches.length && b.pending && (b.days === null || b.days >= 3) ? html`<button class="count warnbk" data-act="view" data-v="data" title="Tu biblioteca solo vive en este navegador">⚠ ${b.last ? 'Copia: ' + b.days + ' d' : 'Sin copia'}</button>` : ''; })()}${(() => { const n = lib.patches.filter((p) => p.kind === 'variant' && lib.isVersion(p) && lib.changeState(p) === 'draft').length, tidy = versionsPlanNow().sounds.length; return html`${n ? html`<button class="count chgpill" data-act="view" data-v="changes" title="${n} cambio(s) propuesto(s) (octava, macros, plantillas…): escúchalos y aplícalos o descártalos en Cambios">● ${n} ${n === 1 ? 'propuesta' : 'propuestas'}</button>` : ''}${tidy ? html`<button class="count warnbk" data-act="tidyOpen" title="Versiones encadenadas, ramas y copias repetidas de versiones anteriores: ordénalas en un paso (se puede deshacer)">⚠ Ordenar versiones · ${tidy}</button>` : ''}`; })()}<span class="count">${lib.faces().length} patches · ${storeKind === 'indexeddb' ? 'guardado local' : 'memoria temporal'}</span></nav>
   ${lib3 ? html`<main class="main lib ${S.sel && S.mobileOpen ? 'open' : ''}">${renderListPane()}${renderCenter()}${renderInspector()}</main>` : html`<main class="main page ${S.dock && cur() ? 'docked' : ''}" id="full"><div class="page-in">${renderFull()}</div>${S.dock && cur() ? renderDock() : ''}</main>`}
   ${pubFooter()}${pubCompatHTML()}
   <div class="drop" id="drop">Suelta .syx, .zip, carpetas o una copia .json</div>
@@ -231,7 +227,7 @@ function render() {
   if (lib3) renderRows();
   afterRender();
 }
-function rerender() { const y = $('#vlist')?.scrollTop, cy = $('.center .pane-b')?.scrollTop, iy = $('.insp .pane-b')?.scrollTop, fy = $('#full')?.scrollTop, ql = $('.ql')?.scrollTop; render(); if ($('#vlist') && y) { $('#vlist').scrollTop = y; renderRows(); } if ($('.center .pane-b') && cy) $('.center .pane-b').scrollTop = cy; if ($('.insp .pane-b') && iy) $('.insp .pane-b').scrollTop = iy; if ($('#full') && fy) $('#full').scrollTop = fy; if ($('.ql') && ql) $('.ql').scrollTop = ql; }
+function rerender() { const y = $('#vlist')?.scrollTop, cy = $('.center .pane-b')?.scrollTop, iy = $('.insp .pane-b')?.scrollTop, fy = $('#full')?.scrollTop, ql = $('.ql')?.scrollTop, dy = $('.dock')?.scrollTop, wy = window.scrollY; render(); if ($('.dock') && dy) $('.dock').scrollTop = dy; if (wy) window.scrollTo(0, wy); if ($('#vlist') && y) { $('#vlist').scrollTop = y; renderRows(); } if ($('.center .pane-b') && cy) $('.center .pane-b').scrollTop = cy; if ($('.insp .pane-b') && iy) $('.insp .pane-b').scrollTop = iy; if ($('#full') && fy) $('#full').scrollTop = fy; if ($('.ql') && ql) $('.ql').scrollTop = ql; }
 function renderNav() {
   const items = [['audition', 'Escucha', IC.aud], ['library', 'Library', IC.lib], ['analyze', 'Analyze', IC.search], ['audit', 'Audit', IC.audit], ['macros', 'Macros', IC.macros], ['banks', 'Packs', IC.banks], ['device', 'Equipo', IC.dev], ['data', 'Datos', IC.data]];
   return html`<nav class="panel nav" aria-label="Secciones">${items.map(([id, label, ic]) => html`<button class="${S.view === id ? 'on' : ''}" data-act="view" data-v="${id}">${raw(ic)}<span>${label}</span></button>`)}
@@ -243,7 +239,7 @@ function renderNav() {
 function renderActions() {
   const p = S.sel && lib.byId(S.sel), any = !!(p || S.multi.size);
   return html`<div class="bc" aria-hidden="true"></div>
-   <button class="btn" data-act="normalizeModal" ${any ? '' : 'disabled'} title="Crear variantes con las macros ordenadas según un perfil">${raw(IC.norm)}Normalizar macros</button>
+   <button class="btn" data-act="normalizeModal" ${any ? '' : 'disabled'} title="Proponer macros ordenadas según un perfil (quedan como propuesta en cada sonido)">${raw(IC.norm)}Normalizar macros</button>
    <button class="btn" data-act="autoTagModal" ${lib.patches.length ? '' : 'disabled'} title="Aceptar propuestas en bloque">${raw(IC.tag)}Auto tag</button>
    <button class="btn" data-act="detectDups" ${lib.patches.length ? '' : 'disabled'}>${raw(IC.dup)}Duplicados</button>
    <button class="btn" data-act="buildPackModal" ${lib.patches.length ? '' : 'disabled'}>${raw(IC.banks)}Construir pack</button>
@@ -252,8 +248,8 @@ function renderActions() {
 }
 // ---------- biblioteca: lista ----------
 function kpis() {
-  const la = LA(), issues = lib.patches.filter((p) => { const a = lib.info(p).macros; return a.integrity.length || a.shared.length; }).length, untagged = lib.patches.filter((p) => !p.meta.category).length;
-  const legacy = lib.patches.filter((p) => compatOf(p).status === 'legacy').length;
+  const F = lib.faces(), la = LA(), issues = F.filter((p) => { const a = lib.info(p).macros; return a.integrity.length || a.shared.length; }).length, untagged = F.filter((p) => !p.meta.category).length;
+  const legacy = F.filter((p) => compatOf(p).status === 'legacy').length;
   const k = (label, n, ic, act, extra = '') => html`<button class="kpi ${extra}" data-act="kpi" data-k="${act}"><span>${label}</span><b>${raw(ic)}${n}</b><i></i></button>`;
   return html`<div class="kpis"><div class="kpititle hf">Analysis<br>summary</div>
     ${k('Total patches', la.N, IC.banks, 'all', S.q.compat || S.q.macroIssues || S.q.uncategorized ? '' : 'on')}${k('Tracks nativos', la.tracks, IC.grid, 'native', S.q.compat === 'native' ? 'on' : '')}${k('Circuit original', legacy, IC.grid2, 'legacy', S.q.compat === 'legacy' ? 'on' : '')}
@@ -275,11 +271,11 @@ function renderListPane() {
       <ol class="steps"><li><b>Importa tus patches</b> — archivos .syx, un .zip, una carpeta entera o una copia .json (también la de la v5). O arrástralos aquí.</li><li><b>Escucha y decide</b> — cada patch suena en el Circuit Tracks (solo en la RAM) y una tecla lo clasifica.</li><li><b>Ordénalos y monta packs</b> — carpetas y subcarpetas tuyas, packs de 128 y canciones enteras.</li></ol>
       <p class="note">Nada sale de tu ordenador: no hay cuentas ni servidores.</p>
       <div class="row2" style="justify-content:center"><button class="btn primary" data-act="import">${raw(IC.imp)}Importar archivos</button><button class="btn" data-act="importDir">Carpeta</button></div></div>`}</div>
-    <div class="lfoot"><span>${n} de ${lib.patches.length}${selCount ? ` · <b>${selCount}</b> seleccionados` : ''}</span>${selCount ? html`<div class="row2"><button class="btn small" data-act="queueSel">Escuchar</button><button class="btn small" data-act="bulkAccept">Aceptar propuestas</button><select class="sel" data-act="bulkCat" style="height:27px;font-size:12px"><option value="">Carpeta…</option>${folderOptions()}</select><button class="btn small" data-act="bulkTags">Etiquetas…</button><button class="btn small" data-act="bulkAutoAttach" title="Adjunta a cada uno su patrón generado">Patrones</button><select class="sel" data-act="bulkOct" style="height:27px;font-size:12px" aria-label="Transponer"><option value="">Octava…</option>${[-24, -12, 12, 24].map((n) => html`<option value="${n}">${n > 0 ? '+' : '−'}${Math.abs(n) / 12} oct</option>`)}</select><select class="sel" data-act="bulkCollection" style="height:27px;font-size:12px"><option value="">Colección…</option>${lib.collections.filter((c) => c.kind === 'manual').map((c) => html`<option value="${c.id}">${c.name}</option>`)}<option value="__new">+ Nueva</option></select><button class="btn small" data-act="bulkZip">ZIP</button><button class="btn small danger" data-act="bulkDelete">Eliminar</button><button class="btn small" data-act="clearSel">✕</button></div>` : html`<span>${S.selMode ? 'Toca para seleccionar' : 'Mayús+clic o «Seleccionar» para varios'}</span>`}</div></section>`;
+    <div class="lfoot"><span>${n} de ${lib.faces().length}${selCount ? ` · <b>${selCount}</b> seleccionados` : ''}</span>${selCount ? html`<div class="row2"><button class="btn small" data-act="queueSel">Escuchar</button><button class="btn small" data-act="bulkAccept">Aceptar propuestas</button><select class="sel" data-act="bulkCat" style="height:27px;font-size:12px"><option value="">Carpeta…</option>${folderOptions()}</select><button class="btn small" data-act="bulkTags">Etiquetas…</button><button class="btn small" data-act="bulkAutoAttach" title="Adjunta a cada uno su patrón generado">Patrones</button><select class="sel" data-act="bulkOct" style="height:27px;font-size:12px" aria-label="Transponer"><option value="">Octava…</option>${[-24, -12, 12, 24].map((n) => html`<option value="${n}">${n > 0 ? '+' : '−'}${Math.abs(n) / 12} oct</option>`)}</select><select class="sel" data-act="bulkCollection" style="height:27px;font-size:12px"><option value="">Colección…</option>${lib.collections.filter((c) => c.kind === 'manual').map((c) => html`<option value="${c.id}">${c.name}</option>`)}<option value="__new">+ Nueva</option></select><button class="btn small" data-act="bulkZip">ZIP</button><button class="btn small danger" data-act="bulkDelete">Eliminar</button><button class="btn small" data-act="clearSel">✕</button></div>` : html`<span>${S.selMode ? 'Toca para seleccionar' : 'Mayús+clic o «Seleccionar» para varios'}</span>`}</div></section>`;
 }
 // Palabras sacadas de los nombres y tus etiquetas, como filtros de un clic (se combinan: todas deben cumplirse)
 function wordsBar() {
-  const q = S.q, base = lib.patches.filter((p) => p.kind !== 'variant' || lib.changeState(p) !== 'draft');
+  const q = S.q, base = lib.faces();
   const idx = lib.wordIndex(base).filter(([w, n]) => n >= 2 || (q.words || []).includes(w)), lim = S.wordsAll ? 160 : 36, tags = lib.allTags();
   const known = (w) => matchText(w).hits.length > 0;
   return html`<div class="wordsbar"><div class="wb-row"><span class="mlabel">Palabras del nombre</span><span class="wb-chips">${idx.slice(0, lim).map(([w, n]) => html`<button class="wq ${(q.words || []).includes(w) ? 'on' : ''} ${known(w) ? 'k' : ''}" data-act="qWord" data-w="${w}" title="${known(w) ? 'La herramienta ya la usa para proponer categoría o subcarpeta' : 'Palabra de tus nombres'}">${w}<small>${n}</small></button>`)}${idx.length > lim || S.wordsAll ? html`<button class="lk" data-act="wordsMore">${S.wordsAll ? 'menos' : `+${idx.length - lim} más`}</button>` : ''}</span></div>
@@ -333,7 +329,7 @@ function renderDetail() {
   if (!tabs.some(([k]) => k === S.tab)) S.tab = 'identity';
   return html`<div class="dhead"><div>
       <button class="btn small mobile-back" data-act="closeDetail">${raw(IC.back)}Lista</button>
-      <div class="lbl">PATCH ${p.kind === 'variant' ? '· VARIANTE' : ''}</div><h2>${p.name || '(sin nombre)'}</h2>
+      <div class="lbl">PATCH ${lib.changeState(p) === 'adopted' ? '· EDITADO' : p.copyOf ? '· COPIA' : ''}</div><h2>${p.name || '(sin nombre)'}</h2>
       <div class="chips">${cat ? html`<span class="badge ${m.category ? '' : 'prop'}">${catName(cat, m.category ? m.subtype : c.subtype)}</span>` : ''}${md ? html`<span class="badge ${md.source === 'measured' || md.source === 'user' ? '' : 'prop'}" title="${MOOD_SOURCE[md.source]}">${md.label}</span>` : ''}<span class="badge">${COMPAT_LABEL[compatOf(p).status]}</span><span class="badge">${['Mono', 'Mono AG', 'Poly'][p.payload[32]] || '?'}</span></div></div>
     <div><div class="dacts"><span class="stars" role="group" aria-label="Puntuación">${[1, 2, 3, 4, 5].map((n) => html`<span class="${n <= (m.rating || 0) ? 'on' : ''}" data-act="rate" data-n="${n}">★</span>`)}</span>
       <button class="iconbtn ${m.fav ? 'on' : ''}" data-act="fav" data-id="${p.id}" aria-label="Favorito">${raw(IC.heart)}</button><button class="iconbtn" data-act="listenSel" title="Escuchar en el equipo (Espacio)" aria-label="Escuchar">${raw(IC.play)}</button></div></div></div>
@@ -353,7 +349,7 @@ function renderCenter() {
   if (!p) return html`<section class="pane center"><div class="empty"><h3>Elige un patch</h3><p>Verás cómo está construido: fuentes, filtro, envolventes, modulación y macros, explicado en un diagrama y en una receta legible.</p></div></section>`;
   const inf = lib.info(p);
   return html`<section class="pane center"><div class="pane-h"><button class="btn small mobile-back" data-act="closeDetail">${raw(IC.back)}Lista</button><div class="ctabs" style="border:0;padding:0">${CTABS.map(([k, l]) => html`<button class="${S.ctab === k ? 'on' : ''}" data-act="ctab" data-t="${k}">${l}</button>`)}</div><span class="sp"></span>
-      <button class="btn small" data-act="listenSel" ${S.dev.session ? '' : 'disabled'} title="Enviar a la RAM del equipo y tocar la frase de prueba (Espacio)">${raw(IC.play)}Escuchar</button>${octBtnsHTML(p)}${p.kind === 'variant' ? '' : html`<button class="btn small" data-act="duplicate" title="Crear una copia editable">${raw(IC.dup)}Variante</button>`}</div>
+      <button class="btn small" data-act="listenSel" ${S.dev.session ? '' : 'disabled'} title="Enviar a la RAM del equipo y tocar la frase de prueba (Espacio)">${raw(IC.play)}Escuchar</button>${octBtnsHTML(p)}<button class="btn small" data-act="duplicate" title="Otro sonido a partir de este, con su propio nombre y sus propias carpetas (para editar sin tocar este no hace falta: los cambios van a su versión y siempre puedes volver al original)">${raw(IC.dup)}Duplicar</button></div>
     <div class="pane-b">${{ anatomy: centerAnatomy, params: tabSynth, macros: tabMacros, compare: tabCompare, lab: centerLab, history: centerHistory }[S.ctab](p, inf)}</div></section>`;
 }
 function centerHistory(p) {
@@ -409,17 +405,17 @@ const BLOCK_GROUPS = { osc1: ['osc1', 'mix.osc1'], osc2: ['osc2', 'mix.osc2'], n
 function blockParams(p, id) {
   const keys = BLOCK_GROUPS[id] || [], list = PARAMS.filter((d) => keys.some((k) => d.key.startsWith(k)));
   const isVar = p.kind === 'variant';
-  return html`<div class="box" style="margin-top:10px"><h3>${anatomy(p.payload).blocks[id].title} <small>${isVar ? 'variante: edición directa' + (S.live && S.dev.session ? ' · envío en vivo' : '') : 'original: crea una variante para editar'}</small></h3>
+  return html`<div class="box" style="margin-top:10px"><h3>${anatomy(p.payload).blocks[id].title} <small>${isVar ? (lib.changeState(p) === 'adopted' ? 'editando su versión' : 'edición directa') + (S.live && S.dev.session ? ' · envío en vivo' : '') : 'original: «Editar» crea su versión (el original se guarda)'}</small></h3>
     ${list.map((d) => isVar ? html`<div class="prm"><span class="n">${d.label}</span>${d.enum ? html`<select data-act="pedit" data-off="${d.off}">${d.enum.map((n, i) => html`<option value="${i}" ${p.payload[d.off] === i ? 'selected' : ''}>${n}</option>`)}</select>` : html`<input type="range" min="${d.min}" max="${d.max}" value="${p.payload[d.off]}" data-act="pedit" data-off="${d.off}">`}<span class="v">${formatValue(d, p.payload[d.off])}${/\.(a|d|r|delay)$/.test(d.key) ? ' · ' + fmtSeconds(approxSeconds(p.payload[d.off])) : ''}</span></div>` : pp(p, d.key, /\.(a|d|r|delay)$/.test(d.key) ? { text: p.payload[d.off] + ' · ' + fmtSeconds(approxSeconds(p.payload[d.off])) } : {}))}
-    ${isVar ? html`<label class="note" style="margin-top:6px;display:block"><input type="checkbox" class="chk" data-act="opt" data-k="live" ${S.live ? 'checked' : ''}> Enviar cada cambio a la RAM del equipo</label>` : html`<button class="btn small" data-act="duplicate" style="margin-top:6px">Crear variante editable</button>`}</div>`;
+    ${isVar ? html`<label class="note" style="margin-top:6px;display:block"><input type="checkbox" class="chk" data-act="opt" data-k="live" ${S.live ? 'checked' : ''}> Enviar cada cambio a la RAM del equipo</label>` : html`<button class="btn small" data-act="editStart" style="margin-top:6px">Editar</button>`}</div>`;
 }
 // ---------- Paleta de acciones (Ctrl K): todo lo que se hace con el patch actual, desde cualquier sección ----------
 const norm = (x) => String(x).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 const fakeEv = { preventDefault() {}, stopPropagation() {} };
 async function transposeIds(ids, n) {
   const seen = new Set(), adopt = [];
-  for (const p of ids.map((id) => lib.byId(id)).filter(Boolean).map((x) => lib.currentVersion(x))) { if (seen.has(p.id)) continue; seen.add(p.id); const t = transposeSemitones(p.payload, n, regMethod(), {}); const v = await lib.createVariant(p.id, t.payload, 'register', `Altura ${fmtSemis(n)} st (a mano)`, ''); adopt.push(v.id); }
-  if (adopt.length) await lib.adoptVariants(adopt, true);
+  // v3.10: se suma a la versión de cada sonido (sin variantes nuevas)
+  for (const p of ids.map((id) => faceOf(lib.byId(id))).filter(Boolean)) { if (seen.has(p.id)) continue; seen.add(p.id); const t = transposeSemitones(p.payload, n, regMethod(), {}); const v = await lib.editSound(p, t.payload, 'register', `Octava ${fmtSemis(n / 12)} (a mano)`); adopt.push(v.id); }
   S.rowsKey = ''; return adopt.length;
 }
 function paletteItems(q) {
@@ -429,7 +425,7 @@ function paletteItems(q) {
     add('Patch', 'Escuchar en el equipo', () => A.listenSel(), 'Espacio');
     add('Patch', p.meta.fav ? 'Quitar de favoritos' : 'Marcar favorito', () => A.fav({ dataset: { id } }, fakeEv));
     for (let n = 1; n <= 5; n++) add('Patch', `Puntuar ${'★'.repeat(n)}`, () => { S.sel = id; A.rate({ dataset: { n } }); });
-    for (const [n, l] of [[-12, 'Bajar una octava'], [12, 'Subir una octava'], [-24, 'Bajar dos octavas'], [24, 'Subir dos octavas']]) add('Patch', l, async () => { const k = await transposeIds([id], n); toast(`${l}: variante aceptada (deshacible en Cambios)`); if (k) rerender(); });
+    for (const [n, l] of [[-12, 'Bajar una octava'], [12, 'Subir una octava'], [-24, 'Bajar dos octavas'], [24, 'Subir dos octavas']]) add('Patch', l, async () => { const k = await transposeIds([id], n); toast(`${l}: se suma a su versión (Ctrl Z deshace)`); if (k) rerender(); });
     if (!patternOf(p)) add('Patch', 'Adjuntar el patrón generado', async () => { await autoAttach(p); toast('Patrón adjuntado'); rerender(); });
     add('Patch', 'Abrir en Patrones', () => A.patOpenFor({ dataset: { id } }));
     for (const [t, l] of EDIT_TABS) add('Editar', `${l} del patch`, () => A.goEdit({ dataset: { t } }));
@@ -450,7 +446,7 @@ function paletteItems(q) {
   const nq = norm(q).trim(), words = nq.split(/\s+/).filter(Boolean);
   let list = words.length ? out.filter((x) => words.every((w) => norm(x.group + ' ' + x.label).includes(w))) : out.filter((x) => x.group === 'Patch' || x.group === 'Editar').slice(0, 14);
   if (words.length) {
-    const pm = lib.patches.filter((x) => x.kind !== 'variant' || lib.changeState(x) === 'adopted').filter((x) => words.every((w) => norm(x.name + ' ' + (x.fileName || '')).includes(w))).slice(0, 8);
+    const pm = lib.faces().filter((x) => words.every((w) => norm(x.name + ' ' + (x.fileName || '')).includes(w))).slice(0, 8);
     list = [...pm.map((x) => ({ group: 'Abrir patch', label: x.name, hint: catName(x.meta.category || lib.info(x).cls.category, x.meta.subtype), run: () => { S.sel = x.id; if (S.view === 'audition') S.view = 'library'; if (S.view !== 'library') S.dock = true; rerender(); } })), ...list];
   }
   return list.slice(0, 40);
@@ -484,7 +480,7 @@ function renderInspector() {
   const inf = lib.info(p), m = p.meta, c = inf.cls, cat = m.category || c.category, md = mood(p, lib), cp = compatOf(p), au = auditChecks(p, lib, S.profile), reg = register(p.payload);
   const packs = lib.banks.filter((b) => b.slots.includes(p.id)).map((b) => b.name + ' #' + (b.slots.indexOf(p.id) + 1));
   return html`<aside class="pane insp"><div class="pane-b">
-    <div class="label"><div class="k">Patch${p.kind === 'variant' ? ' · variante' : ''} · ${COMPAT_LABEL[cp.status]}</div><h2>${p.name || '(sin nombre)'}</h2>
+    <div class="label"><div class="k">Patch${lib.changeState(p) === 'adopted' ? ' · editado' : p.copyOf ? ' · copia' : ''} · ${COMPAT_LABEL[cp.status]}</div><h2>${p.name || '(sin nombre)'}</h2>
       <div class="tags">${cat ? html`<span class="${m.category ? '' : 'prop'}">${catName(cat, m.category ? m.subtype : c.subtype)}</span>` : ''}${md ? html`<span class="${md.source === 'measured' || md.source === 'user' ? '' : 'prop'}" title="${MOOD_SOURCE[md.source]}">${md.label}</span>` : ''}<span>${['Mono', 'Mono AG', 'Poly'][p.payload[32]]}</span>${(m.tags || []).slice(0, 4).map((t) => html`<span>${t}</span>`)}</div>
       <dl class="meta"><dt>Al tocar Do</dt><dd>${describePitch(lib.settings.kbdMidi === 'no' ? reg.lowestSemis : reg.effective)}${reg.confidence === 'dudosa' ? ' (dudoso)' : ''}${reg.keyboardOctave ? ` · tecl. ${fmtSemis(reg.keyboardOctave)}` : ''}</dd><dt>Origen</dt><dd>${p.folderPath || p.fileName || '—'}</dd><dt>Pack</dt><dd>${packs.join(', ') || '—'}</dd></dl>
       <div class="acts"><span class="stars">${[1, 2, 3, 4, 5].map((n) => html`<span class="${n <= (m.rating || 0) ? 'on' : ''}" data-act="rate" data-n="${n}">★</span>`)}</span><span class="sp"></span><button class="ib ${m.fav ? 'on' : ''}" data-act="fav" data-id="${p.id}" aria-label="Favorito">${raw(IC.heart)}</button><button class="ib" data-act="exportSyx" title="Exportar .syx">.syx</button><button class="ib" data-act="addToBank" title="Añadir al pack">+ Pack</button></div><div class="spec"></div></div>
@@ -496,7 +492,7 @@ function renderInspector() {
     <div class="isec"><div class="mlabel"><span>Ficha</span></div>
       <label class="lab">Estado<select class="field" data-act="metaSel" data-k="review">${Object.entries(REVIEW).map(([k, v]) => html`<option value="${k}" ${m.review === k ? 'selected' : ''}>${v}</option>`)}</select></label>
       <label class="lab" style="margin-top:8px">Notas de uso<textarea class="field" data-act="metaTxt" data-k="notes" placeholder="Dónde lo usaste, qué macros mover…">${m.notes}</textarea></label>
-      ${p.kind === 'variant' ? html`<label class="lab" style="margin-top:8px">Nombre de la variante (16 caracteres)<input class="field" data-act="rename" maxlength="16" value="${p.name}"></label>` : ''}</div>
+      ${p.kind === 'variant' ? html`<label class="lab" style="margin-top:8px">Nombre (16 caracteres)<input class="field" data-act="rename" maxlength="16" value="${p.name}"></label>` : ''}</div>
     <div class="isec"><div class="mlabel"><span>Compatibilidad y archivo</span></div><div class="checks">${cp.checks.map((x) => html`<div class="${x.level === 'ok' ? 'ok' : x.level === 'warn' ? 'warn' : ''}"><i></i><span>${x.text}</span></div>`)}</div>${measuredMini(p)}
       <div class="row2" style="margin-top:8px">${lib.fileOf(p) ? html`<button class="btn small" data-act="exportOriginal">Archivo original</button>` : ''}<button class="btn small" data-act="queueOne">A la escucha</button><button class="btn small danger" data-act="deleteOne">Eliminar</button></div></div>
   </div></aside>`;
@@ -540,7 +536,7 @@ async function acceptSubs(ids) {
 function regFixList(k, live = regLive(), drafts = regDraftParents()) { const pl = regPlanOf(k); if (pl.target === 'skip') return []; const rep = regReportFor(k, live), mode = regModeOf(k); return rep.off.filter((x) => regShift(x, mode) !== 0 && !drafts.has(x.id)).map((x) => ({ x, goal: rep.goal, mode })); }
 async function regFixGroups(keys, quiet = false) {
   const live = regLive(), drafts = regDraftParents(), mode = S.regAdopt || 'smart', adopt = []; let created = 0, groups = 0;
-  if (!quiet) { const n = keys.reduce((a, k) => a + regFixList(k, live, drafts).length, 0); if (!n) return null; if (!(await confirmBox('Corregir octava y tono', `Se crearán ${n} variantes de ${keys.map(regLabel).join(', ')} llevadas a su objetivo. Los originales no cambian.`, 'Corregir'))) return null; }
+  if (!quiet) { const n = keys.reduce((a, k) => a + regFixList(k, live, drafts).length, 0); if (!n) return null; if (!(await confirmBox('Corregir octava y tono', `Se corregirán ${n} patches de ${keys.map(regLabel).join(', ')}, cada uno a su objetivo, en la versión de cada sonido. Los originales se guardan.`, 'Corregir'))) return null; }
   for (const k of keys) {
     const list = regFixList(k, live, drafts); if (!list.length) continue; groups++;
     for (const { x, goal, mode: m } of list) {
@@ -553,7 +549,7 @@ async function regFixGroups(keys, quiet = false) {
   S.rowsKey = ''; rerender();
   return { created, adopted: adopt.length, groups };
 }
-function revAutoPlay() { if (S.view !== 'organize' || S.regView !== 'review' || !S.dev.session) return; const q = regQueue(), v = q[Math.min(S.revI || 0, q.length - 1)]; if (v) audPlay(v); }
+function revAutoPlay() { if (S.view !== 'organize' || S.regView !== 'review' || !S.dev.session) return; const q = regQueue(), v = q[Math.min(S.revI || 0, q.length - 1)]; if (v) playTest(faceOf(v), proposalApplied(v)); }
 function measuredMini(p) {
   const a = p.acoustic; if (!a) return html`<p class="note" style="margin-top:8px">Sin medición acústica.${S.dev.session && S.dev.audioId ? html` <a href="#" data-act="measureSel">Medir ahora</a>` : ''}</p>`;
   const d = a.desc; if (d.silent) return html`<p class="note" style="margin-top:8px">Medición sin señal.</p>`;
@@ -567,8 +563,8 @@ function autoTags(p, inf) {
     .filter((x, i, arr) => arr.findIndex((y) => y.t === x.t) === i);
 }
 function kpiTiles(small) {
-  const la = LA(), issues = lib.patches.filter((p) => { const a = lib.info(p).macros; return a.integrity.length || a.shared.length; }).length;
-  return [['Patches', la.N, 'all'], ['Sin categoría guardada', lib.patches.filter((p) => !p.meta.category).length, 'untagged'], ['Sin propuesta', lib.patches.filter((p) => !p.meta.category && !lib.info(p).cls.category).length, 'untagged'], ['Duplicados', la.dup, 'duplicate'], ['Circuit original', la.legacy, 'legacy'], ['Macros con incidencias', issues, 'macro'], ['Pendientes', lib.patches.filter((p) => p.meta.review === 'pending').length, 'pending']]
+  const la = LA(), issues = lib.faces().filter((p) => { const a = lib.info(p).macros; return a.integrity.length || a.shared.length; }).length;
+  return [['Patches', la.N, 'all'], ['Sin categoría guardada', lib.faces().filter((p) => !p.meta.category).length, 'untagged'], ['Sin propuesta', lib.faces().filter((p) => !p.meta.category && !lib.info(p).cls.category).length, 'untagged'], ['Duplicados', la.dup, 'duplicate'], ['Circuit original', la.legacy, 'legacy'], ['Macros con incidencias', issues, 'macro'], ['Pendientes', lib.faces().filter((p) => p.meta.review === 'pending').length, 'pending']]
     .map(([l, n, k]) => html`<button class="stat" data-act="kpi" data-k="${k}"><strong>${n}</strong><span>${l}</span></button>`);
 }
 let envSeq = 0;
@@ -588,7 +584,7 @@ function tabSynth(p, inf) {
   const v = inf.an.decoded.v, d = inf.an.decoded, isVar = p.kind === 'variant';
   if (S.editParams && isVar) return paramEditor(p);
   const envs = [['Amp', 'env1'], ['Filter', 'env2'], ['Mod', 'env3']], e = envs[S.envTab][1], lf = S.lfoTab + 1, fl = d.lfoFlags[S.lfoTab], routes = d.matrix.filter((m) => m.active);
-  return html`<div class="row2"><span class="note">${isVar ? (lib.changeState(p) === 'adopted' ? 'Versión aceptada: los cambios se guardan solos y es la que se exporta.' : 'Variante en borrador: los cambios se guardan solos; el original no cambia.') : 'Original en solo lectura. Crea una variante para editar.'}</span><span style="flex:1"></span>${isVar ? html`<button class="btn small" data-act="editParams">Editar parámetros</button><button class="btn small" data-act="listenSel">▶ Probar en equipo</button>` : html`<button class="btn small" data-act="duplicate">Crear variante editable</button>`}</div>
+  return html`<div class="row2"><span class="note">${isVar ? (lib.changeState(p) === 'adopted' ? 'Editado: los cambios se suman a su versión, la que suena y se exporta. El original se guarda.' : 'Copia independiente: los cambios se guardan solos.') : 'Original. Al editar se crea su versión; el original se guarda y siempre puedes volver a él.'}</span><span style="flex:1"></span>${isVar ? html`<button class="btn small" data-act="editParams">Editar parámetros</button><button class="btn small" data-act="listenSel">▶ Probar en equipo</button>` : html`<button class="btn small" data-act="editStart">Editar parámetros</button>`}</div>
   <div class="grid2">
     <div class="box"><h3>Osciladores</h3>${[1, 2].map((n) => html`<div class="wave">${raw(WAVE_ICON(v[`osc${n}.wave`]))}<span>OSC ${n} · ${OSC_WAVES[v[`osc${n}.wave`]]}</span></div>${pp(p, `mix.osc${n}`, { label: 'Nivel', acc: true })}`)}
       ${pp(p, 'osc1.semi', { label: 'Semit. 1' })}${pp(p, 'osc2.semi', { label: 'Semit. 2' })}${pp(p, 'osc2.cents', { label: 'Cents 2' })}${pp(p, 'osc1.density', { label: 'Density 1' })}${pp(p, 'osc1.vsync', { label: 'VSync 1' })}</div>
@@ -608,8 +604,8 @@ function tabSynth(p, inf) {
 }
 function paramEditor(p) {
   const groups = {}; for (const d of PARAMS) (groups[d.group] ||= []).push(d);
-  return html`<div class="row2"><b class="hf">Edición de parámetros · variante</b><span style="flex:1"></span><button class="btn small" data-act="listenSel">▶ Probar</button><button class="btn small" data-act="editParams">Volver</button></div>
-  <p class="note">Cada cambio se guarda en la variante. Rangos de la guía oficial.</p>
+  return html`<div class="row2"><b class="hf">Edición de parámetros</b><span style="flex:1"></span><button class="btn small" data-act="listenSel">▶ Probar</button><button class="btn small" data-act="editParams">Volver</button></div>
+  <p class="note">Cada cambio se guarda en su versión (el original se guarda). Rangos de la guía oficial.</p>
   ${Object.entries(groups).map(([g, list]) => html`<div class="box"><h3>${GROUP_LABELS[g]}</h3>${list.map((d) => html`<div class="prm"><span class="n">${d.label} <span class="ev">${d.off}</span></span>${d.enum ? html`<select data-act="pedit" data-off="${d.off}">${d.enum.map((n, i) => html`<option value="${i}" ${p.payload[d.off] === i ? 'selected' : ''}>${n}</option>`)}</select>` : html`<input type="number" min="${d.min}" max="${d.max}" value="${p.payload[d.off]}" data-act="pedit" data-off="${d.off}">`}<span class="v">${formatValue(d, p.payload[d.off])}</span></div>`)}</div>`)}`;
 }
 function knobSvg(pos, active) {
@@ -621,7 +617,7 @@ function knobSvg(pos, active) {
 // ===== MESA DE MACROS =====
 // Los 8 knobs se giran (arrastrar, rueda o flechas). Girar NO guarda nada: es una posición de prueba que
 // muestra en vivo qué valor alcanza cada destino y, con el equipo conectado, manda el CC de la macro.
-// Guardar la posición o editar rutas crea (o actualiza) una variante en borrador.
+// Guardar la posición o editar rutas crea (o actualiza) la versión del sonido.
 const MGROUP_ORDER = ['voice', 'osc', 'mixer', 'filter', 'env', 'lfo', 'fx', 'matrix', 'unknown'];
 const MGROUP_TITLE = { voice: 'Voz', osc: 'Osciladores', mixer: 'Mezcla', filter: 'Filtro', env: 'Envolventes', lfo: 'LFO', fx: 'Efectos', matrix: 'Matriz de modulación', unknown: 'Sin identificar' };
 const sgnN = (n) => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n);
@@ -693,7 +689,7 @@ function macroBoard(p, inf) {
         <label>hasta<input type="number" min="0" max="127" value="${sl.end}" data-act="mroute" data-k="${S.knob}" data-s="${sl.slot}" data-f="end"></label>
         <label>Cantidad ${sgnN(sl.depthSigned)}<input type="range" min="0" max="127" value="${sl.depth}" data-act="mroute" data-k="${S.knob}" data-s="${sl.slot}" data-f="depth"></label>
         <button class="btn small danger" data-act="mclear" data-k="${S.knob}" data-s="${sl.slot}">Quitar destino</button></div>` : ''}</div>`; });
-  const detail = html`<div class="box mdetail"><h3>Macro ${S.knob + 1} · ${knobName(k, dec)} <small>${p.kind === 'variant' ? (lib.changeState(p) === 'adopted' ? 'variante aceptada' : 'variante en borrador') : 'original · al guardar o editar se crea una variante'}</small></h3>${savebar}
+  const detail = html`<div class="box mdetail"><h3>Macro ${S.knob + 1} · ${knobName(k, dec)} <small>${p.kind === 'variant' ? (lib.changeState(p) === 'adopted' ? 'editado' : 'copia') : 'original · al guardar o editar se crea su versión'}</small></h3>${savebar}
     <div class="mroutes">${routes.length ? routes : html`<p class="note">Esta macro no mueve nada todavía.</p>`}</div>
     ${free ? html`<div class="madd"><select data-act="mroute" data-k="${S.knob}" data-s="${free.slot}" data-f="newdest" aria-label="Añadir destino a la macro ${S.knob + 1}"><option value="">+ Añadir destino a M${S.knob + 1}…</option>${destOptions(-1)}</select><span class="note">${4 - k.slots.filter((x) => x.state === 'empty').length} de 4 destinos usados · se añade con todo el giro y +32</span></div>` : html`<p class="note">Los 4 destinos de esta macro están ocupados.</p>`}
     <p class="note" style="margin-top:8px">Barra: <i class="lg base"></i> valor guardado en el patch · <i class="lg reach"></i> hasta dónde llega la macro · <i class="lg now"></i> valor con el knob donde lo tienes. Los valores con el knob girado son aproximados. Con el equipo conectado, al girar lo oyes de verdad.</p></div>`;
@@ -741,7 +737,7 @@ function tabMacros(p, inf) {
   <div class="box"><h3>Perfil de referencia <small>preferencia de trabajo, no requisito</small></h3>
     <select class="sel" data-act="profile" style="max-width:none">${Object.entries(PROFILES).map(([id, pr]) => html`<option value="${id}" ${S.profile === id ? 'selected' : ''}>${pr.title}</option>`)}</select>
     <table class="t" style="margin-top:6px"><tr><th>M</th><th>Perfil</th><th>Patch</th><th></th></tr>${fit.map((f) => html`<tr><td>${f.knob + 1}</td><td>${f.want.label}</td><td>${f.have}</td><td>${{ match: '✓', group: '≈', differs: '≠', empty: '○' }[f.status]}</td></tr>`)}</table>
-    <div class="row2" style="margin-top:8px"><button class="btn small" data-act="applyProfile" data-m="reorder">Variante: reordenar</button><button class="btn small" data-act="applyProfile" data-m="fill">Variante: rellenar vacías</button><button class="btn small danger" data-act="applyProfile" data-m="rebuild">Variante: reconstruir</button></div>
+    <div class="row2" style="margin-top:8px"><button class="btn small" data-act="applyProfile" data-m="reorder">Reordenar</button><button class="btn small" data-act="applyProfile" data-m="fill">Rellenar vacías</button><button class="btn small danger" data-act="applyProfile" data-m="rebuild">Reconstruir</button></div>
     <p class="note">«Reordenar» mueve macros completas sin perder rutas. «Rellenar» solo toca macros vacías. «Reconstruir» descarta las rutas de la copia (profundidad +32 y recorrido 0–127: valores de partida propios).</p></div>`;
 }
 function measuredBox(p) {
@@ -780,7 +776,7 @@ function tabClass(p, inf) {
 }
 function tabCompare(p) {
   const fam = lib.families().of.get(p.id);
-  const near = nearest(p.payload, lib.patches.filter((x) => x.id !== p.id).map((x) => ({ id: x.id, payload: x.payload })), 8);
+  const near = nearest(p.payload, lib.faces().filter((x) => x.id !== p.id).map((x) => ({ id: x.id, payload: x.payload })), 8);
   const b = lib.byId(S.cmpB);
   const opts = [...(fam ? fam.members.filter((m) => m.id !== p.id).map((m) => m.id) : []), ...near.map((n) => n.id)].filter((v, i, a) => a.indexOf(v) === i);
   let body = html`<p class="note">Elige un patch: primero su familia, luego los técnicamente más parecidos.</p>`;
@@ -793,7 +789,7 @@ function tabCompare(p) {
   return html`<div class="row2"><span class="mlabel">A · ${p.name}</span><select class="sel" data-act="cmpPick" style="max-width:none;flex:1"><option value="">B…</option>${opts.map((id) => { const q = lib.byId(id); return html`<option value="${id}" ${S.cmpB === id ? 'selected' : ''}>${q.name}${fam?.members.some((m) => m.id === id) ? ' · familia' : ''} — ${relation(p.payload, q.payload).label}</option>`; })}</select></div>${body}`;
 }
 function tabIdentity(p, inf) {
-  const f = lib.fileOf(p), m = p.meta, kids = lib.patches.filter((x) => x.parentId === p.id), parent = p.parentId && lib.byId(p.parentId), md = mood(p, lib), c = inf.cls;
+  const root = lib.rootOf(p), f = lib.fileOf(root), m = p.meta, md = mood(p, lib), c = inf.cls, copy = p.copyOf && lib.byId(p.copyOf), np = lib.proposalsOf(p).length;
   const packs = lib.banks.filter((b) => b.slots.includes(p.id)).map((b) => `${b.name} #${b.slots.indexOf(p.id) + 1}`);
   return html`<div class="box"><h3>Identidad</h3><div class="grid2"><dl class="kv">
       <dt>Nombre</dt><dd>${p.name}</dd><dt>Tipo</dt><dd>${m.category ? catName(m.category, m.subtype) : c.category ? catName(c.category, c.subtype) + ' (propuesta)' : '—'}</dd>
@@ -804,16 +800,14 @@ function tabIdentity(p, inf) {
     <div class="grid2"><label class="lab">Estado<select class="field" data-act="metaSel" data-k="review">${Object.entries(REVIEW).map(([k, v]) => html`<option value="${k}" ${m.review === k ? 'selected' : ''}>${v}</option>`)}</select></label>
       <label class="lab">Etiquetas (coma)<input class="field" data-act="metaTxt" data-k="tags" value="${(m.tags || []).join(', ')}"></label></div>
     <label class="lab" style="margin-top:8px">Notas de uso<textarea class="field" data-act="metaTxt" data-k="notes">${m.notes}</textarea></label>
-    ${p.kind === 'variant' ? html`<label class="lab" style="margin-top:8px">Nombre interno de la variante (16 ASCII)<input class="field" data-act="rename" maxlength="16" value="${p.name}"></label>` : ''}</div>
+    ${p.kind === 'variant' ? html`<label class="lab" style="margin-top:8px">Nombre interno (16 ASCII)<input class="field" data-act="rename" maxlength="16" value="${p.name}"></label>` : ''}</div>
   <div class="box"><h3>Archivo</h3><dl class="kv">
-    <dt>Tipo</dt><dd>${p.kind === 'variant' ? 'Variante (' + (p.variantNote || p.variantOp) + ')' : 'Original'}</dd>
-    ${parent ? html`<dt>Deriva de</dt><dd><a href="#" data-act="pick" data-id="${parent.id}">${parent.name}</a></dd>` : ''}
-    ${kids.length ? html`<dt>Variantes</dt><dd>${kids.map((k, i) => html`${i ? ', ' : ''}<a href="#" data-act="pick" data-id="${k.id}">${k.name}</a>`)}</dd>` : ''}
-    <dt>Archivo</dt><dd>${p.fileName || '—'}${f?.reconstructed ? ' (reconstruido)' : ''}</dd>
+    <dt>Versión</dt><dd>${p.id !== root.id ? 'Editado' + (p.ops?.length ? ' (' + p.ops.join(' · ') + ')' : '') + ' · el original sigue guardado' : copy ? html`Copia de <a href="#" data-act="pick" data-id="${faceOf(copy).id}">${copy.name}</a>` : p.meta.lab ? 'Nacido en el Laboratorio' : 'Original'}${np ? ` · ${np} propuesta(s) pendiente(s)` : ''}</dd>
+    <dt>Archivo</dt><dd>${root.fileName || p.fileName || '—'}${f?.reconstructed ? ' (reconstruido)' : ''}</dd>
     ${f ? html`<dt>SHA-256</dt><dd style="font-family:var(--mono);font-size:11px">${f.sha256.slice(0, 32)}…</dd><dt>Mensajes</dt><dd>${f.messageCount ?? 1}${f.isBank ? ' · banco de 64' : ''} · nº ${p.msgIndex + 1}</dd>` : ''}
     <dt>Cabecera</dt><dd>${p.header.product === 0x60 ? 'Circuit original (0x60)' : 'Circuit Tracks (0x64)'} · cmd ${p.header.command} · ubic. ${p.header.location}</dd>
     ${p.alsoFoundIn?.length ? html`<dt>También en</dt><dd>${p.alsoFoundIn.join(' · ')}</dd>` : ''}<dt>Escuchas</dt><dd>${m.auditions || 0}${m.lastAudition ? ' · última ' + m.lastAudition.slice(0, 10) : ''}</dd></dl>
-    <div class="row2" style="margin-top:8px"><button class="btn small" data-act="exportSyx">Exportar .syx</button>${f ? html`<button class="btn small" data-act="exportOriginal">Archivo original</button>` : ''}<button class="btn small" data-act="queueOne">A la escucha</button><button class="btn small" data-act="duplicate">Crear variante</button><button class="btn small danger" data-act="deleteOne">Eliminar</button></div></div>`;
+    <div class="row2" style="margin-top:8px"><button class="btn small" data-act="exportSyx">Exportar .syx</button>${f ? html`<button class="btn small" data-act="exportOriginal">Archivo original</button>` : ''}<button class="btn small" data-act="queueOne">A la escucha</button><button class="btn small" data-act="duplicate">Duplicar como sonido nuevo</button><button class="btn small danger" data-act="deleteOne">Eliminar</button></div></div>`;
 }
 function tabCompat(p) {
   const c = compatOf(p), lv = { ok: ['o', IC.okc], info: ['i', IC.inf], warn: ['w', IC.warn] };
@@ -952,7 +946,7 @@ function viewPatterns() {
   const drum = isDrumMode(), o = S.patOpts, pt = S.pat, p = cur(), saved = lib.settings.patterns || [];
   const sel = (k, opts, v) => html`<select class="field" data-act="patSet" data-k="${k}">${opts.map(([val, l]) => html`<option value="${val}" ${String(v) === String(val) ? 'selected' : ''}>${l}</option>`)}</select>`;
   const rng = (k, v, min, max, step, fmt) => html`<label class="lab">${fmt}<input type="range" min="${min}" max="${max}" step="${step}" value="${v}" data-act="patSet" data-k="${k}"></label>`;
-  const attached = (id) => lib.patches.filter((x) => x.meta.patternId === id).length;
+  const attached = (id) => lib.faces().filter((x) => x.meta.patternId === id).length;
   const steps = sel('steps', [[16, '16 (1 compás)'], [32, '32 (2 compases)'], [64, '64 (4 compases, solo .mid)']], o.steps);
   const seed = html`<label class="lab">Semilla<span class="row2" style="gap:4px"><input class="field" type="number" min="1" max="99999" value="${o.seed}" data-act="patSet" data-k="seed" style="width:90px"><button class="btn small" data-act="patSeed" title="Otra variación con los mismos ajustes">🎲</button><button class="btn small" data-act="patVary" title="Variación del patrón actual: misma idea con algunos cambios, para el patrón siguiente en el Circuit">Variar</button></span></label>`;
   let ctl;
@@ -1074,15 +1068,20 @@ async function patStore(asNew) {
   list.push(rec); await lib.setSetting('patterns', list); S.patId = rec.id; S.pat = { ...S.pat, name }; patSaveDraft(); return rec;
 }
 function midiName(pt, p) { const safe = (x) => String(x).replace(/[^\w \-áéíóúñÁÉÍÓÚÑ]+/g, '_').trim().slice(0, 60); return (p ? safe(p.name) + ' - ' : '') + safe(pt.name) + '.mid'; }
-// ===== CAMBIOS: original → borrador → aceptada → exportar =====
+// ===== CAMBIOS · v3.10: un sonido, una versión; las propuestas esperan aquí =====
 const ORIGIN_LABEL = { register: 'Octava / tono', edit: 'Edición', 'macro-normalize': 'Macros normalizadas', 'macro-profile': 'Macros según perfil', template: 'Plantilla de macros', copy: 'Copia', live: 'Macros desde el equipo' };
 const originLabel = (v) => ORIGIN_LABEL[v.origin] || (v.origin?.startsWith('macro') ? 'Macros' : v.origin ? 'Edición' : 'Variante');
 const CHG_STEPS = [
-  ['Original', 'El archivo que importaste. Nunca se modifica, ni aquí ni en tu disco.'],
-  ['Borrador', 'Cada corrección (octava, macros, plantilla, parámetros) crea una copia enlazada. Los cambios se guardan solos en ella, dentro de la biblioteca del navegador.'],
-  ['Aceptada', 'Cuando te convence, la aceptas: a partir de ahí sustituye al original en todo lo que exportes. El original sigue en la biblioteca, marcado «sustituido».'],
-  ['Exportar', 'Organizar → Ordenar en disco, Packs o .syx. Nada llega al Circuit Tracks ni a tu disco hasta este paso (y al Circuit, solo a la RAM para escuchar).']
+  ['Original', 'El archivo que importaste. Nunca se modifica, ni aquí ni en tu disco: siempre puedes volver a él.'],
+  ['Una versión', 'Lo que editas (octava, macros, parámetros…) se suma en una sola versión por sonido: es la que suena, la que ves en la lista y la que se exporta. Nada de copias sueltas.'],
+  ['Propuestas', 'Lo que la herramienta corrige en bloque y no tiene claro queda como propuesta: escúchala (A/B) y aplícala (se suma a la versión) o descártala.'],
+  ['Exportar', 'Organizar → Ordenar en disco, Packs o .syx: va la versión de cada sonido, con el nombre y el sitio del original. Al Circuit, solo a la RAM para escuchar.']
 ];
+// Cómo quedaría el sonido si se aplica la propuesta: su versión actual + lo que cambia la propuesta.
+function proposalApplied(v) { const f = faceOf(v), pl = new Uint8Array(f.payload); for (const [o, x] of lib.proposalDiff(v)) pl[o] = x; return pl; }
+const diffLine = (a, b, n = 2) => { const d = diffParams(a, b).filter((x) => x.off >= 16); return d.length ? d.slice(0, n).map((x) => `${x.label}: ${x.fa}→${x.fb}`).join(' · ') + (d.length > n ? ` · +${d.length - n}` : '') : '—'; };
+let _vp = null;
+const versionsPlanNow = () => { if (!_vp || _vp.v !== S.version) _vp = { v: S.version, plan: lib.versionsPlan() }; return _vp.plan; };
 function howTo(steps) { return html`<ol class="flow small" aria-label="Cómo funciona">${steps.map(([t, d], i) => html`<li><b><span>${i + 1}</span>${t}</b><p>${d}</p></li>`)}</ol>`; }
 function chgSteps(active) {
   return html`<ol class="flow">${CHG_STEPS.map(([t, d], i) => html`<li class="${i === active ? 'on' : i < active ? 'done' : ''}"><b><span>${i + 1}</span>${t}</b><p>${d}</p></li>`)}</ol>`;
@@ -1100,62 +1099,75 @@ function whyTag(c, user) {
   return html`<span class="why w-${lvl}" title="${CERTAINTY[lvl].label}: ${CERTAINTY[lvl].help}${warn ? ' · ⚠ ' + c.contradictions.map((x) => x.text).join(' · ') : ''}">${warn ? '⚠ ' : ''}${t}</span>`;
 }
 function chgBadge(p) {
-  const st = lib.changeState(p);
-  if (st === 'draft') return html` <span class="badge chg draft" title="Variante en borrador: acéptala para que sustituya al original al exportar">borrador</span>`;
-  if (st === 'adopted') return html` <span class="badge chg ok" title="Variante aceptada: sustituye al original al exportar">aceptada</span>`;
-  if (st === 'superseded') return html` <span class="badge chg gone" title="Sustituido por una variante aceptada: no se exporta">sustituido</span>`;
-  return '';
+  const st = lib.changeState(p), np = lib.proposalsOf(p).length;
+  const ed = st === 'adopted' ? html` <span class="badge chg ok" title="Editado${p.ops?.length ? ': ' + p.ops.join(' · ') : ''}. Suena y se exporta así; el original sigue guardado.">editado</span>` : '';
+  const cp = p.copyOf ? html` <span class="badge chg" title="Copia independiente de otro sonido">copia</span>` : '';
+  return html`${ed}${cp}${np ? html` <span class="badge chg draft" title="${np} cambio(s) propuesto(s): escúchalos y aplícalos o descártalos (ficha o Cambios)">${np} propuesta${np > 1 ? 's' : ''}</span>` : ''}`;
 }
 function chgInspector(p) {
-  const st = lib.changeState(p);
-  if (st === 'original') return '';
-  if (st === 'superseded') { const v = lib.replacementOf(p); return html`<div class="isec chgbox gone"><div class="mlabel"><span>Cambios</span><span>sustituido</span></div><p class="note">Este original no se exportará: en su lugar va la variante aceptada <b>${v?.name}</b>${v?.originText ? html` (${v.originText})` : ''}.</p><div class="row2" style="margin-top:6px"><button class="btn small" data-act="pick" data-id="${v?.id}">Ver la variante</button><button class="btn small" data-act="chgAdopt" data-id="${v?.id}" data-on="0">Volver a usar el original</button></div></div>`; }
-  const parent = lib.byId(p.parentId), d = parent ? diffParams(parent.payload, p.payload).filter((x) => x.off >= 16) : [];
-  return html`<div class="isec chgbox ${st}"><div class="mlabel"><span>Cambios · ${originLabel(p)}</span><span>${st === 'adopted' ? 'aceptada' : 'borrador'}</span></div>
-    <p class="note">${st === 'adopted' ? html`Aceptada: <b>sustituye a «${parent?.name}»</b> en disco y packs.` : html`Borrador de «${parent?.name}». Los cambios se guardan solos aquí; <b>acéptala</b> para que sustituya al original al exportar.`}</p>
-    ${d.length ? html`<ul class="chglist">${d.slice(0, 4).map((x) => html`<li><span>${x.label}</span><b>${x.fa} → ${x.fb}</b></li>`)}${d.length > 4 ? html`<li class="note">y ${d.length - 4} cambio(s) más · pestaña Comparar</li>` : ''}</ul>` : html`<p class="note">Aún sin diferencias con el original.</p>`}
-    <div class="row2" style="margin-top:8px">${st === 'adopted' ? html`<button class="btn small" data-act="chgAdopt" data-id="${p.id}" data-on="0">Volver a borrador</button>` : html`<button class="btn small primary" data-act="chgAdopt" data-id="${p.id}" data-on="1">✓ Aceptar</button>`}<button class="btn small" data-act="chgAB" data-id="${p.id}" ${S.dev.session ? '' : 'disabled'} title="Toca la frase con el original y luego con esta variante">A/B</button><button class="btn small danger" data-act="chgDrop" data-id="${p.id}">Descartar variante</button></div></div>`;
+  const root = lib.rootOf(p), isV = p.id !== root.id, props = lib.proposalsOf(p), copy = p.copyOf && lib.byId(p.copyOf);
+  if (!isV && !props.length && !copy) return '';
+  const d = isV ? diffParams(root.payload, p.payload).filter((x) => x.off >= 16) : [], live = !!S.dev.session;
+  return html`<div class="isec chgbox ${isV ? 'adopted' : ''}"><div class="mlabel"><span>Versión</span><span>${isV ? 'editado' : copy ? 'copia' : 'original'}</span></div>
+    ${isV ? html`<p class="note">Suena y se exporta así. El original sigue guardado${p.ops?.length ? html`. Cambios: <b>${p.ops.join(' · ')}</b>` : ''}.</p>
+      ${d.length ? html`<ul class="chglist">${d.slice(0, 4).map((x) => html`<li><span>${x.label}</span><b>${x.fa} → ${x.fb}</b></li>`)}${d.length > 4 ? html`<li class="note">y ${d.length - 4} cambio(s) más · pestaña Comparar</li>` : ''}</ul>` : html`<p class="note">Aún igual que el original.</p>`}
+      <div class="row2" style="margin-top:6px"><button class="btn small" data-act="chgAB" data-id="${p.id}" ${live ? '' : 'disabled'} title="Toca la frase con el original y después con esta versión">A/B con el original</button><button class="btn small" data-act="chgRevert" data-id="${p.id}" title="La versión va a la papelera (Ctrl Z la devuelve)">Volver al original</button></div>` : ''}
+    ${copy ? html`<p class="note">Copia independiente de <a href="#" data-act="pick" data-id="${faceOf(copy).id}">«${copy.name}»</a>: tiene su propia carpeta y sus etiquetas.</p>` : ''}
+    ${props.length ? html`<div class="mlabel sm" style="margin-top:10px"><span>Propuestas pendientes</span><span>${props.length}</span></div>
+      ${props.map((v) => html`<div class="propc"><div><b>${originLabel(v)}</b> <span class="note">${v.originText || ''}</span></div><div class="note mono">${diffLine(p.payload, proposalApplied(v), 3)}</div>
+        <div class="row2" style="margin-top:4px"><button class="btn small" data-act="chgAB" data-id="${v.id}" ${live ? '' : 'disabled'} title="Toca el sonido tal como está y después con la propuesta">A/B</button><button class="btn small primary" data-act="chgAdopt" data-id="${v.id}" data-on="1" title="Se suma a la versión del sonido">Aplicar</button><button class="btn small danger" data-act="chgDrop" data-id="${v.id}" title="A la papelera (Ctrl Z la devuelve)">Descartar</button></div></div>`)}` : ''}</div>`;
 }
-function viewChangesList() { const V = lib.patches.filter((p) => p.kind === 'variant'), show = S.chgShow || 'draft'; return (show === 'draft' ? V.filter((v) => lib.changeState(v) === 'draft') : show === 'adopted' ? V.filter((v) => lib.changeState(v) !== 'draft') : V).filter((v) => !S.chgOrigin || originLabel(v) === S.chgOrigin); }
+function viewChangesList() {
+  const props = lib.patches.filter((v) => v.kind === 'variant' && lib.isVersion(v) && lib.changeState(v) === 'draft'), edited = lib.faces().filter((f) => lib.changeState(f) === 'adopted');
+  const list = (S.chgShow || 'draft') === 'draft' ? props : edited;
+  return list.filter((v) => !S.chgOrigin || originLabel(v) === S.chgOrigin);
+}
 function viewChanges() {
-  const V = lib.patches.filter((p) => p.kind === 'variant'), drafts = V.filter((v) => lib.changeState(v) === 'draft'), adopted = V.filter((v) => lib.changeState(v) === 'adopted');
-  const show = S.chgShow || 'draft', list = (show === 'draft' ? drafts : show === 'adopted' ? adopted : V).filter((v) => !S.chgOrigin || originLabel(v) === S.chgOrigin);
-  const origins = [...new Set(V.map(originLabel))];
-  const row = (v) => { const par = lib.byId(v.parentId), d = par ? diffParams(par.payload, v.payload).filter((x) => x.off >= 16) : [];
-    return html`<tr><td><a href="#" data-act="pick" data-id="${v.id}">${v.name}</a><small class="note" style="display:block">de «${par?.name || '?'}»</small></td><td>${originLabel(v)}<small class="note" style="display:block">${v.originText || ''}</small></td>
-      <td class="mono">${d.slice(0, 2).map((x) => `${x.label}: ${x.fa}→${x.fb}`).join(' · ') || '—'}${d.length > 2 ? ` · +${d.length - 2}` : ''}</td>
-      <td>${chgBadge(v)}</td><td class="acts"><button class="btn small" data-act="chgAB" data-id="${v.id}" ${S.dev.session ? '' : 'disabled'}>A/B</button>${lib.changeState(v) !== 'draft' ? html`<button class="btn small" data-act="chgAdopt" data-id="${v.id}" data-on="0">A borrador</button>` : html`<button class="btn small primary" data-act="chgAdopt" data-id="${v.id}" data-on="1">✓ Aceptar</button>`}<button class="btn small danger" data-act="chgDrop" data-id="${v.id}" aria-label="Descartar">✕</button></td></tr>`; };
-  return html`<div class="pad"><div class="ptitle"><h2>Cambios</h2><p>Aquí están todas las versiones corregidas que has creado (octavas, macros, plantillas…). Revisa, compara y acepta: solo lo aceptado sustituye a los originales cuando exportas.</p></div>
-    ${chgSteps(V.length ? (adopted.length ? 2 : 1) : 0)}
-    <div class="statgrid" style="margin:12px 0"><div class="stat"><strong>${drafts.length}</strong><span>borradores por revisar</span></div><div class="stat g"><strong>${adopted.length}</strong><span>aceptadas</span></div><div class="stat"><strong>${lib.adoptedMap().size}</strong><span>versiones sustituidas</span></div></div>
-    <div class="row2" style="margin-bottom:10px">${[['draft', 'Borradores'], ['adopted', 'Aceptadas'], ['all', 'Todas']].map(([k, l]) => html`<button class="btn small ${show === k ? 'on' : ''}" data-act="chgShow" data-v="${k}">${l}</button>`)}
+  const props = lib.patches.filter((v) => v.kind === 'variant' && lib.isVersion(v) && lib.changeState(v) === 'draft'), edited = lib.faces().filter((f) => lib.changeState(f) === 'adopted');
+  const show = S.chgShow === 'adopted' ? 'adopted' : 'draft', list = viewChangesList(), origins = [...new Set((show === 'draft' ? props : edited).map(originLabel))], live = !!S.dev.session, plan = versionsPlanNow();
+  const propRow = (v) => { const f = faceOf(v);
+    return html`<tr><td><a href="#" data-act="pick" data-id="${f.id}">${f.name}</a></td><td>${originLabel(v)}<small class="note" style="display:block">${v.originText || ''}</small></td><td class="mono">${diffLine(f.payload, proposalApplied(v))}</td>
+      <td class="acts"><button class="btn small" data-act="chgAB" data-id="${v.id}" ${live ? '' : 'disabled'}>A/B</button><button class="btn small primary" data-act="chgAdopt" data-id="${v.id}" data-on="1">Aplicar</button><button class="btn small danger" data-act="chgDrop" data-id="${v.id}" aria-label="Descartar">✕</button></td></tr>`; };
+  const edRow = (f) => { const root = lib.rootOf(f);
+    return html`<tr><td><a href="#" data-act="pick" data-id="${f.id}">${f.name}</a></td><td>${(f.ops || [f.originText]).filter(Boolean).join(' · ') || 'Edición'}</td><td class="mono">${diffLine(root.payload, f.payload)}</td>
+      <td class="acts"><button class="btn small" data-act="chgAB" data-id="${f.id}" ${live ? '' : 'disabled'} title="Original y después la versión">A/B</button><button class="btn small" data-act="chgRevert" data-id="${f.id}">Volver al original</button></td></tr>`; };
+  return html`<div class="pad"><div class="ptitle"><h2>Cambios</h2><p>Cada sonido tiene <b>una sola versión</b>: la que suena, la que ves en la lista y la que se exporta. Lo que editas se suma en ella. Lo que una corrección en bloque no tiene claro queda como <b>propuesta</b>: escúchala y aplícala o descártala.</p></div>
+    ${chgSteps(props.length ? 2 : edited.length ? 1 : 0)}
+    ${plan.sounds.length ? html`<div class="box tidybox"><h3>Ordenar versiones de antes <small>${plan.sounds.length} sonido(s)</small></h3>
+      <p class="note">Con la forma anterior de guardar cambios se acumulaban copias: cadenas de versiones aceptadas, ramas abandonadas y borradores iguales al original. Ordenarlas deja <b>una versión por sonido</b> (con exactamente lo que sonaba), unifica carpeta, etiquetas y valoración, y lleva lo que sobra a la papelera. Los packs siguen apuntando al sonido. Se puede deshacer entero.</p>
+      <div class="statgrid" style="margin:8px 0"><div class="stat"><strong>${plan.collapse}</strong><span>cadenas de versiones</span></div><div class="stat"><strong>${plan.drop.length}</strong><span>variantes que sobran</span></div><div class="stat"><strong>${plan.keep.length}</strong><span>propuestas que cambian algo</span></div><div class="stat"><strong>${plan.meta}</strong><span>con datos distintos</span></div></div>
+      <div class="row2"><button class="btn primary" data-act="tidyRun">Ordenar (las propuestas quedan pendientes)</button>${plan.keep.length ? html`<button class="btn" data-act="tidyRun" data-drop="1">Ordenar y descartar también las ${plan.keep.length} propuestas</button>` : ''}</div></div>` : ''}
+    <div class="statgrid" style="margin:12px 0"><div class="stat"><strong>${props.length}</strong><span>propuestas pendientes</span></div><div class="stat g"><strong>${edited.length}</strong><span>sonidos editados</span></div></div>
+    <div class="row2" style="margin-bottom:10px">${[['draft', `Propuestas (${props.length})`], ['adopted', `Editados (${edited.length})`]].map(([k, l]) => html`<button class="btn small ${show === k ? 'on' : ''}" data-act="chgShow" data-v="${k}">${l}</button>`)}
       <select class="sel" data-act="chgOrigin"><option value="">Todos los orígenes</option>${origins.map((o) => html`<option ${S.chgOrigin === o ? 'selected' : ''}>${o}</option>`)}</select><span class="sp"></span>
-      ${show !== 'adopted' && list.some((v) => lib.changeState(v) === 'draft') ? html`<button class="btn primary" data-act="chgAdoptAll">✓ Aceptar los ${list.filter((v) => lib.changeState(v) === 'draft').length} de la lista</button>` : ''}
-      ${list.some((v) => lib.changeState(v) === 'draft') ? html`<button class="btn danger" data-act="chgDropAll">Descartar borradores de la lista</button>` : ''}</div>
-    ${list.length ? html`<div class="box" style="overflow:auto"><table class="t"><tr><th>Variante</th><th>Origen</th><th>Qué cambia</th><th>Estado</th><th></th></tr>${list.slice(0, 400).map(row)}</table>${list.length > 400 ? html`<p class="note">Mostrando 400 de ${list.length}.</p>` : ''}</div>`
-      : html`<div class="box"><p class="note">${V.length ? 'Nada en esta lista.' : 'Todavía no has creado variantes. Se crean al corregir octavas (Organizar), editar macros, aplicar plantillas o editar parámetros.'}</p></div>`}
-    <div class="box nextbox"><h3>Siguiente paso</h3><p>Cuando lo aceptado te convenza, expórtalo. Las variantes aceptadas llevan el nombre de su original y ocupan su sitio; los borradores se quedan fuera.</p>
+      ${show === 'draft' && list.length ? html`<button class="btn primary" data-act="chgAdoptAll">Aplicar las ${list.length} de la lista</button><button class="btn danger" data-act="chgDropAll">Descartarlas</button>` : ''}</div>
+    ${list.length ? html`<div class="box" style="overflow:auto"><table class="t"><tr><th>Sonido</th><th>${show === 'draft' ? 'Propuesta' : 'Cambios'}</th><th>Qué cambia</th><th></th></tr>${list.slice(0, 400).map(show === 'draft' ? propRow : edRow)}</table>${list.length > 400 ? html`<p class="note">Mostrando 400 de ${list.length}.</p>` : ''}</div>`
+      : html`<div class="box"><p class="note">${show === 'draft' ? 'No hay propuestas pendientes.' : 'Todavía no has editado ningún sonido. Se editan al corregir octavas, girar y guardar macros, aplicar plantillas o cambiar parámetros.'}</p></div>`}
+    <div class="box nextbox"><h3>Siguiente paso</h3><p>Al exportar va la versión de cada sonido, con el nombre y el sitio de su original. Las propuestas pendientes no se exportan.</p>
       <div class="row2"><button class="btn accent" data-act="goDisk">Ordenar en disco</button><button class="btn" data-act="view" data-v="banks">Montar un pack</button></div></div></div>`;
 }
-// Explicación tras crear variantes desde cualquier herramienta
-async function afterChanges(n, adopted, what) { // adopted: true (todas), false (ninguna) o número de aceptadas
-  const go = await modal(`${n} ${n === 1 ? 'variante creada' : 'variantes creadas'}`, html`<p>${what}</p>
-    <p>${adopted === true || adopted === n ? html`<b>Ya están aceptadas:</b> al exportar (Ordenar en disco, packs, .syx) se usan en lugar de sus originales, con el mismo nombre.` : !adopted ? html`<b>Están en borrador:</b> escúchalas y acéptalas en <b>Cambios</b>; hasta entonces no sustituyen a nada.` : html`<b>${adopted} aceptadas</b> ya sustituyen a su original al exportar. <b>${n - adopted} en borrador</b>: escúchalas y acéptalas (o descártalas) en <b>Cambios</b>; hasta entonces se exporta el original.`}</p>
+// Explicación tras corregir en bloque desde cualquier herramienta
+async function afterChanges(n, adopted, what) { // adopted: true (todas), false (ninguna) o número de aplicadas
+  const nA = adopted === true ? n : adopted || 0, nP = n - nA;
+  const go = await modal(`${n} ${n === 1 ? 'sonido corregido' : 'sonidos corregidos'}`, html`<p>${what}</p>
+    <p>${nA ? html`<b>${nA} ya forman parte de la versión de su sonido</b>: suenan y se exportan así (cada sonido sigue teniendo una sola versión). ` : ''}${nP ? html`<b>${nP} quedan como propuesta</b>: escúchalas y aplícalas o descártalas en <b>Cambios</b> (o en la ficha de cada sonido).` : ''}</p>
     <p class="note">Tus archivos originales no se han tocado y nada se ha enviado al Circuit Tracks. Todo está guardado en la biblioteca de este navegador; haz una copia de seguridad en Datos.</p>`,
-    [S.view === 'organize' && S.orgTab === 'register' && adopted !== true && adopted !== n ? { label: 'Revisión rápida', value: 'review', primary: true } : { label: 'Ver en Cambios', value: 'changes', primary: adopted !== true && adopted !== n }, { label: 'Ordenar en disco', value: 'disk', primary: adopted === true || adopted === n }, { label: 'Seguir aquí', value: null }]);
-  if (go === 'changes') { S.view = 'changes'; S.chgShow = adopted === true || adopted === n ? 'adopted' : 'draft'; rerender(); }
+    [S.view === 'organize' && S.orgTab === 'register' && nP ? { label: 'Revisión rápida', value: 'review', primary: true } : { label: 'Ver en Cambios', value: 'changes', primary: !!nP }, { label: 'Ordenar en disco', value: 'disk', primary: !nP }, { label: 'Seguir aquí', value: null }]);
+  if (go === 'changes') { S.view = 'changes'; S.chgShow = nP ? 'draft' : 'adopted'; rerender(); }
   if (go === 'disk') { S.view = 'organize'; S.orgTab = 'disk'; rerender(); }
   if (go === 'review') { S.regView = 'review'; S.revI = 0; rerender(); revAutoPlay(); }
 }
-// A/B: la misma frase, primero con el original y después con la variante (solo RAM del equipo).
+// A/B: la misma frase, primero A y después B (solo RAM del equipo).
+// Versión: A = original, B = versión. Propuesta: A = el sonido como está, B = con la propuesta aplicada.
 function abPlay(v) {
-  const s = S.dev.session, par = v && lib.byId(v.parentId); if (!s || !par) return;
+  const s = S.dev.session; if (!s || !v) return;
+  const root = lib.rootOf(v), prop = lib.changeState(v) === 'draft';
+  const a = prop ? faceOf(v).payload : root.payload, b = prop ? proposalApplied(v) : v.payload;
   s.stopAll();
-  const ph = phraseObj(S.phrase === 'auto' ? phraseKeyFor(v) : S.phrase);
-  const opt = (t) => ({ tempo: tempoNow(), root: ph.custom ? 0 : S.dev.root, start: t + (S.dev.patchDelay ?? 80) });
-  toast('A: original → B: variante', 4000);
-  const ra = s.playPhrase(ph, S.dev.synth, opt(s.sendPatch(par.payload, S.dev.synth)));
-  setTimeout(() => { s.playPhrase(ph, S.dev.synth, opt(s.sendPatch(v.payload, S.dev.synth))); }, Math.max(0, ra.end - performance.now()));
+  const tp = testPlan(faceOf(v)), opt = (t) => ({ tempo: tempoNow(), root: tp.root, start: t + (S.dev.patchDelay ?? 80) });
+  toast(prop ? 'A: como está → B: con la propuesta' : 'A: original → B: tu versión', 4000);
+  const ra = s.playPhrase(tp.ph, S.dev.synth, opt(s.sendPatch(a, S.dev.synth)));
+  setTimeout(() => { s.playPhrase(tp.ph, S.dev.synth, opt(s.sendPatch(b, S.dev.synth))); }, Math.max(0, ra.end - performance.now()));
 }
 function renderFull() { return { patterns: viewPatterns, songs: viewSongs, changes: viewChanges, audition: viewAudition, organize: viewOrganize, analyze: viewAnalyze, macros: viewMacroStudio, analyzeOld: viewMap, audit: viewAudit, banks: viewBanks, device: viewDevice, data: viewData }[S.view](); }
 
@@ -1209,7 +1221,7 @@ function orgRean() {
 // Recuento por categoría y subcarpeta: guardado por ti / propuesto por la herramienta
 function folderStats() {
   const st = {};
-  for (const p of lib.patches) {
+  for (const p of lib.faces()) {
     if (p.meta.review === 'discard' || (lib.changeState && lib.changeState(p) === 'superseded')) continue;
     const c = lib.info(p).cls, cat = p.meta.category || c.category; if (!cat) continue;
     const r = (st[cat] ||= { saved: 0, prop: 0, noSub: 0, subs: {}, propSubs: {}, pending: [] });
@@ -1243,7 +1255,7 @@ function orgFolders() {
     <p class="note" style="margin-top:6px">Delay y reverb son efectos del proyecto en el Circuit Tracks, no del patch: la herramienta solo los detecta en el nombre (delay, dly, echo, verb, hall, space…). Chorus, phaser, distorsión y EQ se leen también en el propio patch.</p></div>`;
 }
 function orgArch() {
-  const groups = architectureGroups(lib.patches, S.archLevel), inG = groups.reduce((n, g) => n + g.size, 0);
+  const groups = architectureGroups(lib.faces(), S.archLevel), inG = groups.reduce((n, g) => n + g.size, 0);
   return html`<p class="note">Una <b>arquitectura</b> es lo que define qué synth es: modo de voz, formas de onda de los osciladores audibles, tipo y ruta de filtro, si usa drive/distorsión/chorus, las conexiones de la matriz y los destinos de las macros. Aquí están los grupos con la misma arquitectura y valores distintos (cutoff, tiempos, profundidades…). Abre uno para ver qué cambia entre ellos.</p>
   <div class="row2"><label class="lab" style="min-width:320px">Precisión<select class="field" data-act="archLevel">${ARCH_LEVELS.map((l) => html`<option value="${l.id}" ${S.archLevel === l.id ? 'selected' : ''}>${l.label}</option>`)}</select></label><span class="note" style="align-self:flex-end"><b>${groups.length}</b> grupos · <b>${inG}</b> patches. Menos precisión = grupos más grandes y más parecidos «de receta».</span></div>
   ${groups.length ? groups.slice(0, 120).map((g) => { const open = S.openGroups.has(g.key); const ps = g.ids.map((id) => lib.byId(id)); const cols = g.varying.slice(0, 6); return html`<div class="org-group"><header data-act="orgOpen" data-k="${g.key}"><span class="n">${g.size}</span><div><b>${g.summary}</b><div class="vary">${g.varying.slice(0, 8).map((v) => html`<span>${v.label.split(' · ').pop()}</span>`)}${g.varying.length > 8 ? html`<span>+${g.varying.length - 8}</span>` : ''}</div></div><span class="sp"></span><span class="note">${g.distinct} ajustes distintos</span><button class="btn small" data-act="orgQueue" data-k="${g.key}">Escuchar el grupo</button></header>
@@ -1258,8 +1270,8 @@ const regLabel = (k) => { const [c, sb] = String(k).split(':'); return catName(c
 const regPlanOf = (k) => (lib.settings.regPlan || {})[k] || {};
 async function regPlanSet(k, patch) { const all = { ...(lib.settings.regPlan || {}) }; all[k] = { ...(all[k] || {}), ...patch }; await lib.setSetting('regPlan', all); }
 function regLive() {
-  // se analiza la versión vigente de cada patch: originales sin sustituir y variantes aceptadas
-  return lib.patches.filter((p) => { const st = lib.changeState(p); if (st !== 'original' && st !== 'adopted') return false; for (let q = p, i = 0; q && i < 8; q = q.parentId && lib.byId(q.parentId), i++) if (q.meta.regKeep) return false; return true; });
+  // se analiza cada sonido una vez, en su versión vigente
+  return lib.faces().filter((p) => { for (let q = p, i = 0; q && i < 8; q = q.parentId && lib.byId(q.parentId), i++) if (q.meta.regKeep) return false; return true; });
 }
 function regReportFor(k, live = regLive()) {
   const t = regPlanOf(k).target;
@@ -1267,7 +1279,8 @@ function regReportFor(k, live = regLive()) {
 }
 function regReport() { return regReportFor(S.regCat); }
 const regModeOf = (k) => regPlanOf(k).mode || 'full';
-const regDraftParents = () => new Set(lib.patches.filter((v) => v.kind === 'variant' && v.origin === 'register' && lib.changeState(v) === 'draft').map((v) => v.parentId));
+// sonidos (sus versiones vigentes) que ya tienen una propuesta de octava pendiente
+const regDraftParents = () => new Set(regQueue().map((v) => faceOf(v).id));
 const regMethod = () => (kbdMode() === 'no' ? 'osc' : S.regMethod);
 const regShift = (x, mode = regModeOf(S.regCat)) => (mode === 'octave' ? x.octDelta * 12 : x.delta);
 function regFixPayload(p, x, mode) {
@@ -1292,7 +1305,7 @@ function orgRegister() {
   const rows = groups.map((g) => { const rep = regReportFor(g.k, live), pl = regPlanOf(g.k), mode = regModeOf(g.k), skip = pl.target === 'skip'; const fix = skip ? [] : rep.off.filter((x) => regShift(x, mode) !== 0 && !drafts.has(x.id)); return { ...g, rep, pl, mode, skip, fix }; });
   const total = rows.reduce((a, r) => a + r.fix.length, 0), nDrafts = drafts.size, adoptMode = S.regAdopt || 'smart';
   const pc = (e) => html`<span class="pitch"><b>${NOTE_NAMES[((e % 12) + 12) % 12]}</b>${Math.floor(e / 12) ? fmtSemis(Math.floor(e / 12)) + ' oct' : '0 oct'}</span>`;
-  return html`${howTo([['Revisa el plan', 'cada categoría (o subcarpeta) tiene su objetivo: por defecto, donde suena la mayoría de los tuyos. Cámbialo o pon «No corregir».'], ['Corrige todo', 'de una vez: se crean variantes; las claras quedan aceptadas y las dudosas en borrador. Los originales no se tocan.'], ['Revisión rápida', 'solo de las dudosas: A/B con 1 y 2, Intro acepta, Supr descarta, K «estaba bien».'], ['Exporta', 'en Ordenar en disco, la versión aceptada ocupa el sitio y el nombre del original.']])}
+  return html`${howTo([['Revisa el plan', 'cada categoría (o subcarpeta) tiene su objetivo: por defecto, donde suena la mayoría de los tuyos. Cámbialo o pon «No corregir».'], ['Corrige todo', 'de una vez: las claras se suman a la versión de cada sonido; las dudosas quedan como propuesta. Los originales se guardan.'], ['Revisión rápida', 'solo de las dudosas: A/B con 1 y 2, Intro acepta, Supr descarta, K «estaba bien».'], ['Exporta', 'en Ordenar en disco, la versión aceptada ocupa el sitio y el nombre del original.']])}
   <div class="box regplan"><h3>Plan de octava y tono <small>${live.length} patches analizados</small></h3>
     <div class="row2" style="margin-bottom:10px;flex-wrap:wrap;gap:8px"><span class="seg"><button class="btn small ${S.regBySub ? '' : 'on'}" data-act="regBySub" data-v="0">Por categoría</button><button class="btn small ${S.regBySub ? 'on' : ''}" data-act="regBySub" data-v="1">Por categoría / subcarpeta</button></span><span class="sp"></span>
       <label class="note">Método <select class="sel" data-act="regSet" data-k="regMethod" ${km === 'no' ? 'disabled' : ''}><option value="osc" ${regMethod() === 'osc' ? 'selected' : ''}>semitonos de los osciladores</option><option value="keyboard" ${regMethod() === 'keyboard' ? 'selected' : ''}>octava de teclado + osciladores</option></select></label>
@@ -1303,19 +1316,19 @@ function orgRegister() {
       <select class="sel" data-act="regPlanSel" data-g="${r.k}" data-f="target">${regTargetOpts(r.rep, r.pl.target)}</select>
       <select class="sel" data-act="regPlanSel" data-g="${r.k}" data-f="mode" ${r.skip ? 'disabled' : ''}><option value="full" ${r.mode === 'full' ? 'selected' : ''}>Octava y tono</option><option value="octave" ${r.mode === 'octave' ? 'selected' : ''}>Solo octava</option></select>
       <span class="regacts">${r.fix.length ? html`<button class="btn small" data-act="regFixGroup" data-g="${r.k}">Corregir ${r.fix.length}</button>` : ''}<button class="lk" data-act="regOpen" data-g="${r.k}">detalle</button></span></div>`)}</div>
-    <div class="actbox" style="margin-top:12px"><div><b>${total ? `Corregir todo el plan: ${total} patches en ${rows.filter((r) => r.fix.length).length} grupos` : 'Nada que corregir con este plan'}</b><p class="note">Variantes enlazadas a su original; deshacibles en Cambios. ${nDrafts ? html`Hay <a href="#" data-act="regView" data-v="review">${nDrafts} dudosa(s) por revisar</a>.` : ''}</p></div>
+    <div class="actbox" style="margin-top:12px"><div><b>${total ? `Corregir todo el plan: ${total} patches en ${rows.filter((r) => r.fix.length).length} grupos` : 'Nada que corregir con este plan'}</b><p class="note">Cada sonido sigue con una sola versión; se puede deshacer (Ctrl Z, Cambios). ${nDrafts ? html`Hay <a href="#" data-act="regView" data-v="review">${nDrafts} dudosa(s) por revisar</a>.` : ''}</p></div>
       <label class="lab">Al crearlas<select class="field" data-act="regSet" data-k="regAdopt"><option value="smart" ${adoptMode === 'smart' ? 'selected' : ''}>Aceptar las claras; dudosas en borrador</option><option value="all" ${adoptMode === 'all' ? 'selected' : ''}>Aceptarlas todas ya</option><option value="none" ${adoptMode === 'none' ? 'selected' : ''}>Todas en borrador</option></select></label>
       <button class="btn accent" data-act="regFixPlan" ${total ? '' : 'disabled'}>Corregir todo</button>${nDrafts ? html`<button class="btn" data-act="regView" data-v="review">Revisión rápida (${nDrafts})</button>` : ''}</div>
   </div>`;
 }
-function regQueue() { return lib.patches.filter((v) => v.kind === 'variant' && v.origin === 'register' && lib.changeState(v) === 'draft'); }
+function regQueue() { return lib.patches.filter((v) => v.kind === 'variant' && v.origin === 'register' && lib.isVersion(v) && lib.changeState(v) === 'draft'); }
 function regCrumbs(here) {
   return html`<div class="crumbs"><button class="btn back" data-act="regView" data-v="plan" title="Esc">← Volver al plan <kbd>Esc</kbd></button><nav aria-label="Ruta"><a href="#" data-act="regView" data-v="plan">Octava y tono</a><span>›</span><b>${here}</b></nav></div>`;
 }
 function orgRegisterReview() {
   const q = regQueue(), live = !!S.dev.session;
-  if (!q.length) return html`${regCrumbs('Revisión rápida')}<div class="empty"><h3>No hay correcciones pendientes</h3><p>Todas las variantes de octava están aceptadas o descartadas.</p></div>`;
-  const i = Math.min(S.revI || 0, q.length - 1), v = q[i], o = lib.byId(v.parentId), x = regReportFor(regKeyOf(o) || 'bass', [o]).items[0], y = o && pitchInfo(v.payload);
+  if (!q.length) return html`${regCrumbs('Revisión rápida')}<div class="empty"><h3>No hay correcciones pendientes</h3><p>Todas las propuestas de octava están aplicadas o descartadas.</p></div>`;
+  const i = Math.min(S.revI || 0, q.length - 1), v = q[i], o = faceOf(v), x = regReportFor(regKeyOf(o) || 'bass', [o]).items[0], y = o && pitchInfo(proposalApplied(v));
   return html`${regCrumbs(`Revisión rápida · ${i + 1} de ${q.length}`)}
   <div class="box regrev"><div class="mlabel"><span>${o ? regLabel(regKeyOf(o) || '') : ''} · ${v.originText || ''}</span><span>${i + 1} / ${q.length}</span></div>
     <h2 class="hf">${o?.name || v.name}</h2>
@@ -1327,15 +1340,15 @@ function orgRegisterReview() {
 }
 function orgRegisterDetail() {
   const rep = regReport(), km = kbdMode(), maxN = Math.max(1, ...rep.distribution.map((d) => d[1]));
-  const cats = [...new Set(lib.patches.map((p) => effCat(p)).filter(Boolean))];
+  const cats = [...new Set(lib.faces().map((p) => effCat(p)).filter(Boolean))];
   const pc = (e) => html`<span class="pitch"><b>${NOTE_NAMES[((e % 12) + 12) % 12]}</b>${Math.floor(e / 12) ? fmtSemis(Math.floor(e / 12)) + ' oct' : '0 oct'}</span>`;
   const probCls = { 'octava': 'oct', 'tono': 'tone', 'octava y tono': 'both' };
   const list = S.regShow === 'all' ? rep.items : rep.off;
-  const drafts = new Map(lib.patches.filter((v) => v.kind === 'variant' && v.origin === 'register' && lib.changeState(v) === 'draft').map((v) => [v.parentId, v]));
-  const fixable = rep.off.filter((x) => regShift(x) !== 0 && !drafts.has(x.id)), keepN = lib.patches.filter((p) => p.meta.regKeep && regKeyOf(p) === S.regCat).length;
+  const drafts = new Map(regQueue().map((v) => [faceOf(v).id, v]));
+  const fixable = rep.off.filter((x) => regShift(x) !== 0 && !drafts.has(x.id)), keepN = lib.faces().filter((p) => p.meta.regKeep && regKeyOf(p) === S.regCat).length;
   const adoptMode = S.regAdopt || 'smart';
   const sm = rep.summary, live = !!S.dev.session, canVerify = live && S.dev.audioId;
-  return html`${regCrumbs(regLabel(S.regCat))}${howTo([['Elige', 'categoría y objetivo (por defecto, lo habitual en tu colección).'], ['Escucha', '«▶ corregido» lo toca en el Circuit sin guardar nada (solo RAM).'], ['Crea', 'variantes corregidas: se guardan en la biblioteca de este navegador, enlazadas al original.'], ['Exporta', 'en Ordenar en disco, la versión aceptada ocupa el sitio y el nombre del original. Tus archivos no se tocan.']])}
+  return html`${regCrumbs(regLabel(S.regCat))}${howTo([['Elige', 'categoría y objetivo (por defecto, lo habitual en tu colección).'], ['Escucha', '«▶ corregido» lo toca en el Circuit sin guardar nada (solo RAM).'], ['Corrige', 'cada patch en su versión (las dudosas, como propuesta), en la biblioteca de este navegador. El original se guarda.'], ['Exporta', 'en Ordenar en disco, la versión de cada sonido ocupa el sitio y el nombre del original. Tus archivos no se tocan.']])}
   <p class="note">Nota que suena al tocar un Do: <b>octava de teclado × 12 + semitonos del oscilador que manda</b> (el más fuerte; si suenan parecido, el más grave). Así una quinta añadida no cuenta como «otro tono». Si un patch está medido con la entrada de audio, manda la medición. El objetivo por defecto es lo más habitual en <b>tu</b> colección.</p>
   <div class="verify ${km !== 'unknown' ? 'ok' : ''}"><div style="flex:1;min-width:260px"><span class="mlabel">Octava de teclado (byte 35) y notas MIDI externas</span><div class="note" style="margin-top:3px">${km === 'yes' ? html`<b>Medido con tu equipo:</b> la octava de teclado del patch también transpone las notas que llegan por MIDI. Se cuenta en el cálculo.` : km === 'no' ? html`<b>Medido con tu equipo:</b> la octava de teclado solo afecta a los pads; las notas MIDI externas no se transponen. Se ignora en el cálculo y la corrección usa los osciladores.` : html`<b>Se cuenta en el cálculo.</b> La guía de Novation lo documenta como parámetro de la voz (CC 13), no como la octava de los pads, lo que apunta a que transpone el sonido. ${kbdShare(rep)} Si no afecta a las notas que mandas desde Ableton, sonarán más agudos de lo que indica la tabla. Si quieres medirlo, «Comprobar con el equipo» lo hace en unos segundos con la entrada de audio.`}</div></div>
     <button class="btn ${km === 'unknown' ? 'accent' : 'small'}" data-act="regVerify" ${canVerify && !S.verifying ? '' : 'disabled'} title="${canVerify ? '' : 'Conecta el equipo y elige una entrada de audio en Equipo'}">${S.verifying ? 'Midiendo…' : km === 'unknown' ? 'Comprobar con el equipo' : 'Repetir comprobación'}</button>
@@ -1349,9 +1362,9 @@ function orgRegisterDetail() {
   <div class="statgrid"><div class="stat g"><strong>${rep.items.length - rep.off.length}</strong><span>En ${describePitch(rep.goal)}</span></div><div class="stat"><strong>${sm.octave}</strong><span>Otra octava</span></div><div class="stat"><strong>${sm.tone}</strong><span>Otro tono</span></div><div class="stat"><strong>${sm.both}</strong><span>Octava y tono</span></div><div class="stat"><strong>${sm.doubtful}</strong><span>Dudosos: medir</span></div><div class="stat"><strong>${sm.detuned}</strong><span>Desafinados ≥10 ct</span></div></div>
   <div class="box"><h3>Dónde suena cada ${regLabel(S.regCat)} <small>${rep.items.length} patches · tocando un Do</small></h3><div class="dist">${rep.distribution.map(([e, n]) => html`<div class="${e === rep.mode ? 'mode' : ''} ${e === rep.goal ? 'goal' : ''}" title="${describePitch(e)}: ${n}"><span>${n}</span><i style="height:${(n / maxN) * 60}px"></i><span>${NOTE_NAMES[((e % 12) + 12) % 12]}${Math.floor(e / 12)}</span></div>`)}</div><p class="note">Nota y octava relativas (Do0 = sin transponer). Verde = objetivo; gris claro = lo más habitual en tu colección.</p></div>
   <div class="box"><h3>${S.regShow === 'all' ? 'Todos' : 'Fuera del objetivo'} <small>${list.length} patches</small></h3>${list.length ? html`<div style="overflow:auto;max-height:640px"><table class="t"><tr><th>Patch</th><th>Problema</th><th>Suena en</th><th>Raíz</th><th>Confianza</th><th>Corrección</th><th></th></tr>${list.slice(0, 400).map((x) => { const p = lib.byId(x.id), sh = regShift(x); return html`<tr><td><a href="#" data-act="pick" data-id="${p.id}">${p.name}</a> <span class="note">${p.folderPath || ''}</span></td><td>${x.problem ? html`<span class="prob ${probCls[x.problem]}">${x.problem}</span>` : html`<span class="dot ok"></span>`}</td><td>${pc(x.effective)}${x.source === 'medido' ? html` <span class="note">${x.measured.f0.toFixed(0)} Hz</span>` : ''}</td><td class="num">OSC ${x.root + 1} ${fmtSemis(x.osc[x.root])} st · tecl. ${fmtSemis(x.keyboardOctave)}${x.interval !== null ? html` <span class="note">(+OSC ${2 - x.root} a ${fmtSemis(x.interval)})</span>` : ''}${x.centsRoot ? html` <span class="note">${fmtSemis(x.centsRoot)} ct</span>` : ''}</td><td class="conf-${x.confidence}" title="${x.reasons.join('; ')}">${x.confidence}${x.macroPitch.length ? html` <span class="note">· macro de afinación</span>` : ''}</td><td class="num">${x.off && sh ? fmtSemis(sh) + ' st' : '—'}</td><td class="num"><button class="btn small" data-act="regListen" data-id="${p.id}" ${live ? '' : 'disabled'} title="Escuchar original">▶</button> ${drafts.has(p.id) ? html`<span class="badge chg draft">borrador creado</span> <button class="btn small" data-act="chgAB" data-id="${drafts.get(p.id).id}" ${live ? '' : 'disabled'}>A/B</button> <button class="btn small primary" data-act="chgAdopt" data-id="${drafts.get(p.id).id}" data-on="1">✓ Aceptar</button>` : x.off && sh ? html`<button class="btn small" data-act="regTry" data-id="${p.id}" ${live ? '' : 'disabled'} title="Escuchar corregido (solo RAM)">▶ corregido</button> <button class="btn small" data-act="regFix" data-id="${p.id}">Crear variante</button>` : p.kind === 'variant' ? html`<span class="badge chg ok">corregido</span>` : ''} ${canVerify ? html`<button class="btn small" data-act="regMeasure" data-id="${p.id}" title="Medir la nota real con la entrada de audio">Medir</button>` : ''} ${x.off ? html`<button class="btn small" data-act="regKeep" data-id="${p.id}" title="Está bien como está: no volver a proponerlo">Está bien</button>` : ''}</td></tr>`; })}</table></div>${list.length > 400 ? html`<p class="note">Se muestran 400 de ${list.length}.</p>` : ''}
-    ${fixable.length ? html`<div class="actbox"><div><b>Crear ${fixable.length} variantes corregidas</b><p class="note">Cada una es una copia del patch llevada a ${describePitch(rep.goal)}. Los originales no cambian.</p></div>
+    ${fixable.length ? html`<div class="actbox"><div><b>Corregir ${fixable.length} patches</b><p class="note">Cada uno se lleva a ${describePitch(rep.goal)} en su versión. Los originales se guardan.</p></div>
       <label class="lab">Al crearlas<select class="field" data-act="regSet" data-k="regAdopt"><option value="smart" ${adoptMode === 'smart' ? 'selected' : ''}>Aceptar las de confianza clara; las dudosas, en borrador</option><option value="all" ${adoptMode === 'all' ? 'selected' : ''}>Aceptarlas todas ya</option><option value="none" ${adoptMode === 'none' ? 'selected' : ''}>Dejarlas todas en borrador para revisarlas</option></select></label>
-      <button class="btn accent" data-act="regFixAll">Crear variantes</button></div>` : ''}
+      <button class="btn accent" data-act="regFixAll">Corregir</button></div>` : ''}
     ${drafts.size ? html`<p class="note" style="margin-top:8px">${drafts.size} borrador(es) de octava esperando revisión: <a href="#" data-act="regView" data-v="review">revisión rápida</a>.</p>` : ''}
     ${keepN ? html`<p class="note">${keepN} patch(es) de este grupo marcados como «está bien»: no se analizan. <a href="#" data-act="regUnkeep" data-g="${S.regCat}">Volver a analizarlos</a></p>` : ''}` : html`<p class="note"><span class="dot ok"></span>Todos los patches de esta categoría suenan en ${describePitch(rep.goal)}.</p>`}</div>`;
 }
@@ -1377,11 +1390,11 @@ function orgDisk() {
   <div class="grid3"><label class="lab">Estructura${sel('layout', [['category', 'Categoría / subcarpeta (tus carpetas)'], ['architecture', 'Arquitectura (mismo synth juntos)'], ['source', 'Carpetas de origen']])}</label>
     <label class="lab">Nombre de archivo${sel('naming', [['{cat} - {name}', 'Categoría - Nombre'], ['{name}', 'Nombre'], ['{n} {name}', 'Número Nombre']])}</label>
     <label class="lab">Duplicados${sel('duplicates', [['folder', 'Aparte en _Duplicados'], ['skip', 'No copiarlos']])}</label>
-    <label class="lab">Variantes de una familia${sel('variants', [['family', 'Juntas en una subcarpeta'], ['flat', 'Sin subcarpeta']])}</label>
+    <label class="lab">Parecidos de una familia${sel('variants', [['family', 'Juntas en una subcarpeta'], ['flat', 'Sin subcarpeta']])}</label>
     <label class="lab">Qué incluir${sel('scope', [['all', 'Toda la biblioteca'], ['filter', 'El filtro actual de la biblioteca']])}</label></div><p class="note">Los patches en estado «Descartar» nunca se copian. Las carpetas y subcarpetas se editan en <a href="#" data-act="orgTab" data-t="folders">Carpetas y subcarpetas</a>.</p>
   ${(() => { const W = plan.entries.filter((e) => e.action === 'write'), rep = W.filter((e) => e.replaces).length, mids = W.filter((e) => planMid(e)).length, why = {}; plan.entries.filter((e) => e.action === 'skip').forEach((e) => { const r = e.reason.startsWith('sustituido') ? 'originales sustituidos por su versión corregida' : e.reason.startsWith('variante en borrador') ? 'variantes en borrador' : e.reason.startsWith('duplicado') ? 'duplicados' : e.reason; why[r] = (why[r] || 0) + 1; });
     return html`<div class="statgrid" style="margin-top:4px"><div class="stat"><strong>${plan.writes}</strong><span>patches a escribir</span></div><div class="stat g"><strong>${rep}</strong><span>en su versión corregida</span></div><div class="stat"><strong>${mids}</strong><span>con patrón .mid</span></div><div class="stat"><strong>${plan.folders}</strong><span>carpetas</span></div><div class="stat"><strong>${plan.skipped}</strong><span>no se escriben</span></div></div>
-    <p class="note">Se escribe la <b>versión vigente</b> de cada patch: el original si no lo has cambiado, o su variante aceptada (con el mismo nombre y en el mismo sitio).${Object.keys(why).length ? html` No se escriben: ${Object.entries(why).map(([r, n]) => `${n} ${r}`).join(' · ')}.` : ''}${plan.entries.some((e) => e.reason?.startsWith('variante en borrador')) ? html` <a href="#" data-act="view" data-v="changes">Revisar los borradores</a>.` : ''}</p>`; })()}
+    <p class="note">Se escribe la <b>versión vigente</b> de cada patch: el original si no lo has cambiado, o su versión editada (con el mismo nombre y en el mismo sitio).${Object.keys(why).length ? html` No se escriben: ${Object.entries(why).map(([r, n]) => `${n} ${r}`).join(' · ')}.` : ''}${plan.entries.some((e) => e.reason?.startsWith('variante en borrador')) ? html` <a href="#" data-act="view" data-v="changes">Revisar los borradores</a>.` : ''}</p>`; })()}
   <div class="box"><h3>Vista previa <small>primeras carpetas</small></h3><div class="tree">${[...tree.entries()].slice(0, 60).map(([d, files]) => html`<div class="d">▸ ${d} <span class="s">(${files.length})</span></div>${files.slice(0, 5).map((f) => html`<div class="s">&nbsp;&nbsp;&nbsp;${f}</div>`)}${files.length > 5 ? html`<div class="s">&nbsp;&nbsp;&nbsp;… ${files.length - 5} más</div>` : ''}`)}</div>
     <div class="row2" style="margin-top:10px"><button class="btn primary" data-act="planWrite">Elegir carpeta y escribir</button><button class="btn" data-act="planZip">Descargar como ZIP</button><button class="btn" data-act="planCsv">Manifiesto CSV</button><span class="note">Escribir en carpeta requiere Chrome o Edge.</span></div></div>`;
 }
@@ -1389,11 +1402,11 @@ function orgDisk() {
 function viewMacroStudio() {
   const p = S.sel && lib.byId(S.sel);
   const tpls = [...S.templates, ...profileTemplates()], tsel = tpls.find((t) => t.id === S.tplSel) || null;
-  const head = html`<div class="ptitle"><h2>Macros</h2><p>Edita las 8 macros de un patch ruta a ruta, guárdalas como plantilla y aplícalas a otros patches. Todo se hace sobre variantes: los originales no cambian.</p></div>`;
+  const head = html`<div class="ptitle"><h2>Macros</h2><p>Edita las 8 macros de un patch ruta a ruta, guárdalas como plantilla y aplícalas a otros patches. Los cambios van a la versión de cada sonido: el original se guarda y siempre puedes volver a él.</p></div>`;
   if (!p) return html`${head}<div class="empty"><h3>Elige un patch</h3><p>Selecciónalo en la Biblioteca y vuelve aquí.</p><button class="btn" data-act="view" data-v="library">Ir a la biblioteca</button></div>${tplLibrary(tpls, tsel, null)}`;
   const inf = lib.info(p), a = inf.macros, isVar = p.kind === 'variant', live = !!S.dev.session;
   return html`${head}
-  <div class="banner ${isVar ? 'ok' : ''}">${raw(isVar ? IC.okc : IC.inf)}<span><b>${p.name}</b> — ${isVar ? (lib.changeState(p) === 'adopted' ? 'versión aceptada: lo que cambies aquí se guarda solo y es lo que se exportará.' : 'variante en borrador: lo que cambies se guarda solo; acéptala en Cambios para que sustituya al original.') : lib.replacementOf(p) ? `original sustituido. Al editar se trabaja sobre su versión aceptada «${lib.replacementOf(p).name}».` : 'original. Girar los knobs no guarda nada; al guardar una posición o editar un destino se crea una variante en borrador.'}</span><span class="sp"></span><label class="note"><input type="checkbox" class="chk" data-act="opt" data-k="live" ${S.live ? 'checked' : ''} ${live ? '' : 'disabled'}> Enviar cada cambio al equipo</label><button class="btn small" data-act="listenSel" ${live ? '' : 'disabled'}>${raw(IC.play)}Escuchar</button></div>
+  <div class="banner ${isVar ? 'ok' : ''}">${raw(isVar ? IC.okc : IC.inf)}<span><b>${p.name}</b> — ${isVar ? (lib.changeState(p) === 'adopted' ? 'editado: lo que cambies aquí se suma a su versión, la que suena y se exporta.' : 'copia independiente: lo que cambies se guarda solo.') : 'original. Girar los knobs no guarda nada; al guardar una posición o editar un destino se crea su versión (el original se guarda).'}</span><span class="sp"></span><label class="note"><input type="checkbox" class="chk" data-act="opt" data-k="live" ${S.live ? 'checked' : ''} ${live ? '' : 'disabled'}> Enviar cada cambio al equipo</label><button class="btn small" data-act="listenSel" ${live ? '' : 'disabled'}>${raw(IC.play)}Escuchar</button></div>
   ${macroBoard(p, inf)}
   <div class="status">${a.integrity.map((x) => html`<div class="e">${raw(IC.warn)}<b>Integridad</b><span>${x.text}</span></div>`)}${a.shared.map((x) => html`<div class="w">${raw(IC.warn)}<b>Destino compartido</b><span>${x.label} en ${x.knobs.map((k) => 'M' + (k + 1)).join(', ')}</span></div>`)}${!a.integrity.length && !a.shared.length ? html`<div class="o">${raw(IC.okc)}<b>Estructura correcta</b><span>Sin códigos fuera de rango ni destinos repetidos entre macros.</span></div>` : ''}</div>
   <p class="note">«Barrer» mantiene una nota y mueve la macro en el equipo: es la forma de comprobar de oído qué hace cada una.</p>
@@ -1423,56 +1436,58 @@ function viewAnalyze() {
 // ===== ESCUCHA =====
 function buildQueue(src = S.qsrc) {
   S.qsrc = src; let list;
-  if (src === 'pending') list = lib.patches.filter((p) => p.meta.review === 'pending');
-  else if (src === 'uncategorized') list = lib.patches.filter((p) => !p.meta.category);
-  else if (src === 'filter') list = lib.patches.filter((p) => lib.matches(p, { ...S.q, features: S.q.features?.length ? S.q.features : undefined }));
-  else if (src === 'selection') list = [...S.multi].map((id) => lib.byId(id)).filter(Boolean);
-  else if (src === 'unmeasured') list = lib.patches.filter((p) => !p.acoustic);
-  else if (src.startsWith('col:')) { const c = lib.collections.find((x) => x.id === src.slice(4)); list = c ? lib.patches.filter((p) => c.kind === 'manual' ? c.ids.includes(p.id) : lib.matches(p, c.query)) : []; }
-  else list = lib.patches;
-  // Una sola escucha por familia: el resto se revisa desde Comparar.
+  if (src === 'pending') list = lib.faces().filter((p) => p.meta.review === 'pending');
+  else if (src === 'uncategorized') list = lib.faces().filter((p) => !p.meta.category);
+  else if (src === 'filter') list = lib.faces().filter((p) => lib.matches(p, { ...S.q, features: S.q.features?.length ? S.q.features : undefined }));
+  else if (src === 'selection') list = [...S.multi].map((id) => faceOf(lib.byId(id))).filter(Boolean);
+  else if (src === 'unmeasured') list = lib.faces().filter((p) => !p.acoustic);
+  else if (src.startsWith('col:')) { const c = lib.collections.find((x) => x.id === src.slice(4)); list = c ? lib.faces().filter((p) => c.kind === 'manual' ? c.ids.includes(p.id) : lib.matches(p, c.query)) : []; }
+  else list = lib.faces();
+  // Una sola escucha por familia: el resto se revisa desde Comparar. En la cola va cada sonido (su original).
   const { of } = lib.families(), seen = new Set();
   list = list.filter((p) => { const f = of.get(p.id); if (!f) return true; if (seen.has(f.id)) return false; seen.add(f.id); return true; });
   const cur = S.queue[S.qi];
-  S.queue = list.map((p) => p.id); S.qi = Math.max(0, cur ? S.queue.indexOf(cur) : 0);
+  S.queue = [...new Set(list.map((p) => lib.rootOf(p).id))]; S.qi = Math.max(0, cur ? S.queue.indexOf(cur) : 0);
 }
 function viewAudition() {
   if (!lib.patches.length) return html`<div class="empty"><h3>Nada que escuchar</h3><p>Importa patches en Library o léelos desde Equipo.</p></div>`;
-  const id = S.queue[S.qi], p = id && lib.byId(id), live = !!S.dev.session;
+  const id = S.queue[S.qi], p = id && faceOf(lib.byId(id)), live = !!S.dev.session;
   const srcs = [['pending', 'Pendientes de revisión'], ['uncategorized', 'Sin categoría'], ['unmeasured', 'Sin medir'], ['filter', 'Filtro de Library'], ['selection', `Selección (${S.multi.size})`], ['all', 'Toda la biblioteca'], ...lib.collections.map((c) => ['col:' + c.id, 'Colección · ' + c.name])];
   const queueHtml = html`<div class="queue"><div class="qh"><select class="sel" data-act="qsrc" style="max-width:none">${srcs.map(([k, l]) => html`<option value="${k}" ${S.qsrc === k ? 'selected' : ''}>${l}</option>`)}</select><span class="note">${S.queue.length} en cola · una por familia</span></div>
-    <div class="ql">${S.queue.slice(0, 600).map((qid, i) => { const q = lib.byId(qid); if (!q) return ''; const cat = effCat(q); return html`<div class="qi ${i === S.qi ? 'on' : ''}" data-act="qgo" data-i="${i}"><span class="ix">${i + 1}</span><span class="nm">${q.name}</span><span>${q.meta.category ? html`<span class="dot ok"></span>` : ''}${cat ? html`<span class="badge ${q.meta.category ? '' : 'prop'}">${catName(cat)}</span>` : ''}</span></div>`; })}</div></div>`;
+    <div class="ql">${S.queue.slice(0, 600).map((qid, i) => { const q = faceOf(lib.byId(qid)); if (!q) return ''; const cat = effCat(q); return html`<div class="qi ${i === S.qi ? 'on' : ''}" data-act="qgo" data-i="${i}"><span class="ix">${i + 1}</span><span class="nm">${q.name}</span><span>${q.meta.category ? html`<span class="dot ok"></span>` : ''}${cat ? html`<span class="badge ${q.meta.category ? '' : 'prop'}">${catName(cat)}</span>` : ''}</span></div>`; })}</div></div>`;
   if (!p) return html`<h2>Escucha</h2><div class="aud">${queueHtml}<div class="empty"><h3>Cola vacía</h3><p>Elige otra fuente de cola.</p></div></div>`;
-  const inf = lib.info(p), c = inf.cls, m = p.meta, ph = S.phrase === 'auto' ? phraseKeyFor(p) : S.phrase;
-  const v = inf.an.decoded.v;
+  const inf = lib.info(p), c = inf.cls, m = p.meta, tp = testPlan(p, 'auto');
+  const v = inf.an.decoded.v, saved = !!m.category, cat = m.category || c.category, subs = cat ? lib.tax[cat] : [];
+  const propSub = c.category === cat && c.subtype && c.subtype !== (saved ? m.subtype : null) ? c.subtype : null;
   return html`<h2>Escucha y decisión</h2>
   ${live ? html`<div class="banner ok">${raw(IC.okc)}<span>Conectado a <b>${S.dev.session.name}</b> · Synth ${S.dev.synth + 1} (canal ${S.dev.channels[S.dev.synth] + 1}) · ${tempoNow()} BPM${S.followClock && S.dev.session.clockTempo() ? ' (reloj del equipo)' : ''}${S.dev.audioId ? ' · medición activa' : ''}</span><span style="flex:1"></span><button class="btn small" data-act="view" data-v="device">Ajustes</button></div>` : html`<div class="banner">${raw(IC.warn)}<span>Sin equipo conectado: puedes decidir igualmente, pero escuchar en el Circuit Tracks es la forma fiable de clasificar.</span><button class="btn small primary" data-act="midiConnect">Conectar Circuit Tracks</button></div>`}
   <div class="aud">${queueHtml}
   <div class="stage">
-    <div class="hero"><div class="mlabel">${S.qi + 1} / ${S.queue.length} · ${p.folderPath || p.fileName || ''}</div><h2>${p.name}</h2>
-      <div class="meta"><div><div class="mlabel">Propuesta</div><div class="hf" style="font-size:18px">${c.category ? catName(c.category, c.subtype) : c.candidates ? c.candidates.map((x) => CAT_LABEL[x]).join(' / ') : '—'}</div><div class="note">${CERTAINTY[c.certainty].label}</div>${nnHint(p, true)}</div>
-        <div><div class="mlabel">Tu categoría</div><div class="hf" style="font-size:18px">${m.category ? catName(m.category, m.subtype) : '—'}</div><div class="note">${REVIEW[m.review]}</div></div>
+    <div class="hero"><div class="mlabel">${S.qi + 1} / ${S.queue.length} · ${p.folderPath || p.fileName || ''}</div><h2>${p.name}${chgBadge(p)}</h2>
+      <div class="meta"><div class="audfolder"><div class="mlabel"><span>Carpeta</span><span>${saved ? 'tuya · ' + REVIEW[m.review].toLowerCase() : cat ? 'propuesta · ' + CERTAINTY[c.certainty].label.toLowerCase() : 'sin propuesta'}</span></div>
+          <div class="row2" style="gap:6px"><select class="sel" data-act="audCatSel" aria-label="Categoría del patch que suena">${cat ? '' : html`<option value="">Elegir categoría…</option>`}${CATEGORIES.map((x) => html`<option value="${x.id}" ${x.id === cat ? 'selected' : ''}>${x.label}${!saved && x.id === c.category ? ' (propuesta)' : ''}</option>`)}</select>${!saved && c.category ? html`<button class="btn small primary" data-act="audAccept" title="Aceptar la propuesta y pasar al siguiente">Aceptar <span class="kbd">INTRO</span></button>` : ''}</div>
+          ${subs.length ? html`<div class="subchips" style="margin-top:6px">${subs.map((x) => html`<button class="subc ${saved && m.subtype === x.id ? 'on' : ''} ${propSub === x.id ? 'prop' : ''}" data-act="audSub" data-c="${cat}" data-s="${x.id}" aria-pressed="${saved && m.subtype === x.id}" title="${propSub === x.id ? 'Propuesta' : ''}">${x.label}</button>`)}</div>` : ''}
+          ${nnHint(p, true)}</div>
         <div><div class="mlabel">Voz · amp env</div><div class="note">${['Mono', 'Mono AG', 'Poly'][v['voice.poly']]} · A ${fmtSeconds(approxSeconds(v['env1.a']))} · R ${fmtSeconds(approxSeconds(v['env1.r']))}</div><div class="note">${FILTER_TYPES[v['filter.type']]} · cutoff ${v['filter.freq']} · res ${v['filter.res']}</div></div>
         <div><div class="mlabel">Valoración</div><div class="stars" style="font-size:18px">${[1, 2, 3, 4, 5].map((n) => html`<span class="${n <= (m.rating || 0) ? 'on' : ''}" data-act="rate" data-n="${n}">★</span>`)}</div><div class="note">${m.fav ? '♥ favorito' : ''}</div></div></div>
       ${c.contradictions.length ? html`<p class="note" style="margin-top:8px">⚠ ${c.contradictions.map((x) => x.text).join(' · ')}</p>` : ''}
       ${p.acoustic && !p.acoustic.desc.silent ? html`<div class="mfeat" style="margin-top:8px">${p.acoustic.features.map((f) => html`<span class="badge" title="${f.basis}">${f.label}</span>`)}</div>` : ''}</div>
     <div class="row2"><button class="btn big play ${S.playing ? 'on' : ''}" data-act="audPlay" ${live ? '' : 'disabled'}>${raw(IC.play)}Escuchar <span class="kbd">ESPACIO</span></button><button class="btn big" data-act="audStop" ${live ? '' : 'disabled'}>${raw(IC.stop)}<span class="kbd">ESC</span></button><button class="btn big" data-act="measureSel" ${live && S.dev.audioId ? '' : 'disabled'} title="${S.dev.audioId ? '' : 'Configura una entrada de audio en Equipo'}">${raw(IC.mic)}Medir <span class="kbd">M</span></button>
-      <select class="sel" data-act="phrase" style="max-width:none"><option value="auto" ${S.phrase === 'auto' ? 'selected' : ''}>Automática (${ph.startsWith?.('pat:') ? 'patrón adjunto: ' : ''}${phraseObj(ph).label})</option>${Object.entries({ ...PHRASES, ...S.customPhrases }).map(([k, f]) => html`<option value="${k}" ${S.phrase === k ? 'selected' : ''}>${f.custom ? '● ' : ''}${f.label}</option>`)}${(lib.settings.patterns || []).length ? html`<optgroup label="Tus patrones">${lib.settings.patterns.filter((x) => x.kind !== 'drum').map((x) => html`<option value="pat:${x.id}" ${S.phrase === 'pat:' + x.id ? 'selected' : ''}>▦ ${x.name}</option>`)}</optgroup>` : ''}</select>
+      <select class="sel" data-act="phrase" style="max-width:none" aria-label="Frase de prueba"><option value="auto" ${S.phrase === 'auto' ? 'selected' : ''}>Automática (${tp.src === 'att' ? 'patrón adjunto: ' : ''}${tp.label})</option>${Object.entries({ ...PHRASES, ...S.customPhrases }).map(([k, f]) => html`<option value="${k}" ${S.phrase === k ? 'selected' : ''}>${f.custom ? '● ' : ''}${f.label}</option>`)}${(lib.settings.patterns || []).length ? html`<optgroup label="Tus patrones">${lib.settings.patterns.filter((x) => x.kind !== 'drum').map((x) => html`<option value="pat:${x.id}" ${S.phrase === 'pat:' + x.id ? 'selected' : ''}>▦ ${x.name}</option>`)}</optgroup>` : ''}</select>
       <label class="note"><input type="checkbox" class="chk" data-act="opt" data-k="autoPlay" ${S.autoPlay ? 'checked' : ''}> auto-escuchar</label><label class="note"><input type="checkbox" class="chk" data-act="opt" data-k="autoNext" ${S.autoNext ? 'checked' : ''}> avanzar al decidir</label></div>
+    <div class="box">${testBox(p, 'aud')}</div>
     <div class="box"><h3>Macros en el equipo <small>mantiene una nota y barre 0→127→0 · Mayús+1…8</small></h3><div class="sweeps">${inf.macros.knobs.map((k) => html`<button class="btn" data-act="sweep" data-k="${k.index}" ${live ? '' : 'disabled'}>M${k.index + 1}<small>${k.activeCount ? k.slots.find((s) => s.state === 'active').info.label : 'sin efecto'}</small></button>`)}</div></div>
-    <div class="box"><h3>Decidir <small>tecla = categoría · Intro = aceptar propuesta · 1–5 valoración · F favorito · Supr eliminar · ← → navegar · ? todos los atajos</small></h3>
+    <div class="box"><h3>Decidir <small>tecla = categoría y siguiente · Intro = aceptar la propuesta (o confirmar la tuya) · 1–5 valoración · F favorito · Supr eliminar · ← → navegar · ? todos los atajos</small></h3>
       <div class="keys">${CATEGORIES.filter((x) => KEY_OF[x.id]).map((x) => html`<button class="btn ${m.category === x.id ? 'cur' : c.category === x.id ? 'prop' : ''}" data-act="audCat" data-c="${x.id}">${x.label}<kbd>${KEY_OF[x.id]}</kbd></button>`)}</div>
-      <div class="row2" style="margin-top:8px"><button class="btn primary" data-act="audAccept" ${c.category ? '' : 'disabled'}>Aceptar propuesta <span class="kbd">INTRO</span></button><button class="btn" data-act="audReview" data-r="keep">Conservar</button><button class="btn" data-act="audReview" data-r="discard" title="Se queda en la biblioteca, pero no se exporta">Descartar <span class="kbd">MAYÚS SUPR</span></button><button class="btn danger" data-act="audDelete" title="Fuera de la biblioteca (a la papelera; Ctrl+Z deshace)">Eliminar <span class="kbd">SUPR</span></button><button class="btn" data-act="audFav">${m.fav ? '♥ Favorito' : '♡ Favorito'} <span class="kbd">F</span></button><span style="flex:1"></span><button class="btn" data-act="qstep" data-d="-1">◀</button><button class="btn" data-act="qstep" data-d="1">Siguiente ▶</button><button class="btn" data-act="openSel">Abrir ficha</button></div>
+      <div class="row2" style="margin-top:8px"><button class="btn primary" data-act="audAccept" ${c.category || m.category ? '' : 'disabled'}>${m.category ? 'Confirmar' : 'Aceptar propuesta'} <span class="kbd">INTRO</span></button><button class="btn" data-act="audReview" data-r="keep">Conservar</button><button class="btn" data-act="audReview" data-r="discard" title="Se queda en la biblioteca, pero no se exporta">Descartar <span class="kbd">MAYÚS SUPR</span></button><button class="btn danger" data-act="audDelete" title="Fuera de la biblioteca (a la papelera; Ctrl+Z deshace)">Eliminar <span class="kbd">SUPR</span></button><button class="btn" data-act="audFav">${m.fav ? '♥ Favorito' : '♡ Favorito'} <span class="kbd">F</span></button><span style="flex:1"></span><button class="btn" data-act="qstep" data-d="-1">◀</button><button class="btn" data-act="qstep" data-d="1">Siguiente ▶</button><button class="btn" data-act="openSel">Abrir ficha</button></div>
       <div class="row2" style="margin-top:8px">${octBtnsHTML(p)}</div>${tagClipHTML()}
       <div class="qtags"><span class="mlabel">Etiquetas rápidas</span>${quickTags().map((t, i) => html`<button class="tq ${(m.tags || []).includes(t) ? 'on' : ''}" data-act="audTag" data-t="${t}" title="Alt+${i + 1}">${t}<sup>${i + 1}</sup></button>`)}</div></div>
   </div></div>`;
 }
-async function audPlay(p = lib.byId(S.queue[S.qi])) {
+// Toca el sonido con su frase de prueba (testPlan, igual en toda la herramienta). payload: otra carga (p. ej. «▶ corregido»).
+async function audPlay(p = cur(), payload = null) {
   const s = S.dev.session; if (!s || !p) return;
-  s.stopAll();
-  const inf = lib.info(p), ph = S.phrase === 'auto' ? (S.view === 'library' && !patternOf(p) ? 'gen:' + p.id : phraseKeyFor(p)) : S.phrase;
-  const t = s.sendPatch(lib.currentVersion(p).payload, S.dev.synth);
-  const r = s.playPhrase(phraseObj(ph), S.dev.synth, { tempo: tempoNow(), root: phraseObj(ph).custom ? 0 : S.dev.root, start: t + (S.dev.patchDelay ?? 80) });
+  const r = playTest(p, payload); if (!r) return;
   S.playing = true; $('[data-act="audPlay"]')?.classList.add('on');
   clearTimeout(S.playTimer); S.playTimer = setTimeout(() => { S.playing = false; $('[data-act="audPlay"]')?.classList.remove('on'); }, r.end - performance.now());
   lib.logAudition(p.id);
@@ -1480,7 +1495,9 @@ async function audPlay(p = lib.byId(S.queue[S.qi])) {
 // Eliminar sin preguntar: va a la papelera y el aviso ofrece deshacer. En Escucha pasa al siguiente.
 async function trashIds(ids) {
   ids = ids.filter((id) => lib.byId(id)); if (!ids.length) return;
-  const set = new Set(ids), name = ids.length === 1 ? lib.byId(ids[0]).name : `${ids.length} patches`;
+  const name = ids.length === 1 ? lib.byId(ids[0]).name : `${ids.length} patches`;
+  ids = [...new Set(ids.flatMap((id) => lib.groupIds(id)))]; // el sonido entero: original, versión y propuestas
+  const set = new Set(ids);
   if (S.sel && set.has(S.sel)) { const rows = (S.rows || []).filter((r) => !r.header && r.p); const i = rows.findIndex((r) => r.p.id === S.sel); const nx = rows.slice(i + 1).find((r) => !set.has(r.p.id)) || rows.slice(0, Math.max(0, i)).reverse().find((r) => !set.has(r.p.id)); S.sel = nx ? nx.p.id : null; }
   const atQ = S.queue.indexOf(S.queue[S.qi]);
   await lib.deletePatches(ids);
@@ -1493,11 +1510,11 @@ async function trashIds(ids) {
 async function undoLast() {
   const h = lib.lastUndoable(); if (!h) { toast('Nada que deshacer'); return; }
   try { await lib.undo(h.id); } catch (e) { toast(e.message); return; }
-  if (h.op === 'delete') { const back = h.ids.filter((id) => lib.byId(id) && !S.queue.includes(id)); if (back.length && S.view === 'audition') { S.queue.splice(S.qi, 0, ...back); } if (h.ids.length === 1) S.sel = h.ids[0]; }
+  if (h.op === 'delete') { const back = [...new Set(h.ids.filter((id) => lib.byId(id)).map((id) => lib.rootOf(lib.byId(id)).id))].filter((id) => !S.queue.includes(id)); if (back.length && S.view === 'audition') { S.queue.splice(S.qi, 0, ...back); } const f = faceOf(lib.byId(h.ids[0])); if (f && S.view !== 'audition') S.sel = f.id; }
   S.rowsKey = ''; toast('Deshecho: ' + h.text); rerender();
 }
 async function audDecide(fn) {
-  const p = lib.byId(S.queue[S.qi]); if (!p) return;
+  const p = cur(); if (!p) return;
   await fn(p);
   if (S.autoNext && S.qi < S.queue.length - 1) { S.qi++; rerender(); if (S.autoPlay) audPlay(); } else rerender();
 }
@@ -1506,7 +1523,7 @@ async function audDecide(fn) {
 function viewMap() {
   if (lib.patches.length < 3) return html`<div class="empty"><h3>Mapa</h3><p>Hacen falta al menos 3 patches.</p></div>`;
   const ranking = lib.affinityRanking(30), refs = lib.referenceSet();
-  const cats = [...new Set(lib.patches.map((p) => effCat(p) || 'none'))];
+  const cats = [...new Set(lib.faces().map((p) => effCat(p) || 'none'))];
   const la = LA();
   return html`<h3 class="sec-h">Grupos y mapa técnico</h3>
   <div class="box"><h3>Clusters de parámetros <small>k-means sobre los parámetros de síntesis · etiqueta = categoría dominante</small></h3><div class="clusters">${la.clusters.map((c) => html`<button class="clus" data-act="clusterGo" data-id="${c.id}"><b>${c.label}</b><span>${c.size} patches · ${Math.round(c.purity * 100)} % ${c.label}</span><div class="bar acc"><i style="width:${c.purity * 100}%"></i></div></button>`)}</div><p class="note">Grupos técnicos, no sonoros. Un grupo mezclado indica patches parecidos en parámetros pero clasificados distinto: buen sitio para escuchar y corregir.</p></div>
@@ -1535,7 +1552,7 @@ function drawMap() {
     return p.acoustic ? '#4fd18b' : '#4a4e54';
   };
   const hl = mapHLSet();
-  for (const p of lib.patches) {
+  for (const p of lib.faces()) {
     const c = xy.get(p.id); if (!c) continue;
     if (S.mapColor === 'category' && S.mapHidden.has(effCat(p) || 'none')) continue;
     const X = sx(c[0]), Y = sy(c[1]); pts.push({ id: p.id, X, Y });
@@ -1558,7 +1575,7 @@ function drawMap() {
 // ===== AUDITORÍA (incluye reglas y calibración) =====
 function statsOf() {
   const st = { cats: {}, user: 0, cert: {}, mono: 0, longEnv: 0, dist: 0, lfo: 0, inactive: 0, integrity: 0, contr: 0, pending: 0, seq: 0, variants: 0, measured: 0, mdark: 0, mlow: 0 };
-  for (const p of lib.patches) {
+  for (const p of lib.faces()) {
     const i = lib.info(p), c = i.cls, H = (id) => i.an.features.some((f) => f.id === id), HM = (id) => p.acoustic?.features?.some((f) => f.id === id);
     const cat = p.meta.category || c.category || (c.candidates ? 'ambiguous' : 'none');
     st.cats[cat] = (st.cats[cat] || 0) + 1; if (p.meta.category) st.user++;
@@ -1571,13 +1588,13 @@ function statsOf() {
 }
 function viewAudit() {
   if (!lib.patches.length) return html`<div class="empty"><h3>Sin datos</h3><p>Importa patches para auditar la colección.</p></div>`;
-  const st = statsOf(), dups = lib.duplicates(), fams = lib.families().list, N = lib.patches.length, maxc = Math.max(...Object.values(st.cats));
+  const st = statsOf(), dups = lib.duplicates(), fams = lib.families().list, N = lib.faces().length, maxc = Math.max(...Object.values(st.cats));
   const q = (label, n, query) => html`<button data-act="ask" data-q="${JSON.stringify(query)}"><span>${label}</span><b>${n}</b></button>`;
   const cal = calibration(lib.decisions());
-  const tokenFreq = new Map(); for (const p of lib.patches) if (!p.meta.category) for (const t of lib.info(p).cls.unknownTokens) tokenFreq.set(t, (tokenFreq.get(t) || 0) + 1);
+  const tokenFreq = new Map(); for (const p of lib.faces()) if (!p.meta.category) for (const t of lib.info(p).cls.unknownTokens) tokenFreq.set(t, (tokenFreq.get(t) || 0) + 1);
   const topTok = [...tokenFreq.entries()].filter(([, n]) => n > 1).sort((a, b) => b[1] - a[1]).slice(0, 16);
   return html`<h2>Auditoría</h2>
-  <div class="statgrid"><div class="stat"><strong>${N}</strong><span>Patches (${st.variants} variantes)</span></div><div class="stat"><strong>${fams.length}</strong><span>Familias de duplicados / variantes</span></div><div class="stat g"><strong>${st.user}</strong><span>Clasificados por ti</span></div><div class="stat"><strong>${st.pending}</strong><span>Pendientes de revisión</span></div><div class="stat g"><strong>${st.measured}</strong><span>Medidos acústicamente</span></div><div class="stat"><strong>${dups.payload.length}</strong><span>Grupos de duplicados binarios</span></div></div>
+  <div class="statgrid"><div class="stat"><strong>${N}</strong><span>Patches (${st.variants} editados)</span></div><div class="stat"><strong>${fams.length}</strong><span>Familias de duplicados y parecidos</span></div><div class="stat g"><strong>${st.user}</strong><span>Clasificados por ti</span></div><div class="stat"><strong>${st.pending}</strong><span>Pendientes de revisión</span></div><div class="stat g"><strong>${st.measured}</strong><span>Medidos acústicamente</span></div><div class="stat"><strong>${dups.payload.length}</strong><span>Grupos de duplicados binarios</span></div></div>
   <div class="box"><h3>Preguntas <small>pulsa para filtrar Library</small></h3><div class="qa">
     ${q('¿Cuántos bajos tengo? (tuyos + propuestas)', st.cats.bass || 0, { category: 'bass', includeProposals: true })}${q('Monofónicos', st.mono, { features: ['mono'] })}${q('Envolventes largas', st.longEnv, { features: ['long-release'] })}${q('Con distorsión o drive', st.dist, { features: ['distortion'] })}
     ${q('Con modulación por LFO', st.lfo, { features: ['lfo-mod'] })}${q('Para secuencias cortas', st.seq, { features: ['fast-attack', 'short-decay'] })}${q('Con alguna macro inactiva', st.inactive, { inactiveMacros: true })}${q('Con parámetros anómalos', st.integrity, { integrity: true })}
@@ -1586,25 +1603,25 @@ function viewAudit() {
   <div class="grid2"><div class="box"><h3>Por categoría <small>guardada o propuesta</small></h3>${Object.entries(st.cats).sort((a, b) => b[1] - a[1]).map(([k, n]) => html`<div class="hbar" data-act="ask" data-q="${JSON.stringify(k === 'ambiguous' ? { certainty: 'ambiguous' } : k === 'none' ? { certainty: 'none', uncategorized: true } : { category: k, includeProposals: true })}"><span>${k === 'ambiguous' ? 'Ambigua' : k === 'none' ? 'Sin evidencia' : CAT_LABEL[k]}</span><div class="bar"><i style="width:${(n / maxc) * 100}%"></i></div><span>${n}</span></div>`)}</div>
     <div class="box"><h3>Certeza de las propuestas</h3>${Object.entries(CERTAINTY).filter(([k]) => k !== 'manual').map(([k, v]) => html`<div class="hbar" data-act="ask" data-q="${JSON.stringify({ certainty: k })}"><span>${v.label}</span><div class="bar"><i style="width:${((st.cert[k] || 0) / N) * 100}%"></i></div><span>${st.cert[k] || 0}</span></div>`)}
       <h3 style="margin-top:12px">Calibración <small>propuesta frente a tu decisión</small></h3>${Object.keys(cal).length ? html`<table class="t"><tr><th>Certeza</th><th>N</th><th>Aceptadas</th><th>Corregidas</th><th>Acierto</th></tr>${Object.entries(cal).map(([k, r]) => html`<tr><td>${CERTAINTY[k]?.label || k}</td><td>${r.total}</td><td>${r.accepted}</td><td>${r.corrected + r.rejected}</td><td>${Math.round((r.accepted / r.total) * 100)} %</td></tr>`)}</table>` : html`<p class="note">Aún sin decisiones.</p>`}</div></div>
-  <div class="box"><h3>Familias <small>duplicados y variantes agrupados; una escucha por familia</small></h3>${fams.slice(0, 60).map((f) => html`<div class="row2" style="margin:3px 0">${f.members.map((m, i) => html`${i ? '·' : ''}<a href="#" data-act="pick" data-id="${m.id}">${lib.byId(m.id)?.name}</a>${m.rel ? html` <span class="note">(${m.rel.level === 'payload' ? 'idéntico' : m.rel.level === 'synth' ? 'misma síntesis' : m.rel.level === 'macro' || m.rel.level === 'macro-position' ? 'macros' : m.rel.level === 'param' ? m.rel.count + ' parám.' : 'parecido'})</span>` : ''}`)}</div>`)}${fams.length > 60 ? html`<p class="note">… y ${fams.length - 60} más.</p>` : ''}${fams.length ? '' : html`<p class="note">Sin familias.</p>`}</div>
+  <div class="box"><h3>Familias <small>duplicados y parecidos agrupados; una escucha por familia</small></h3>${fams.slice(0, 60).map((f) => html`<div class="row2" style="margin:3px 0">${f.members.map((m, i) => html`${i ? '·' : ''}<a href="#" data-act="pick" data-id="${m.id}">${lib.byId(m.id)?.name}</a>${m.rel ? html` <span class="note">(${m.rel.level === 'payload' ? 'idéntico' : m.rel.level === 'synth' ? 'misma síntesis' : m.rel.level === 'macro' || m.rel.level === 'macro-position' ? 'macros' : m.rel.level === 'param' ? m.rel.count + ' parám.' : 'parecido'})</span>` : ''}`)}</div>`)}${fams.length > 60 ? html`<p class="note">… y ${fams.length - 60} más.</p>` : ''}${fams.length ? '' : html`<p class="note">Sin familias.</p>`}</div>
   <div class="box"><h3>Reglas aprendidas <small>peso 4 (código Novation: 2)</small></h3>${lib.rules.length ? html`<table class="t"><tr><th>Tipo</th><th>Patrón</th><th>Categoría</th><th>Activa</th><th></th></tr>${lib.rules.map((r) => html`<tr><td>${{ token: 'Palabra', folder: 'Carpeta', nvcat: 'Código Novation', patch: 'Excepción' }[r.type]}</td><td>${r.type === 'patch' ? r.pattern.slice(0, 10) + '…' : r.pattern}</td><td>${catName(r.category, r.subtype)}</td><td><input type="checkbox" class="chk" data-act="ruleToggle" data-id="${r.id}" ${r.enabled ? 'checked' : ''}></td><td><button class="btn small danger" data-act="ruleDel" data-id="${r.id}">Eliminar</button></td></tr>`)}</table>` : html`<p class="note">Se proponen al corregir una clasificación.</p>`}
     <div class="row2" style="margin-top:8px"><select class="sel" id="rType"><option value="token">Palabra</option><option value="folder">Carpeta</option><option value="nvcat">Código Novation</option></select><input class="field" id="rPat" placeholder="patrón" style="width:160px"><select class="sel" id="rCat">${CATEGORIES.map((c) => html`<option value="${c.id}">${c.label}</option>`)}</select><button class="btn small" data-act="ruleAdd">Añadir</button></div>
     ${topTok.length ? html`<p class="mlabel" style="margin-top:10px">Palabras frecuentes sin interpretar</p><div class="chips">${topTok.map(([t, n]) => html`<span class="badge prop">${t} · ${n}</span>`)}</div>` : ''}</div>`;
 }
 // ===== MACROS =====
 function viewMacros() {
-  const rows = lib.patches.map((p) => ({ p, a: lib.info(p).macros })).filter((x) => x.a.integrity.length || x.a.shared.length || x.a.knobs.some((k) => !k.activeCount));
+  const rows = lib.faces().map((p) => ({ p, a: lib.info(p).macros })).filter((x) => x.a.integrity.length || x.a.shared.length || x.a.knobs.some((k) => !k.activeCount));
   return html`<h2>Macros</h2>
   <div class="box"><h3>Observaciones en la colección <small>${rows.length} patches</small></h3><p class="note"><b>Integridad</b> = códigos fuera de rango. <b>Observaciones</b> = macros sin efecto o destinos compartidos: no son errores.</p>
     <table class="t"><tr><th>Patch</th><th>Activas</th><th>Inactivas</th><th>Compartidos</th><th>Integridad</th></tr>${rows.slice(0, 300).map(({ p, a }) => html`<tr><td><a href="#" data-act="pickMacros" data-id="${p.id}">${p.name}</a></td><td>${a.knobs.filter((k) => k.activeCount).map((k) => 'M' + (k.index + 1)).join(' ')}</td><td>${a.knobs.filter((k) => !k.activeCount).map((k) => 'M' + (k.index + 1)).join(' ')}</td><td>${a.shared.map((s) => s.label + ' (' + s.knobs.map((k) => 'M' + (k + 1)).join('/') + ')').join('; ')}</td><td>${a.integrity.length ? '⚠ ' + a.integrity.length : '—'}</td></tr>`)}</table></div>
   <div class="box"><h3>24 perfiles <small>distribuciones opcionales</small></h3><div class="grid2">${Object.entries(PROFILES).map(([, pr]) => html`<div class="box" style="background:var(--surf)"><h3>${pr.title}</h3><div class="fgroups">${pr.knobs.map((k, i) => html`<div class="fgroup"><span>M${i + 1}</span>${k.label}</div>`)}</div></div>`)}</div></div>
-  <div class="box"><h3>Variantes en bloque <small>${S.multi.size} seleccionados en Library</small></h3><div class="row2"><select class="sel" data-act="profile" style="max-width:none">${Object.entries(PROFILES).map(([id, pr]) => html`<option value="${id}" ${S.profile === id ? 'selected' : ''}>${pr.title}</option>`)}</select><button class="btn small" data-act="bulkProfile" data-m="reorder" ${S.multi.size ? '' : 'disabled'}>Reordenar</button><button class="btn small" data-act="bulkProfile" data-m="fill" ${S.multi.size ? '' : 'disabled'}>Rellenar vacías</button></div><p class="note">Solo se crea variante si cambia algo. Originales intactos.</p></div>`;
+  <div class="box"><h3>Macros en bloque <small>${S.multi.size} seleccionados en Library</small></h3><div class="row2"><select class="sel" data-act="profile" style="max-width:none">${Object.entries(PROFILES).map(([id, pr]) => html`<option value="${id}" ${S.profile === id ? 'selected' : ''}>${pr.title}</option>`)}</select><button class="btn small" data-act="bulkProfile" data-m="reorder" ${S.multi.size ? '' : 'disabled'}>Reordenar</button><button class="btn small" data-act="bulkProfile" data-m="fill" ${S.multi.size ? '' : 'disabled'}>Rellenar vacías</button></div><p class="note">Quedan como propuesta en cada sonido (solo si cambia algo): escúchalas y aplícalas en Cambios.</p></div>`;
 }
 // ===== PACKS =====
 function viewBanks() {
   const b = lib.banks.find((x) => x.id === S.bank) || lib.banks[0]; if (!b) return ''; S.bank = b.id;
   const iss = lib.bankIssues(b), dupSet = new Set(iss.dups.flat()), misSet = new Set(iss.blockMismatch), pick = S.bankPick.toLowerCase();
-  const avail = lib.patches.filter((p) => !pick || (p.name + ' ' + (p.meta.category || '') + ' ' + p.folderPath).toLowerCase().includes(pick)).slice(0, 300);
+  const avail = lib.faces().filter((p) => !pick || (p.name + ' ' + (p.meta.category || '') + ' ' + p.folderPath).toLowerCase().includes(pick)).slice(0, 300);
   const slots = Array.from({ length: 32 }, (_, i) => S.page * 32 + i);
   return html`<h2>Packs · 128 posiciones</h2>
   <div class="status"><div class="i">${raw(IC.inf)}<b>Mapa virtual</b><span>El Pack nativo (.circuittrackspack) lo crea Components: se exportan 128 .syx numerados + mapa CSV para montarlo allí.</span></div></div>
@@ -1633,9 +1650,9 @@ function viewDevice() {
       <p class="note">Reloj recibido: <b id="clockBpm">${ct ? ct + ' BPM' : 'no llega (activa Clock Tx en Setup View o pon el equipo en marcha)'}</b></p>
       <div class="row2" style="margin-top:6px"><button class="btn small ${S.capturing ? 'primary' : ''}" data-act="capture" ${s && d.inId ? '' : 'disabled'}>${S.capturing ? '■ Parar y guardar frase' : '● Capturar frase de los pads'}</button><span class="note">Toca en Note View del equipo (Note Tx activo). Se cuantiza a semicorcheas.</span></div>
       ${Object.keys(S.customPhrases).length ? html`<table class="t" style="margin-top:6px">${Object.entries(S.customPhrases).map(([k, ph]) => html`<tr><td>${ph.label}</td><td>${ph.notes.length} notas</td><td><button class="btn small" data-act="phraseTry" data-k="${k}" ${s ? '' : 'disabled'}>▶</button> <button class="btn small danger" data-act="phraseDel" data-k="${k}">✕</button></td></tr>`)}</table>` : ''}</div></div>
-  <div class="grid2"><div class="box"><h3>Macros del equipo</h3><p class="note">Con CC Tx activo, al girar las macros del Circuit Tracks llegan sus posiciones (CC 80–87). Puedes guardarlas en una variante del patch seleccionado sin grabarlas en el equipo.</p>
+  <div class="grid2"><div class="box"><h3>Macros del equipo</h3><p class="note">Con CC Tx activo, al girar las macros del Circuit Tracks llegan sus posiciones (CC 80–87). Puedes guardarlas en la versión del patch seleccionado sin grabarlas en el equipo.</p>
       <div class="sweeps" id="liveMacros">${(s?.macroPos[d.synth] || new Array(8).fill(null)).map((v, i) => html`<div class="btn" style="cursor:default">M${i + 1}<small>${v ?? '—'}</small></div>`)}</div>
-      <div class="row2" style="margin-top:8px"><button class="btn small" data-act="saveLiveMacros" ${s && S.sel ? '' : 'disabled'}>Guardar posiciones en una variante de «${S.sel ? lib.byId(S.sel)?.name : '—'}»</button></div></div>
+      <div class="row2" style="margin-top:8px"><button class="btn small" data-act="saveLiveMacros" ${s && S.sel ? '' : 'disabled'}>Guardar posiciones en «${S.sel ? lib.byId(S.sel)?.name : '—'}»</button></div></div>
     <div class="box"><h3>Medición acústica <small>opcional</small></h3><p class="note">Salida de audio del Circuit Tracks → interfaz → elige la entrada. Se graba una nota de prueba con el procesado del navegador desactivado.</p>
       <div class="row2"><button class="btn small" data-act="audioList">Elegir entrada</button>${S.audioInputs ? html`<select class="sel" data-act="devSet" data-k="audioId" style="max-width:none">${[html`<option value="">— ninguna —</option>`, ...S.audioInputs.map((a) => html`<option value="${a.deviceId}" ${d.audioId === a.deviceId ? 'selected' : ''}>${a.label || 'Entrada ' + a.deviceId.slice(0, 6)}</option>`)]}</select>` : d.audioId ? html`<span class="note">Entrada guardada</span>` : ''}</div>
       <div style="margin-top:8px"><div class="mlabel">Nivel</div><div class="meter"><i id="lvl"></i></div><div class="row2" style="margin-top:6px"><button class="btn small" data-act="audioTest" ${d.audioId ? '' : 'disabled'}>Probar nivel 3 s</button><label class="lab">Nota de medición<input class="field" type="number" min="24" max="84" value="${d.measureNote}" data-act="devSet" data-k="measureNote" style="width:80px"></label></div></div>
@@ -1779,10 +1796,13 @@ async function restoreFrom(bytes, name) {
 }
 
 // ---------- acciones ----------
-const cur = () => (S.view === 'audition' && S.queue[S.qi] ? lib.byId(S.queue[S.qi]) : S.sel && lib.byId(S.sel));
+// v3.10: un sonido = una ficha. Lo que se ve, suena y se edita es siempre la versión vigente del sonido.
+const faceOf = (p) => (p ? lib.currentVersion(lib.rootOf(p)) : null);
+const cur = () => faceOf(S.view === 'audition' && S.queue[S.qi] ? lib.byId(S.queue[S.qi]) : S.sel && lib.byId(S.sel));
+// Una operación sobre el sonido actual (macros, plantilla…): se suma a su versión; el original queda guardado.
 async function variantFrom(p, payload, op, note) {
-  if (p.payload.every((b, i) => b === payload[i])) { toast('La operación no cambia nada: no se crea variante'); return null; }
-  const v = await lib.createVariant(p.id, payload, op, note, ''); S.sel = v.id; S.rowsKey = ''; toast('Variante creada'); return v;
+  if (p.payload.every((b, i) => b === payload[i])) { toast('La operación no cambia nada'); return null; }
+  const v = await lib.editSound(p, payload, op, note); S.sel = v.id; S.rowsKey = ''; toast(`«${v.name}»: ${note}. El original sigue guardado (Versión → Volver al original).`, 4500); return v;
 }
 const listOf = (ids) => ids.map((id) => lib.byId(id)).filter(Boolean);
 const A = {
@@ -1807,7 +1827,7 @@ const A = {
   selAll: (el) => { if (el.checked) filteredPatches().forEach((p) => S.multi.add(p.id)); else S.multi.clear(); rerenderList(); },
   clearSel: () => { S.multi.clear(); rerenderList(); },
   fav: async (el, e) => { e.stopPropagation(); const p = lib.byId(el.dataset.id); await lib.updateMeta([p.id], { fav: !p.meta.fav }, p.meta.fav ? 'Quitado de favoritos' : 'Favorito'); rerender(); },
-  rate: async (el) => { const p = S.view === 'audition' ? lib.byId(S.queue[S.qi]) : cur(); const n = +el.dataset.n; await lib.updateMeta([p.id], { rating: p.meta.rating === n ? 0 : n }, 'Puntuación ' + n); rerender(); },
+  rate: async (el) => { const p = cur(); if (!p) return; const n = +el.dataset.n; await lib.updateMeta([p.id], { rating: p.meta.rating === n ? 0 : n }, 'Puntuación ' + n); rerender(); },
   sort: (el) => { const k = el.dataset.k; S.sort = { by: k, dir: S.sort.by === k ? -S.sort.dir : 1 }; rerender(); },
   toggleFav: () => { S.q.fav = !S.q.fav; rerender(); },
   toggleQ: (el) => { S.q[el.dataset.k] = !S.q[el.dataset.k]; rerender(); },
@@ -1822,13 +1842,15 @@ const A = {
   mResetPos: () => { const p = cur(); delete S.mtest?.[p.id]?.[S.knob]; if (S.dev.session) S.dev.session.cc(S.dev.synth, 80 + S.knob, p.payload[204 + S.knob * 17]); rerender(); },
   anatKnob: (el) => { const i = +el.dataset.i; if (S.knob === i && S.view === 'library') { S.ctab = 'macros'; } S.knob = i; rerender(); },
   editParams: () => { S.editParams = !S.editParams; rerender(); },
+  // Empezar a editar un original: se crea su versión (el original se guarda) y se abre el editor
+  editStart: async () => { const p = cur(); if (!p) return; await ensureVariant(p); S.editParams = true; S.tab = 'synth'; rerender(); },
   import: () => $('#fileIn').click(),
   importDir: () => $('#dirIn').click(),
-  duplicate: async () => { const p = cur(); if (!p) return; const v = await lib.createVariant(p.id, p.payload, 'copy', 'Copia editable', ''); S.sel = v.id; S.rowsKey = ''; S.tab = 'synth'; toast('Variante editable creada'); rerender(); },
+  duplicate: async () => { const p = cur(); if (!p) return; const c = await lib.duplicateSound(p); S.sel = c.id; S.rowsKey = ''; toast(`«${c.name}»: sonido nuevo, independiente de «${p.name}». Edítalo sin miedo.`, 4500); rerender(); },
   exportSyx: () => { const p = cur(); if (p) download(safeFile(p.name) + '.syx', lib.exportSyx(p)); },
   exportOriginal: () => { const p = cur(), b = lib.originalFileBytes(p); if (b) download(p.fileName || safeFile(p.name) + '.syx', b); },
   backup: async () => { lib.settings.templates = S.templates; lib.settings.phrases = S.customPhrases; await lib.markBackup(); setTimeout(rerender, 50); download(`CircuitTracks_Biblioteca_${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(lib.backupObject()), 'application/json'); toast('Copia descargada'); },
-  accept: async () => { await lib.acceptClassification([S.sel]); rerender(); },
+  accept: async () => { const p = cur(); if (!p) return; await lib.acceptClassification([p.id]); rerender(); },
   reject: async () => { await lib.rejectClassification([S.sel]); rerender(); },
   exception: async () => { const p = cur(), cat = p.meta.category || lib.info(p).cls.category; if (!cat) return toast('Fija primero una categoría'); await lib.addRule({ type: 'patch', pattern: p.fp.payload, category: cat, subtype: p.meta.subtype || null }); toast('Excepción registrada'); rerender(); },
   nvcatRule: async () => { const c = $('#nvcatCat').value; if (!c) return; await lib.addRule({ type: 'nvcat', pattern: String(cur().payload[16]), category: c }); toast('Regla guardada'); rerender(); },
@@ -1836,7 +1858,7 @@ const A = {
   bulkDelete: async () => { if (S.multi.size > 50 && !(await confirmBox('Eliminar', `¿Llevar ${S.multi.size} patches a la papelera? Se pueden recuperar desde Organizar → Papelera.`, 'Eliminar', true))) return; await trashIds([...S.multi]); },
   bulkZip: () => zipOf(listOf([...S.multi]), 'seleccion'),
   deleteOne: () => trashIds([cur().id]),
-  audDelete: () => { const p = lib.byId(S.queue[S.qi]); if (p) trashIds([p.id]); },
+  audDelete: () => { const p = cur(); if (p) trashIds([p.id]); },
   audTag: async (el) => { const p = lib.byId(S.queue[S.qi]); if (!p) return; const on = (p.meta.tags || []).includes(el.dataset.t); await lib.addTags([p.id], [el.dataset.t], on); rerender(); },
   undoLast: () => undoLast(),
   keysHelp: () => showKeys(),
@@ -1848,7 +1870,7 @@ const A = {
   abListen: (el) => { const p = el.dataset.w === 'a' ? cur() : lib.byId(S.cmpB); audPlay(p); },
   applyProfile: async (el) => {
     const p = cur(), m = el.dataset.m, title = PROFILES[S.profile].title;
-    if (m === 'rebuild' && !(await confirmBox('Reconstruir macros', 'La variante descartará todas las rutas de macro y aplicará una por macro según el perfil. El original no cambia.', 'Crear variante'))) return;
+    if (m === 'rebuild' && !(await confirmBox('Reconstruir macros', 'Se quitarán todas las rutas de macro y se pondrá una por macro según el perfil, en su versión. El original se guarda.', 'Reconstruir'))) return;
     const pl = m === 'reorder' ? reorderToProfile(p.payload, S.profile).payload : m === 'fill' ? fillEmptyFromProfile(p.payload, S.profile).payload : rebuildFromProfile(p.payload, S.profile);
     await variantFrom(p, pl, 'macro-' + m, `Macros ${{ reorder: 'reordenadas', fill: 'vacías rellenas', rebuild: 'reconstruidas' }[m]} · ${title}`); rerender();
   },
@@ -1885,7 +1907,7 @@ const A = {
   ruleAdd: async () => { const pat = $('#rPat').value.trim(); if (pat) { await lib.addRule({ type: $('#rType').value, pattern: pat, category: $('#rCat').value }); rerender(); } },
   csvAll: () => download('circuit_tracks_biblioteca.csv', lib.csvReport(), 'text/csv;charset=utf-8'),
   csvFiltered: () => download('circuit_tracks_filtro.csv', lib.csvReport(filteredPatches().map((p) => p.id)), 'text/csv;charset=utf-8'),
-  jsonReport: () => download('circuit_tracks_analisis.json', JSON.stringify(lib.patches.map((p) => { const i = lib.info(p); return { id: p.id, name: p.name, file: p.fileName, folder: p.folderPath, kind: p.kind, parentId: p.parentId, family: lib.families().of.get(p.id)?.id || null, userMeta: p.meta, proposal: { category: i.cls.category, subtype: i.cls.subtype, candidates: i.cls.candidates, certainty: i.cls.certainty, scores: i.cls.scores, evidence: i.cls.evidence, contradictions: i.cls.contradictions, descriptors: i.cls.descriptors, usage: i.cls.usage }, features: i.an.features, acoustic: p.acoustic || null, integrity: i.integrity, macros: i.macros.knobs.map((k) => ({ knob: k.index + 1, position: k.position, active: k.activeCount, routes: k.slots.map((s) => ({ dest: s.dest, label: s.info.label, start: s.start, end: s.end, depth: s.depthSigned, state: s.state })) })), fingerprints: p.fp }; }), null, 1), 'application/json'),
+  jsonReport: () => download('circuit_tracks_analisis.json', JSON.stringify(lib.faces().map((p) => { const i = lib.info(p); return { id: p.id, name: p.name, file: p.fileName, folder: p.folderPath, kind: p.kind, parentId: p.parentId, family: lib.families().of.get(p.id)?.id || null, userMeta: p.meta, proposal: { category: i.cls.category, subtype: i.cls.subtype, candidates: i.cls.candidates, certainty: i.cls.certainty, scores: i.cls.scores, evidence: i.cls.evidence, contradictions: i.cls.contradictions, descriptors: i.cls.descriptors, usage: i.cls.usage }, features: i.an.features, acoustic: p.acoustic || null, integrity: i.integrity, macros: i.macros.knobs.map((k) => ({ knob: k.index + 1, position: k.position, active: k.activeCount, routes: k.slots.map((s) => ({ dest: s.dest, label: s.info.label, start: s.start, end: s.end, depth: s.depthSigned, state: s.state })) })), fingerprints: p.fp }; }), null, 1), 'application/json'),
   zipFiltered: () => zipOf(filteredPatches(), 'filtro'),
   zipOriginals: () => { const seen = new Set(), files = []; for (const p of filteredPatches()) { const f = lib.fileOf(p); if (!f || seen.has(f.id)) continue; seen.add(f.id); files.push({ path: (f.path ? f.path + '/' : '') + f.name, bytes: f.bytes }); } download('originales.zip', writeZip(files), 'application/zip'); },
   toDisk: async (el) => {
@@ -1915,23 +1937,27 @@ const A = {
   wipe: async () => { if (!(await confirmBox('Vaciar biblioteca', 'Se borrará todo lo guardado en este navegador. Descarga antes una copia.', 'Vaciar', true))) return; await lib.restore({ format: 'ctpl-backup', files: [], patches: [] }, 'replace'); S.sel = null; S.bank = lib.banks[0]?.id; buildQueue(); rerender(); },
   // --- escucha ---
   midiConnect: () => connectMidi(false),
-  listenSel: () => { const p = S.view === 'audition' ? lib.byId(S.queue[S.qi]) : cur(); if (!S.dev.session) { toast('Conecta el equipo en «Equipo»'); return; } audPlay(p); },
+  listenSel: () => { const p = cur(); if (!S.dev.session) { toast('Conecta el equipo en «Equipo»'); return; } audPlay(p); },
   audPlay: () => audPlay(),
   audStop: () => { S.dev.session?.stopAll(); S.playing = false; $('[data-act="audPlay"]')?.classList.remove('on'); },
   sweep: (el) => { const p = S.view === 'audition' ? lib.byId(S.queue[S.qi]) : cur(), s = S.dev.session; if (!s || !p) return; s.stopAll(); const k = +el.dataset.k; const t = s.sendPatch(p.payload, S.dev.synth); s.macroSweep(S.dev.synth, k, { note: (lib.info(p).cls.category === 'bass' ? 36 : 48) + S.dev.root, restore: p.payload[204 + 17 * k], start: t + (S.dev.patchDelay ?? 80) }); toast(`Barrido M${k + 1}`, 1500); },
   qsrc: () => {}, phrase: () => {},
   qgo: (el) => { S.qi = +el.dataset.i; rerender(); if (S.autoPlay) audPlay(); },
   qstep: (el) => { S.qi = Math.max(0, Math.min(S.queue.length - 1, S.qi + +el.dataset.d)); rerender(); if (S.autoPlay) audPlay(); },
-  audCat: (el) => audDecide((p) => lib.setCategory([p.id], el.dataset.c).then(() => lib.updateMeta([p.id], { review: 'listened' }, 'Escuchado'))),
-  audAccept: () => audDecide(async (p) => { await lib.acceptClassification([p.id]); await lib.updateMeta([p.id], { review: 'listened' }, 'Escuchado'); }),
+  // Tecla de categoría: decide y pasa al siguiente. Conserva la subcarpeta si ya era de esa categoría (tuya o propuesta).
+  audCat: (el) => audDecide((p) => { const c = el.dataset.c, cls = lib.info(p).cls, sub = p.meta.category === c ? p.meta.subtype : cls.category === c ? cls.subtype : null; return lib.setCategory([p.id], c, sub || null).then(() => lib.updateMeta([p.id], { review: 'listened' }, 'Escuchado')); }),
+  // Intro: si ya tiene tu carpeta, la confirma; si no, acepta la propuesta. Y al siguiente.
+  audAccept: () => audDecide(async (p) => { if (!p.meta.category) await lib.acceptClassification([p.id]); await lib.updateMeta([p.id], { review: 'listened' }, 'Escuchado'); }),
+  // Carpeta del patch que suena, sin pasar al siguiente (para corregir la propuesta con calma)
+  audSub: async (el) => { const p = cur(); if (!p) return; const c = el.dataset.c, sb = el.dataset.s || null; const on = p.meta.category === c && p.meta.subtype === sb && sb; await lib.setSubfolder([p.id], c, on ? null : sb); rerender(); },
   audReview: (el) => audDecide((p) => lib.updateMeta([p.id], { review: el.dataset.r }, REVIEW[el.dataset.r])),
-  audFav: async () => { const p = lib.byId(S.queue[S.qi]); await lib.updateMeta([p.id], { fav: !p.meta.fav }, 'Favorito'); rerender(); },
+  audFav: async () => { const p = cur(); if (!p) return; await lib.updateMeta([p.id], { fav: !p.meta.fav }, 'Favorito'); rerender(); },
   measureSel: () => { const p = S.view === 'audition' ? lib.byId(S.queue[S.qi]) : cur(); if (p) measure(p); },
   clearMeasure: async () => { await lib.clearAcoustic(S.sel); rerender(); },
   queueSel: () => { S.qsrc = 'selection'; buildQueue('selection'); S.qi = 0; S.view = 'audition'; rerender(); },
   queueOne: () => { S.multi = new Set([S.sel]); A.queueSel(); },
   queueAffinity: () => { S.multi = new Set(lib.affinityRanking(30).map((r) => r.id)); A.queueSel(); },
-  mapNear: () => { const p = cur(); S.multi = new Set([p.id, ...nearest(p.payload, lib.patches.filter((x) => x.id !== p.id).map((x) => ({ id: x.id, payload: x.payload })), 12).map((n) => n.id)]); A.queueSel(); },
+  mapNear: () => { const p = cur(); S.multi = new Set([p.id, ...nearest(p.payload, lib.faces().filter((x) => x.id !== p.id).map((x) => ({ id: x.id, payload: x.payload })), 12).map((n) => n.id)]); A.queueSel(); },
   mapColor: (el) => { S.mapColor = el.dataset.k; rerender(); },
   mapToggle: (el) => { const c = el.dataset.c; S.mapHidden.has(c) ? S.mapHidden.delete(c) : S.mapHidden.add(c); rerender(); },
   // --- rediseño ---
@@ -1957,16 +1983,16 @@ const A = {
   nnUse: async (el) => { const p = cur(); if (!p) return; await lib.setCategory([p.id], el.dataset.c, el.dataset.s || null); rerender(); },
   fCat: (el) => { S.fCat = el.dataset.c; rerender(); },
   fMove: async (el) => { await lib.moveSubfolder(el.dataset.c, el.dataset.s, +el.dataset.d); rerender(); },
-  fDel: async (el) => { const c = el.dataset.c, sb = el.dataset.s, n = lib.patches.filter((p) => p.meta.category === c && p.meta.subtype === sb).length; if (n && !(await confirmBox('Quitar subcarpeta', `${n} patch(es) tienen «${lib.subLabel(c, sb)}». Se quedan en ${CAT_LABEL[c]} sin subcarpeta (se puede deshacer en el historial).`))) return; await lib.removeSubfolder(c, sb); rerender(); },
+  fDel: async (el) => { const c = el.dataset.c, sb = el.dataset.s, n = lib.faces().filter((p) => p.meta.category === c && p.meta.subtype === sb).length; if (n && !(await confirmBox('Quitar subcarpeta', `${n} patch(es) tienen «${lib.subLabel(c, sb)}». Se quedan en ${CAT_LABEL[c]} sin subcarpeta (se puede deshacer en el historial).`))) return; await lib.removeSubfolder(c, sb); rerender(); },
   fReset: async (el) => { await lib.resetTax(el.dataset.c); rerender(); },
   fAccept: async (el) => { const ids = folderStats()[el.dataset.c]?.pending || []; await acceptSubs(ids); },
   fAcceptAll: async () => { const ids = Object.values(folderStats()).flatMap((x) => x.pending); await acceptSubs(ids); },
   orgOpen: (el, e) => { if (e.target.closest('button')) return; const k = el.dataset.k; S.openGroups.has(k) ? S.openGroups.delete(k) : S.openGroups.add(k); rerender(); },
-  orgQueue: (el) => { const g = architectureGroups(lib.patches, S.archLevel).find((x) => x.key === el.dataset.k); if (!g) return; S.multi = new Set(g.ids); S.qsrc = 'selection'; buildQueue('selection'); S.qi = 0; S.view = 'audition'; rerender(); },
+  orgQueue: (el) => { const g = architectureGroups(lib.faces(), S.archLevel).find((x) => x.key === el.dataset.k); if (!g) return; S.multi = new Set(g.ids); S.qsrc = 'selection'; buildQueue('selection'); S.qi = 0; S.view = 'audition'; rerender(); },
   pickListen: (el) => { audPlay(lib.byId(el.dataset.id)); },
   regListen: (el) => audPlay(lib.byId(el.dataset.id)),
-  regTry: (el) => { const p = lib.byId(el.dataset.id), x = regReport().items.find((i) => i.id === p.id); if (!x) return; const t = regFixPayload(p, x); audPlay({ ...p, payload: t.payload, name: p.name + ' (corregido)' }); },
-  regFix: async (el) => { const p = lib.byId(el.dataset.id), x = regReport().items.find((i) => i.id === p.id); if (!x) return; const t = regFixPayload(p, x); if (t.problems.length) toast(t.problems[0], 5000); const v = await lib.createVariant(p.id, t.payload, 'register', `Altura ${fmtSemis(regShift(x))} st (a ${describePitch(regReport().goal)})`, ''); if ((S.regAdopt || 'smart') === 'all' || ((S.regAdopt || 'smart') === 'smart' && x.confidence === 'clara' && !t.problems.length)) { await lib.adoptVariants([v.id], true); toast(`Variante aceptada: «${p.name}» se exportará ya corregido`, 5000); } else toast('Variante creada en borrador: acéptala en Cambios o en su ficha', 5000); rerender(); },
+  regTry: (el) => { const p = lib.byId(el.dataset.id), x = regReport().items.find((i) => i.id === p.id); if (!x) return; const t = regFixPayload(p, x); audPlay(p, t.payload); },
+  regFix: async (el) => { const p = lib.byId(el.dataset.id), x = regReport().items.find((i) => i.id === p.id); if (!x) return; const t = regFixPayload(p, x); if (t.problems.length) toast(t.problems[0], 5000); const v = await lib.createVariant(p.id, t.payload, 'register', `Altura ${fmtSemis(regShift(x))} st (a ${describePitch(regReport().goal)})`, ''); if ((S.regAdopt || 'smart') === 'all' || ((S.regAdopt || 'smart') === 'smart' && x.confidence === 'clara' && !t.problems.length)) { await lib.adoptVariants([v.id], true); toast(`Corregido: «${p.name}» suena y se exporta así`, 5000); } else toast('Queda como propuesta: aplícala en su ficha o en Cambios', 5000); rerender(); },
   regView: (el) => { S.regView = el.dataset.v; S.revI = 0; rerender(); if (S.regView === 'review') revAutoPlay(); },
   regOpen: (el) => { S.regCat = el.dataset.g; S.regView = 'detail'; rerender(); },
   regBySub: (el) => { S.regBySub = el.dataset.v === '1'; rerender(); },
@@ -1974,20 +2000,20 @@ const A = {
   regFixPlan: async () => {
     const ks = regGroups().map((g) => g.k).filter((k) => regPlanOf(k).target !== 'skip');
     const n = ks.reduce((a, k) => a + regFixList(k).length, 0); if (!n) return;
-    if (!(await confirmBox('Corregir todo el plan', `Se crearán ${n} variantes en ${ks.filter((k) => regFixList(k).length).length} grupos, cada una llevada al objetivo de su grupo. ${{ smart: 'Las claras quedan aceptadas; las dudosas, en borrador para la revisión rápida.', all: 'Quedarán todas aceptadas.', none: 'Quedarán todas en borrador.' }[S.regAdopt || 'smart']} Los originales no cambian.`, 'Corregir'))) return;
+    if (!(await confirmBox('Corregir todo el plan', `Se corregirán ${n} patches en ${ks.filter((k) => regFixList(k).length).length} grupos, cada uno al objetivo de su grupo. ${{ smart: 'Las claras se suman a la versión de cada sonido; las dudosas quedan como propuesta para la revisión rápida.', all: 'Todas se suman a la versión de cada sonido.', none: 'Todas quedan como propuesta.' }[S.regAdopt || 'smart']} Los originales se guardan.`, 'Corregir'))) return;
     const r = await regFixGroups(ks, true); if (r) await afterChanges(r.created, r.adopted, `Has corregido ${r.created} patches en ${r.groups} grupos.${r.created > r.adopted ? ` ${r.created - r.adopted} dudosas esperan en la revisión rápida.` : ''}`);
   },
   regKeep: async (el) => { await lib.updateMeta([el.dataset.id], { regKeep: true }, 'Octava: está bien como está'); rerender(); },
-  regUnkeep: async (el) => { const ids = lib.patches.filter((p) => p.meta.regKeep && regKeyOf(p) === el.dataset.g).map((p) => p.id); if (ids.length) await lib.updateMeta(ids, { regKeep: false }, 'Octava: volver a analizar'); rerender(); },
+  regUnkeep: async (el) => { const ids = lib.faces().filter((p) => p.meta.regKeep && regKeyOf(p) === el.dataset.g).map((p) => p.id); if (ids.length) await lib.updateMeta(ids, { regKeep: false }, 'Octava: volver a analizar'); rerender(); },
   regTuneChk: (el) => { S.regTune = el.checked; rerender(); },
-  revPlay: (el) => { const q = regQueue(), v = q[Math.min(S.revI || 0, q.length - 1)]; if (!v) return; audPlay(el.dataset.w === 'o' ? lib.byId(v.parentId) : v); },
+  revPlay: (el) => { const q = regQueue(), v = q[Math.min(S.revI || 0, q.length - 1)]; if (!v) return; if (el.dataset.w === 'o') audPlay(faceOf(v)); else playTest(faceOf(v), proposalApplied(v)); },
   revOk: async () => { const v = regQueue()[Math.min(S.revI || 0, regQueue().length - 1)]; if (!v) return; await lib.adoptVariants([v.id], true); rerender(); revAutoPlay(); },
-  revDrop: async () => { const v = regQueue()[Math.min(S.revI || 0, regQueue().length - 1)]; if (!v) return; if (S.sel === v.id) S.sel = v.parentId; await lib.deletePatches([v.id]); S.rowsKey = ''; rerender(); revAutoPlay(); },
-  revKeep: async () => { const v = regQueue()[Math.min(S.revI || 0, regQueue().length - 1)]; if (!v) return; await lib.updateMeta([v.parentId], { regKeep: true }, 'Octava: está bien como está'); if (S.sel === v.id) S.sel = v.parentId; await lib.deletePatches([v.id]); S.rowsKey = ''; rerender(); revAutoPlay(); },
+  revDrop: async () => { const v = regQueue()[Math.min(S.revI || 0, regQueue().length - 1)]; if (!v) return; await lib.deletePatches([v.id]); S.rowsKey = ''; rerender(); revAutoPlay(); },
+  revKeep: async () => { const v = regQueue()[Math.min(S.revI || 0, regQueue().length - 1)]; if (!v) return; await lib.updateMeta([lib.rootOf(v).id], { regKeep: true }, 'Octava: está bien como está'); await lib.deletePatches([v.id], true); S.rowsKey = ''; rerender(); revAutoPlay(); },
   revStep: (d) => { const n = regQueue().length; S.revI = Math.max(0, Math.min(n - 1, (S.revI || 0) + d)); rerender(); revAutoPlay(); },
   regFixAll: async () => {
-    const rep = regReport(), drafts = new Set(lib.patches.filter((v) => v.kind === 'variant' && v.origin === 'register' && lib.changeState(v) === 'draft').map((v) => v.parentId)), list = rep.off.filter((x) => regShift(x) !== 0 && !drafts.has(x.id));
-    if (!(await confirmBox('Corregir octava y tono', `Se crearán ${list.length} variantes llevadas a ${describePitch(rep.goal)} (${regModeOf(S.regCat) === 'octave' ? 'solo octavas' : 'octava y tono'}; ${regMethod() === 'osc' ? 'semitonos de los osciladores' : 'octava de teclado + osciladores'}). Los originales no cambian. ${{ smart: 'Las de confianza clara quedarán aceptadas; las dudosas, en borrador.', all: 'Quedarán aceptadas: sustituirán al original al exportar.', none: 'Quedarán en borrador hasta que las aceptes en Cambios.' }[S.regAdopt || 'smart']}`, 'Crear variantes'))) return;
+    const rep = regReport(), drafts = regDraftParents(), list = rep.off.filter((x) => regShift(x) !== 0 && !drafts.has(x.id));
+    if (!(await confirmBox('Corregir octava y tono', `Se llevarán ${list.length} patches a ${describePitch(rep.goal)} (${regModeOf(S.regCat) === 'octave' ? 'solo octavas' : 'octava y tono'}; ${regMethod() === 'osc' ? 'semitonos de los osciladores' : 'octava de teclado + osciladores'}). Los originales se guardan. ${{ smart: 'Los de confianza clara se suman a la versión de cada sonido; los dudosos quedan como propuesta.', all: 'Todos se suman a la versión de cada sonido: se exportarán así.', none: 'Todos quedan como propuesta hasta que los apliques en Cambios.' }[S.regAdopt || 'smart']}`, 'Corregir'))) return;
     const mode = S.regAdopt || 'smart', adopt = []; let probs = 0;
     for (const x of list) { const p = lib.byId(x.id), t = regFixPayload(p, x); probs += t.problems.length ? 1 : 0; const v = await lib.createVariant(p.id, t.payload, 'register', `Altura ${fmtSemis(regShift(x))} st (a ${describePitch(rep.goal)})`, ''); if (mode === 'all' || (mode === 'smart' && x.confidence === 'clara' && !t.problems.length)) adopt.push(v.id); }
     if (adopt.length) await lib.adoptVariants(adopt, true);
@@ -2015,16 +2041,16 @@ const A = {
   patMidi: (el) => { const pt = el.dataset.id ? findPattern(el.dataset.id) : S.pat; if (!pt) return; const drum = pt.kind === 'drum', ch = drum ? destChannel('drums') : destChannel(S.patDest || 'synth1'), gm = el.dataset.gm === '1'; download(midiName(gm ? { ...pt, name: pt.name + ' (GM)' } : pt, el.dataset.id || drum ? null : cur()), patternToMidi(pt, { channel: ch, drumNotes: drum ? (gm ? GM_DRUM_NOTES : DRUM_NOTES) : undefined }), 'audio/midi'); },
   patJson: () => download(midiName(S.pat, null).replace(/\.mid$/, '.json'), JSON.stringify({ format: 'ctpl-pattern', ...S.pat }, null, 1), 'application/json'),
   patLoad: (el) => { const x = findPattern(el.dataset.id); if (!x) return; S.patMode = x.kind === 'drum' ? 'drum' : 'synth'; S.patPrev = S.pat; S.pat = { ...x }; S.patOpts = { ...(x.kind === 'drum' ? DRUM_DEFAULTS : DEFAULTS), ...(x.opts || {}) }; S.patId = x.id; patSaveDraft(); rerender(); },
-  patDel: async (el) => { const x = findPattern(el.dataset.id), n = lib.patches.filter((p) => p.meta.patternId === x.id); if (!(await confirmBox('Borrar patrón', `Se borra «${x.name}» de tu biblioteca${n.length ? ` y se desadjunta de ${n.length} patch(es)` : ''}.`))) return; if (n.length) await lib.updateMeta(n.map((p) => p.id), { patternId: null }, 'Patrón desadjuntado'); await lib.setSetting('patterns', (lib.settings.patterns || []).filter((y) => y.id !== x.id)); if (S.patId === x.id) S.patId = null; rerender(); },
+  patDel: async (el) => { const x = findPattern(el.dataset.id), n = lib.faces().filter((p) => p.meta.patternId === x.id); if (!(await confirmBox('Borrar patrón', `Se borra «${x.name}» de tu biblioteca${n.length ? ` y se desadjunta de ${n.length} patch(es)` : ''}.`))) return; if (n.length) await lib.updateMeta(n.map((p) => p.id), { patternId: null }, 'Patrón desadjuntado'); await lib.setSetting('patterns', (lib.settings.patterns || []).filter((y) => y.id !== x.id)); if (S.patId === x.id) S.patId = null; rerender(); },
   patOpenFor: (el) => { const p = lib.byId(el.dataset.id); S.sel = p.id; S.patMode = 'synth'; const x = patternOf(p); if (x) { S.pat = { ...x }; S.patOpts = { ...DEFAULTS, ...(x.opts || {}) }; S.patId = x.id; } else { const inf = lib.info(p); S.patOpts = { ...DEFAULTS, style: STYLE_FOR_CAT[p.meta.category || inf.cls.category] || 'offbeat', seed: 1 + Math.floor(Math.random() * 9999) }; S.pat = generatePattern(S.patOpts); S.patId = null; } S.view = 'patterns'; rerender(); },
-  chgAdopt: async (el) => {
-    const v = lib.byId(el.dataset.id), prev = el.dataset.on === '1' && lib.patches.find((o) => o.kind === 'variant' && o.parentId === v.parentId && o.id !== v.id && o.meta.adopted);
-    if (prev && !(await confirmBox('Sustituir la versión aceptada', `«${lib.byId(v.parentId)?.name}» ya tiene una versión aceptada (${prev.originText || 'variante'}). Solo puede haber una por original: la anterior volverá a borrador. Si quieres sumar los dos cambios, edita la versión aceptada en lugar del original.`, 'Aceptar esta'))) return;
-    await lib.adoptVariants([el.dataset.id], el.dataset.on === '1'); toast(el.dataset.on === '1' ? 'Aceptada: sustituirá al original al exportar' : 'Vuelve a borrador: se exportará el original'); rerender(); },
-  chgDrop: async (el) => { const v = lib.byId(el.dataset.id); if (!(await confirmBox('Descartar variante', `Se borra la variante «${v.name}» de la biblioteca. El original no cambia. No se puede deshacer.`))) return; if (S.sel === v.id) S.sel = v.parentId; await lib.deletePatches([v.id]); S.rowsKey = ''; rerender(); },
-  chgAdoptAll: async () => { const ids = viewChangesList().filter((v) => lib.changeState(v) === 'draft').map((v) => v.id); if (!(await confirmBox('Aceptar variantes', `${ids.length} variantes pasarán a sustituir a sus originales al exportar. Puedes volverlas a borrador cuando quieras.`))) return; await lib.adoptVariants(ids, true); rerender(); },
-  chgDropAll: async () => { const ids = viewChangesList().filter((v) => lib.changeState(v) === 'draft').map((v) => v.id); if (!(await confirmBox('Descartar borradores', `Se borran ${ids.length} variantes en borrador. Los originales no cambian.`))) return; await lib.deletePatches(ids); S.rowsKey = ''; rerender(); },
-  chgShow: (el) => { S.chgShow = el.dataset.v; rerender(); },
+  chgAdopt: async (el) => { const v = lib.byId(el.dataset.id); if (!v) return; await lib.adoptVariants([v.id], el.dataset.on === '1'); S.rowsKey = ''; toast(el.dataset.on === '1' ? `Aplicada a «${faceOf(lib.byId(lib.rootOf(v).id))?.name || ''}»: suena y se exporta así` : 'Vuelve a propuesta: suena el original'); rerender(); },
+  chgDrop: async (el) => { const v = lib.byId(el.dataset.id); if (!v) return; await lib.deletePatches([v.id]); S.rowsKey = ''; toastAct('Propuesta descartada', 'Deshacer · Ctrl Z', undoLast); rerender(); },
+  chgRevert: async (el) => { const p = lib.byId(el.dataset.id); if (!p) return; const r = await lib.revertToOriginal(p); S.sel = r.id; S.rowsKey = ''; toastAct(`«${r.name}» vuelve a sonar como el original`, 'Deshacer · Ctrl Z', undoLast); rerender(); },
+  chgAdoptAll: async () => { const ids = viewChangesList().map((v) => v.id); if (!(await confirmBox('Aplicar propuestas', `${ids.length} propuestas se suman a la versión de su sonido: sonarán y se exportarán así. Puedes volver al original de cada uno cuando quieras.`, 'Aplicar'))) return; await lib.adoptVariants(ids, true); S.rowsKey = ''; rerender(); },
+  chgDropAll: async () => { const ids = viewChangesList().map((v) => v.id); if (!(await confirmBox('Descartar propuestas', `Se descartan ${ids.length} propuestas (a la papelera). Los sonidos no cambian.`))) return; await lib.deletePatches(ids); S.rowsKey = ''; rerender(); },
+  chgShow: (el) => { S.chgShow = el.dataset.v; S.chgOrigin = ''; rerender(); },
+  tidyOpen: () => { S.view = 'changes'; rerender(); },
+  tidyRun: async (el) => { const plan = lib.versionsPlan(), drop = el.dataset.drop === '1'; if (!plan.sounds.length) return; if (!(await confirmBox('Ordenar versiones', `${plan.sounds.length} sonido(s) quedarán con una sola versión (la que suena ahora). ${plan.drop.length + (drop ? plan.keep.length : 0)} variante(s) sobrante(s) irán fuera${drop ? ', también las propuestas' : ''}. Se puede deshacer entero (Ctrl Z o Historial).`, 'Ordenar'))) return; const r = await lib.tidyVersions(plan, { dropProposals: drop }); S.rowsKey = ''; rerender(); toastAct(`Versiones ordenadas: ${r.sounds} sonido(s), ${r.dropped} variante(s) fuera`, 'Deshacer · Ctrl Z', undoLast); },
   chgAB: (el) => { abPlay(lib.byId(el.dataset.id)); },
   goDisk: () => { S.view = 'organize'; S.orgTab = 'disk'; rerender(); },
   regKbd: async (el) => { await lib.setSetting('kbdMidi', el.value === 'unknown' ? null : el.value); if (el.value === 'no') S.regMethod = 'osc'; rerender(); },
@@ -2073,7 +2099,7 @@ const A = {
   tplApply: async () => {
     const p = cur(), t = [...S.templates, ...profileTemplates()].find((x) => x.id === S.tplSel); if (!t) return;
     const r = applyTemplate(p.payload, t, S.tplMode === 'selected' ? { knobs: [S.knob] } : { mode: S.tplMode });
-    if (p.kind === 'variant') { await lib.editVariantBytes(p.id, [...r.payload].map((v, i) => [i, v]).filter(([i]) => i >= 204)); toast('Plantilla aplicada a la variante'); }
+    if (p.kind === 'variant') { await lib.editVariantBytes(p.id, [...r.payload].map((v, i) => [i, v]).filter(([i]) => i >= 204)); toast('Plantilla aplicada a su versión'); }
     else await variantFrom(p, r.payload, 'template', 'Plantilla «' + t.name + '»');
     if (r.warnings.length) await modal('Avisos de la plantilla', html`<ul class="note">${r.warnings.map((w) => html`<li>${w}</li>`)}</ul>`);
     if (S.live) liveSend(); rerender();
@@ -2101,7 +2127,7 @@ const A = {
   wordsMore: () => { S.wordsAll = !S.wordsAll; rerender(); },
   wordToTag: async () => { const ids = filteredPatches().map((p) => p.id), t = (S.q.words || []).map((w) => w[0].toUpperCase() + w.slice(1)); if (!ids.length || !t.length) return; if (!(await confirmBox('Etiquetar por palabra', `Se añade «${t.join('», «')}» a los ${ids.length} patches que lo llevan en el nombre.`, 'Etiquetar'))) return; const h = await lib.addTags(ids, t); toast(h.text); rerender(); },
   wordsToFolder: async () => { S.multi = new Set(filteredPatches().map((p) => p.id)); rerender(); toast(`${S.multi.size} seleccionados: elige «Carpeta…» abajo`); },
-  fxAutoTag: async () => { const todo = lib.patches.map((p) => [p, lib.fxOf(p).map((x) => x.t).filter((t) => !(p.meta.tags || []).includes(t))]).filter(([, t]) => t.length); if (!todo.length) return toast('No hay efectos nuevos que etiquetar'); if (!(await confirmBox('Etiquetar efectos detectados', `Se añaden etiquetas de efecto a ${todo.length} patch(es): delay y reverb cuando el nombre lo dice; chorus, phaser, distorsión y EQ cuando el patch los usa.`, 'Etiquetar'))) return; for (const [p, t] of todo) await lib.addTags([p.id], t); toast(`${todo.length} patch(es) etiquetados`); rerender(); },
+  fxAutoTag: async () => { const todo = lib.faces().map((p) => [p, lib.fxOf(p).map((x) => x.t).filter((t) => !(p.meta.tags || []).includes(t))]).filter(([, t]) => t.length); if (!todo.length) return toast('No hay efectos nuevos que etiquetar'); if (!(await confirmBox('Etiquetar efectos detectados', `Se añaden etiquetas de efecto a ${todo.length} patch(es): delay y reverb cuando el nombre lo dice; chorus, phaser, distorsión y EQ cuando el patch los usa.`, 'Etiquetar'))) return; for (const [p, t] of todo) await lib.addTags([p.id], t); toast(`${todo.length} patch(es) etiquetados`); rerender(); },
   palAdd: async () => { const pal = structuredClone(lib.tagPalette); pal.push({ name: 'Nuevo grupo', tags: [] }); await lib.setSetting('tagPalette', pal); rerender(); },
   palDel: async (el) => { const pal = structuredClone(lib.tagPalette); pal.splice(+el.dataset.i, 1); await lib.setSetting('tagPalette', pal); rerender(); },
   palReset: async () => { await lib.setSetting('tagPalette', null); rerender(); },
@@ -2116,7 +2142,8 @@ const A = {
     if (!r || !r[1].trim()) return;
     const h = await lib.addTags(ids, r[1].split(','), r[0] === 'del'); if (h) toast(h.text); rerender();
   },
-  autoNext: () => { const p = cur(); if (!p) return; S.autoSeed[p.id] = (S.autoSeed[p.id] || 0) + 1; rerender(); if (S.dev.session && S.autoListen !== false) audPlay(p); },
+  autoNext: () => { const p = cur(); if (!p) return; const r = lib.rootOf(p); S.autoSeed[r.id] = (S.autoSeed[r.id] || 0) + 1; rerender(); if (S.dev.session && S.autoListen !== false) audPlay(p); },
+  phOct: (el) => shiftPhrase(cur(), +el.dataset.d),
   autoAttach: async () => { const p = cur(); if (!p || patternOf(p)) return; const r = await autoAttach(p); toast(`Patrón adjuntado a «${p.name}». Lo tienes en Patrones para editarlo.`); rerender(); return r; },
   autoDetach: async () => { const p = cur(); if (!p?.meta.patternId) return; await lib.updateMeta([p.id], { patternId: null }, `Patrón quitado de ${p.name}`); rerender(); },
   autoOpen: () => { const p = cur(); if (!p) return; const pt = autoPat(p); S.patMode = 'synth'; S.pat = { ...pt }; S.patOpts = { ...DEFAULTS, style: pt.style, root: pt.root, scale: pt.scale, steps: pt.steps, tempo: pt.tempo, seed: autoSeedOf(p) }; S.patId = null; S.view = 'patterns'; rerender(); },
@@ -2124,10 +2151,10 @@ const A = {
   addTag: async (el) => { const p = cur(), t = el.dataset.t, tags = p.meta.tags || []; await lib.updateMeta([p.id], { tags: tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t] }, 'Etiquetas'); rerender(); },
   normalizeModal: async () => {
     const ids = S.multi.size ? [...S.multi] : [S.sel];
-    const r = await modal('Normalizar macros', html`<p class="note">${ids.length} patch(es). Se crean <b>variantes</b>; los originales no cambian. Solo se crea variante si la operación cambia algo.</p>
+    const r = await modal('Normalizar macros', html`<p class="note">${ids.length} patch(es). Quedan como <b>propuesta</b> en cada sonido (solo si la operación cambia algo): escúchalas y aplícalas en Cambios.</p>
       <div class="grid2"><label class="lab">Perfil<select class="field" id="nmP">${Object.entries(PROFILES).map(([id, pr]) => html`<option value="${id}" ${S.profile === id ? 'selected' : ''}>${pr.title}</option>`)}</select></label>
       <label class="lab">Operación<select class="field" id="nmM"><option value="reorder">Reordenar macros completas (sin perder rutas)</option><option value="fill">Rellenar solo macros vacías</option></select></label></div>`,
-      [{ label: 'Cancelar', value: null }, { label: 'Crear variantes', primary: true, value: (m) => ({ p: $('#nmP', m).value, m: $('#nmM', m).value }) }]);
+      [{ label: 'Cancelar', value: null }, { label: 'Proponer', primary: true, value: (m) => ({ p: $('#nmP', m).value, m: $('#nmM', m).value }) }]);
     if (!r) return; S.profile = r.p; let n = 0;
     for (const p of listOf(ids)) { const pl = r.m === 'reorder' ? reorderToProfile(p.payload, r.p).payload : fillEmptyFromProfile(p.payload, r.p).payload; if (p.payload.some((b, i) => b !== pl[i])) { await lib.createVariant(p.id, pl, 'macro-' + r.m, `Macros ${r.m === 'reorder' ? 'reordenadas' : 'rellenas'} · ${PROFILES[r.p].title}`, ''); n++; } }
     rerender(); if (n) await afterChanges(n, false, `Macros normalizadas con el perfil «${PROFILES[r.p].title}» (${ids.length - n} patches ya estaban bien).`); else toast('Ningún patch necesitaba cambios');
@@ -2154,7 +2181,7 @@ const A = {
       <label class="note"><input type="checkbox" class="chk" id="bpF"> Rellenar huecos con lo que sobre de otras categorías</label><label class="lab" style="margin-top:6px">Nombre<input class="field" id="bpN" value="Pack auto ${new Date().toISOString().slice(0, 10)}"></label>`,
       [{ label: 'Cancelar', value: null }, { label: 'Construir', primary: true, value: (m) => ({ s: $('#bpS', m).value, c: $('#bpC', m).value, f: $('#bpF', m).checked, n: $('#bpN', m).value }) }]);
     if (!r) return;
-    const cand = r.s === 'all' ? lib.patches : r.s === 'selection' ? listOf([...S.multi]) : filteredPatches();
+    const cand = r.s === 'all' ? lib.faces() : r.s === 'selection' ? listOf([...S.multi]) : filteredPatches();
     const res = buildPack(cand, lib, { allowProposals: r.c !== 'none', minCertainty: r.c === 'none' ? 'manual' : r.c, fillGaps: r.f });
     const b = await lib.createBank(r.n || 'Pack auto'); b.slots = res.slots; b.blocks = res.blocks; await lib.saveBank(b); S.bank = b.id; S.page = 0; S.view = 'banks'; rerender();
     await modal('Pack construido', html`<p>${res.placed} de 128 posiciones ocupadas.</p><table class="t">${res.pages.map((pg, i) => html`<tr><td>Página ${i + 1} · ${pg.label}</td><td>${pg.placed}/32</td><td>${pg.available > 32 ? pg.available - 32 + ' no caben' : ''}</td><td>${pg.fromProposals ? pg.fromProposals + ' por propuesta' : ''}</td></tr>`)}</table>
@@ -2193,12 +2220,12 @@ const A = {
 // Patrón adjunto al patch de una entrada del plan → .mid con el mismo nombre que su .syx
 function planMid(e) { const p = lib.byId(e.id), pt = p && patternOf(p); return pt ? { file: e.file.replace(/\.syx$/i, '.mid'), bytes: patternToMidi(pt, { channel: S.dev.channels?.[S.dev.synth] ?? 0, name: p.name }) } : null; }
 function currentPlan() { const o = S.plan; return diskPlan(lib, planScope(lib, filteredPatches(), o.scope), o); }
-// Primer cambio sobre un original: crea la variante y continúa sobre ella.
+// Primer cambio sobre un sonido: se crea su versión (la que suena y se exporta) y los cambios se suman en ella.
 async function ensureVariant(p) {
-  if (p.kind === 'variant') return p;
-  const rep = lib.replacementOf(p);
-  if (rep) { S.sel = rep.id; S.rowsKey = ''; toast(`Editando la versión aceptada «${rep.name}» (${rep.originText || 'variante'}): así los cambios se suman en una sola versión`, 6000); return rep; }
-  const v = await lib.createVariant(p.id, p.payload, 'edit', 'Edición de macros', ''); S.sel = v.id; S.rowsKey = ''; toast('Variante creada en borrador: tus cambios se guardan solos en ella. El original no cambia.', 5000); return v;
+  const root = lib.rootOf(p), cv = lib.currentVersion(root);
+  if (cv.kind === 'variant') { if (S.sel !== cv.id && S.view === 'library') { S.sel = cv.id; S.rowsKey = ''; } return cv; }
+  const v = await lib.createVariant(root.id, root.payload, 'edit', 'Edición', '', { adopted: true }); S.sel = v.id; S.rowsKey = '';
+  toast(`Editando «${v.name}»: los cambios se guardan solos y es lo que se exporta. El original sigue guardado (Volver al original).`, 5000); return v;
 }
 let liveTimer;
 function liveSend() { clearTimeout(liveTimer); liveTimer = setTimeout(() => { const p = cur(), s = S.dev.session; if (p && s) s.sendPatch(p.payload, S.dev.synth); }, 120); }
@@ -2267,7 +2294,7 @@ function bindGlobal() {
     if (act === 'archLevel') { S.archLevel = el.value; S.openGroups.clear(); saveSettings(); rerender(); return; }
     if (act === 'bulkOct' && el.value) {
       const n = +el.value, adopt = { length: await transposeIds([...S.multi], n) };
-      toast(`${adopt.length} patch(es) transpuestos ${n > 0 ? '+' : '−'}${Math.abs(n) / 12} oct (variantes aceptadas; deshacibles en Cambios)`); rerender(); return;
+      toast(`${adopt.length} patch(es) transpuestos ${n > 0 ? '+' : '−'}${Math.abs(n) / 12} oct (en la versión de cada uno; Ctrl Z deshace)`); rerender(); return;
     }
     if (act === 'regPlanSel') { await regPlanSet(el.dataset.g, { [el.dataset.f]: el.value === '' ? null : el.value }); rerender(); return; }
     if (act === 'regSet') { S[el.dataset.k] = el.dataset.k === 'regTune' ? !!el.value : el.value; rerender(); return; }
@@ -2288,8 +2315,9 @@ function bindGlobal() {
     if (act === 'palName' || act === 'palTags') { const pal = structuredClone(lib.tagPalette), g = pal[+el.dataset.i]; if (act === 'palName') g.name = el.value.trim() || g.name; else g.tags = [...new Set(el.value.split(',').map((x) => x.trim()).filter(Boolean))]; await lib.setSetting('tagPalette', pal); rerender(); return; }
     if (act === 'fRename') { await lib.renameSubfolder(el.dataset.c, el.dataset.s, el.value); rerender(); return; }
     if (act === 'fAdd' && el.value.trim()) { await lib.addSubfolder(el.dataset.c, el.value); rerender(); $('[data-act="fAdd"]')?.focus(); return; }
-    if (act === 'setCat' && el.value) { const r = await lib.setCategory([S.sel], el.value, null); rerender(); if (r.suggestions.length) suggestRulesModal(r.suggestions); return; }
-    if (act === 'correct' && el.value) { const [c, s] = el.value.split(':'); const r = await lib.setCategory([S.sel], c, s || null); rerender(); if (r.suggestions.length) suggestRulesModal(r.suggestions); return; }
+    if (act === 'setCat' && el.value && p) { const r = await lib.setCategory([p.id], el.value, null); rerender(); if (r.suggestions.length && S.view !== 'audition') suggestRulesModal(r.suggestions); return; }
+    if (act === 'audCatSel' && el.value && p) { const c = el.value, cls = lib.info(p).cls; await lib.setCategory([p.id], c, cls.category === c ? cls.subtype || null : null); rerender(); return; }
+    if (act === 'correct' && el.value && p) { const [c, s] = el.value.split(':'); const r = await lib.setCategory([p.id], c, s || null); rerender(); if (r.suggestions.length) suggestRulesModal(r.suggestions); return; }
     if (act === 'profile') { S.profile = el.value; rerender(); return; }
     if (act === 'bankSel') { S.bank = el.value; rerender(); return; }
     if (act === 'cmpPick') { S.cmpB = el.value; rerender(); return; }
@@ -2308,9 +2336,9 @@ function bindGlobal() {
   });
   document.addEventListener('keydown', async (e) => {
     const act = e.target.dataset?.act;
-    if (act === 'tagIn' && (e.key === 'Enter' || e.key === ',')) { e.preventDefault(); const v = e.target.value.split(',').map((x) => x.trim()).filter(Boolean); if (v.length) { await lib.addTags([S.sel], v); rerender(); $('.tagin')?.focus(); } return; }
-    if (act === 'tagIn' && e.key === 'Backspace' && !e.target.value) { const t = cur()?.meta.tags || []; if (t.length) { await lib.addTags([S.sel], [t.at(-1)], true); rerender(); $('.tagin')?.focus(); } return; }
-    if (act === 'subNewIn' && e.key === 'Enter') { e.preventDefault(); const c = e.target.dataset.c, id = await lib.addSubfolder(c, e.target.value); S.subNew = null; if (id && S.sel) await lib.setSubfolder([S.sel], c, id); rerender(); return; }
+    if (act === 'tagIn' && (e.key === 'Enter' || e.key === ',')) { e.preventDefault(); const v = e.target.value.split(',').map((x) => x.trim()).filter(Boolean), p = cur(); if (v.length && p) { await lib.addTags([p.id], v); rerender(); $('.tagin')?.focus(); } return; }
+    if (act === 'tagIn' && e.key === 'Backspace' && !e.target.value) { const p = cur(), t = p?.meta.tags || []; if (t.length) { await lib.addTags([p.id], [t.at(-1)], true); rerender(); $('.tagin')?.focus(); } return; }
+    if (act === 'subNewIn' && e.key === 'Enter') { e.preventDefault(); const c = e.target.dataset.c, id = await lib.addSubfolder(c, e.target.value), p = cur(); S.subNew = null; if (id && p) await lib.setSubfolder([p.id], c, id); rerender(); return; }
     if (act === 'subNewIn' && e.key === 'Escape') { S.subNew = null; rerender(); return; }
   });
   document.addEventListener('keydown', (e) => {
@@ -2322,6 +2350,7 @@ function bindGlobal() {
     if (e.key === '?') { e.preventDefault(); showKeys(); return; }
     if (e.altKey && /^Digit[1-9]$/.test(e.code) && ['audition', 'library'].includes(S.view)) { const t = quickTags()[+e.code.slice(5) - 1], id = S.view === 'audition' ? S.queue[S.qi] : S.sel, p = id && lib.byId(id); if (t && p) { e.preventDefault(); const on = (p.meta.tags || []).includes(t); lib.addTags([p.id], [t], on).then(() => { toast(`${on ? 'Quitada' : 'Etiqueta'}: ${t}`, 1400); rerender(); }); } return; }
     if (S.view === 'organize' && S.orgTab === 'register' && S.regView && S.regView !== 'plan' && e.key === 'Escape') { e.preventDefault(); A.regView({ dataset: { v: 'plan' } }); return; }
+    if ((e.key === '<' || e.key === '>') && ['audition', 'library'].includes(S.view) && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); shiftPhrase(cur(), e.key === '>' ? 12 : -12); return; }
     if (S.view === 'audition') {
       const k = e.key.toLowerCase();
       if (e.code === 'Space') { e.preventDefault(); audPlay(); return; }

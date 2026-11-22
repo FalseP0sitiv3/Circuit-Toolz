@@ -13,8 +13,9 @@ const LB = { forId: null, mode: 'mutate', amount: 'medium', groups: ['filter', '
 
 function labPartners(p) {
   const v = lib.vecOf(p), out = [];
-  for (const q of lib.patches) {
-    if (q.id === p.id || q.kind === 'variant' || q.rootId === p.id) continue;
+  const me = lib.rootOf(p).id;
+  for (const q of lib.faces()) {
+    if (lib.rootOf(q).id === me) continue;
     const w = lib.vecOf(q); let d = 0; for (let i = 0; i < v.length; i++) d += (v[i] - w[i]) ** 2;
     out.push({ q, d });
   }
@@ -27,7 +28,7 @@ function labPartners(p) {
 function labB(p) { const b = LB.bId && lib.byId(LB.bId); return b && b.id !== p.id ? b : null; }
 function labSameCat(p, n = 3) {
   const c = effCat(p); if (!c) return [];
-  const pool = lib.patches.filter((q) => q.id !== p.id && q.kind !== 'variant' && effCat(q) === c);
+  const me = lib.rootOf(p).id, pool = lib.faces().filter((q) => lib.rootOf(q).id !== me && effCat(q) === c);
   const r = labRngUI(LB.seed * 13 + pool.length), out = [];
   while (out.length < n && pool.length) out.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
   return out;
@@ -97,12 +98,7 @@ function centerLab(p) {
   </div>`;
 }
 
-function labPlayPayload(p, payload) {
-  const s = S.dev.session; if (!s) return;
-  s.stopAll();
-  const ph = S.phrase === 'auto' ? phraseKeyFor(p) : S.phrase, t = s.sendPatch(payload, S.dev.synth);
-  s.playPhrase(phraseObj(ph), S.dev.synth, { tempo: tempoNow(), root: phraseObj(ph).custom ? 0 : S.dev.root, start: t + (S.dev.patchDelay ?? 80) });
-}
+function labPlayPayload(p, payload) { playTest(p, payload); }
 let labLiveAt = 0, labLiveTimer = 0;
 function labLiveSend(payload) {
   const s = S.dev.session; if (!s) return;

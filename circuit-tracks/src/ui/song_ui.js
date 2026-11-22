@@ -47,7 +47,7 @@ function sgTl() { const s = sgState(); if (!s.fam || !s.sections) sgRegen(); ret
 function sgChannels() { const D = S.dev; return [D.channels[0], D.channels[1], D.chMidi?.[0] ?? 2, D.chMidi?.[1] ?? 3]; }
 function sgPatchList(t) {
   const want = SG_SYNTH_CATS[t];
-  const all = lib.patches.filter((p) => p.kind !== 'variant' || lib.changeState(p) !== 'draft');
+  const all = lib.faces();
   const fit = all.filter((p) => want.includes(effCat(p))).sort((a, b) => (b.meta.fav ? 1 : 0) - (a.meta.fav ? 1 : 0) || (b.meta.rating || 0) - (a.meta.rating || 0) || a.name.localeCompare(b.name));
   return fit.slice(0, 250);
 }

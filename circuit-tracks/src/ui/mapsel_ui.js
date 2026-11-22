@@ -9,7 +9,7 @@ import { paramDescriptors } from '../core/classify.js';
 let _mz = { key: '', z: null };
 function mapZ() {
   const key = lib.patches.length + '|' + (lib.history?.length || 0);
-  if (_mz.key !== key) _mz = { key, z: zScoreMap(lib.patches.map((p) => [p.id, lib.vecOf(p)])) };
+  if (_mz.key !== key) _mz = { key, z: zScoreMap(lib.faces().map((p) => [p.id, lib.vecOf(p)])) };
   return _mz.z;
 }
 // carácter de un patch: lo que se lee en sus ajustes y lo que dice su nombre
@@ -32,7 +32,7 @@ function mapHLSet() {
   const key = lib.patches.length + '|' + (lib.history?.length || 0) + '|' + crit + '|' + word;
   if (_mhl.key !== key) {
     const set = new Set();
-    for (const p of lib.patches) {
+    for (const p of lib.faces()) {
       if (crit && !mapCrit(p, crit)) continue;
       if (word && !(`${p.name} ${p.fileName || ''} ${(p.meta.tags || []).join(' ')}`.toLowerCase().includes(word))) continue;
       set.add(p.id);
@@ -44,8 +44,8 @@ function mapHLSet() {
 function mapCount(list) { const m = new Map(); for (const x of list) m.set(x, (m.get(x) || 0) + 1); return [...m].sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0]))); }
 function mapHLSelect() {
   const cur = S.mapHL || '', o = (v, l) => html`<option value="${v}" ${cur === v ? raw('selected') : ''}>${l}</option>`;
-  const chars = mapCount(lib.patches.flatMap(charsOf)), cats = mapCount(lib.patches.map((p) => effCat(p) || 'none'));
-  const tags = mapCount(lib.patches.flatMap((p) => p.meta.tags || [])), fx = mapCount(lib.patches.flatMap((p) => lib.fxOf(p).map((x) => x.t)));
+  const F = lib.faces(), chars = mapCount(F.flatMap(charsOf)), cats = mapCount(F.map((p) => effCat(p) || 'none'));
+  const tags = mapCount(F.flatMap((p) => p.meta.tags || [])), fx = mapCount(F.flatMap((p) => lib.fxOf(p).map((x) => x.t)));
   return html`<select id="mapHL" class="sel" aria-label="Resaltar en el mapa"><option value="">Nada</option>
     ${chars.length ? html`<optgroup label="Carácter (ajustes y nombre)">${chars.map(([c, n]) => o('char:' + c, `${c} (${n})`))}</optgroup>` : ''}
     <optgroup label="Categoría">${cats.map(([c, n]) => o('cat:' + c, `${c === 'none' ? 'Sin categoría' : CAT_LABEL[c] || c} (${n})`))}</optgroup>

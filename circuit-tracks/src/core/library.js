@@ -9,7 +9,7 @@ import { auditMacros } from './macros.js';
 import { buildFamilies, vectorize, pca2, affinity } from './families.js';
 import { measuredFeatures } from './acoustic.js';
 
-export const APP_VERSION = '3.9.2';
+export const APP_VERSION = '3.10.0';
 export const STORES = ['files', 'patches', 'collections', 'banks', 'rules', 'history', 'settings'];
 const MAX_SYX = 2 * 1024 * 1024;
 
@@ -59,6 +59,8 @@ export function groupReport(rep) {
   for (const f of rep.foreign) { const e = foreign.get(f.kind) || { kind: f.kind, why: f.why, files: 0, items: 0, examples: [], names: [] }; e.files++; e.items += f.count; if (e.examples.length < 4) e.examples.push(f.name); if (e.names.length < 400) e.names.push(...f.names.slice(0, 400 - e.names.length)); foreign.set(f.kind, e); }
   return { unknown: g(rep.unknown, (x) => x.why), warnings: g(rep.warnings, (x) => x.items), skipped: g(rep.skipped, (x) => x.why), foreign: [...foreign.values()] };
 }
+// Metadatos propios de cada versión (el resto es del sonido y se comparte entre el original y sus variantes).
+const VERSION_KEYS = new Set(['adopted', 'quickOct']);
 function newMeta() { return { category: null, subtype: null, usage: [], descriptors: [], tags: [], fav: false, rating: 0, notes: '', review: 'pending', classStatus: 'proposed', classAt: null }; }
 
 export class Library {
@@ -71,7 +73,7 @@ export class Library {
     const old = this.trash().filter((h) => Date.now() - Date.parse(h.at) > 30 * 864e5); if (old.length) await this.emptyTrash(old.map((h) => h.id));
     return this;
   }
-  emit() { this._fam = null; this._map = null; this._adopt = null; this._chain = null; for (const f of this.listeners) f(); }
+  emit() { this._fam = null; this._map = null; this._adopt = null; this._chain = null; this._faces = null; this._groups = null; for (const f of this.listeners) f(); }
   // ===== Modelo de cambios =====
   // Original: el archivo importado; nunca cambia. Cualquier edición crea una VARIANTE (copia enlazada).
   // Una variante nace como «borrador»; al ACEPTARLA sustituye a su original en disco y packs
@@ -98,16 +100,156 @@ export class Library {
   // Versión vigente de un patch: sigue la cadena de variantes aceptadas.
   currentVersion(p) { let q = p, i = 0; while (q && this.adoptedMap().has(q.id) && i++ < 16) q = this.byId(this.adoptedMap().get(q.id)); return q || p; }
   replacementOf(p) { const v = this.currentVersion(p); return v && v.id !== p.id ? v : null; }
+  // v3.10 · Aceptar una propuesta = sumarla a la versión del sonido. Cada sonido tiene como mucho UNA versión:
+  //  · si aún no tiene, la propuesta pasa a ser su versión (colgada directamente del original);
+  //  · si ya tiene, los cambios de la propuesta (lo que cambia respecto a aquello de lo que salió) se escriben en esa
+  //    versión y la propuesta desaparece: nada de cadenas ni ramas.
+  // on = false: la versión vuelve a ser una propuesta pendiente (el sonido suena otra vez como el original).
   async adoptVariants(ids, on = true) {
-    const vs = ids.map((id) => this.byId(id)).filter((v) => v && v.kind === 'variant');
+    const vs = ids.map((id) => this.byId(id)).filter((v) => v && v.kind === 'variant' && this.isVersion(v));
     if (!vs.length) return null;
-    const touched = new Set(vs.map((v) => v.id));
-    // al aceptar, la hermana aceptada antes deja de estarlo
-    if (on) for (const v of vs) for (const o of this.patches) if (o.kind === 'variant' && o.parentId === v.parentId && o.meta.adopted && !touched.has(o.id)) touched.add(o.id);
-    const want = new Set(on ? vs.map((v) => v.id) : []);
-    return this.updateMeta([...touched], { adopted: (p) => want.has(p.id) }, on ? `${vs.length} variante(s) aceptada(s): sustituyen al original al exportar` : `${vs.length} variante(s) vuelven a borrador`, { op: 'adopt' });
+    if (!on) return this.updateMeta(vs.map((v) => v.id), { adopted: false }, `${vs.length} versión(es) vuelven a propuesta: suena el original`, { op: 'adopt' });
+    let last = null;
+    for (const v0 of vs) {
+      const v = this.byId(v0.id); if (!v) continue;
+      const root = this.rootOf(v), cv = this.currentVersion(root);
+      if (cv.id === v.id) continue;
+      if (cv.id === root.id) {
+        // el sonido no tiene versión: esta pasa a serlo, como «original + lo que proponía»
+        const want = new Uint8Array(root.payload); for (const [o, x] of this.proposalDiff(v)) want[o] = x;
+        if (v.parentId !== root.id || !this.sameSound(want, v.payload)) { v.payload = want; v.fp = fingerprints(want); v.name = readName(want).name || v.name; v.parentId = root.id; v.diff = null; await this.store.putMany('patches', [v]); this._adopt = null; this._chain = null; this._idx = null; }
+        last = await this.updateMeta([v.id], { adopted: true }, `Versión de «${root.name}»: ${v.originText || 'cambios'}`, { op: 'adopt' });
+      } else {
+        const edits = this.proposalDiff(v).filter(([o, val]) => cv.payload[o] !== val);
+        if (edits.length) await this.editVariantBytes(cv.id, edits, `Propuesta aplicada: ${v.originText || 'cambios'}`);
+        await this.noteOp(cv, v.originText || 'cambios');
+        if (v.meta.quickOct) await this.updateMeta([cv.id], { quickOct: (cv.meta.quickOct || 0) + v.meta.quickOct }, 'Octava a mano');
+        await this.deletePatches([v.id], true);
+        last = true;
+      }
+    }
+    return last;
   }
-  byId(id) { return this.patches.find((p) => p.id === id); }
+  byId(id) {
+    const ix = this._idx;
+    if (!ix || ix.arr !== this.patches || ix.len !== this.patches.length) this._idx = { arr: this.patches, len: this.patches.length, map: new Map(this.patches.map((p) => [p.id, p])) };
+    return this._idx.map.get(id);
+  }
+
+  // ===== v3.10 · Un sonido, una versión =====
+  // Sonido = un original (o una copia independiente) con, como mucho, una versión editada que lo sustituye.
+  // Las demás variantes que cuelgan de él son propuestas pendientes (octava, macros, plantillas en borrador…).
+  // En la biblioteca, en Escucha y en los recuentos solo aparece cada sonido una vez, con su versión vigente.
+  isVersion(p) { return !!p && p.kind === 'variant' && !!p.parentId && !!this.byId(p.parentId); }
+  rootOf(p) { let q = p, i = 0; while (q && this.isVersion(q) && i++ < 32) q = this.byId(q.parentId); return q || p; }
+  // Lo que se ve en las listas: la versión vigente de cada sonido.
+  faces() {
+    if (!this._faces) this._faces = this.patches.filter((p) => !this.isVersion(p)).map((p) => this.currentVersion(p));
+    return this._faces;
+  }
+  // root.id → ids del sonido (original y todas sus variantes). Los metadatos (carpeta, etiquetas, valoración…) son del sonido.
+  groups() {
+    if (!this._groups) { const g = new Map(); for (const p of this.patches) { const r = this.rootOf(p).id; (g.get(r) || g.set(r, []).get(r)).push(p.id); } this._groups = g; }
+    return this._groups;
+  }
+  groupIds(id) { const p = this.byId(id); if (!p) return [id]; return this.groups().get(this.rootOf(p).id) || [id]; }
+  proposalsOf(p) { const root = this.rootOf(p), ids = this.groups().get(root.id) || []; return ids.map((id) => this.byId(id)).filter((v) => v && v.id !== root.id && this.changeState(v) === 'draft'); }
+  // Cambios que propone una variante: lo que cambia respecto a aquello de lo que salió (o lo guardado al reordenar).
+  proposalDiff(v) {
+    if (v.diff) return v.diff.map(([o, x]) => [+o, x]);
+    const base = this.byId(v.parentId) || this.rootOf(v), out = [];
+    for (let i = 0; i < 340; i++) if (base.payload[i] !== v.payload[i]) out.push([i, v.payload[i]]);
+    return out;
+  }
+  async noteOp(v, text) {
+    if (!v || !text) return;
+    // la misma clase de cambio con otro valor sustituye a la anterior («Octava −1» → «Octava −2»)
+    const kind = (t) => String(t).replace(/[−+\-]?\d+([.,]\d+)?/g, '#').trim();
+    const ops = (v.ops || (v.originText ? [v.originText] : [])).filter((x) => kind(x) !== kind(text));
+    v.ops = [...ops, text].slice(-8); v.originText = v.ops.join(' · '); await this.store.putMany('patches', [v]);
+  }
+  // Editar un sonido: los cambios van a su versión; si aún no tiene, se crea (ya aceptada). El original no se toca.
+  async editSound(p, payload, op, text) {
+    const root = this.rootOf(p), cv = this.currentVersion(root);
+    if (cv.kind === 'variant') {
+      const edits = []; for (let i = 0; i < 340; i++) if (cv.payload[i] !== payload[i]) edits.push([i, payload[i]]);
+      if (edits.length) await this.editVariantBytes(cv.id, edits, text);
+      await this.noteOp(cv, text);
+      if (cv.id !== root.id && this.sameSound(cv.payload, root.payload)) { await this.deletePatches([cv.id], true); await this.log('meta', [root.id], null, null, `«${root.name}» vuelve a ser el original`); this.emit(); return root; }
+      return cv;
+    }
+    if (this.sameSound(cv.payload, payload)) return cv;
+    return this.createVariant(root.id, payload, op, text, '', { adopted: true });
+  }
+  sameSound(a, b) { for (let i = 0; i < 340; i++) if (a[i] !== b[i]) return false; return true; }
+  // Volver al original: la versión va a la papelera (se puede recuperar o deshacer con Ctrl Z).
+  async revertToOriginal(p) {
+    const root = this.rootOf(p), chain = []; let q = root, i = 0;
+    while (this.adoptedMap().has(q.id) && i++ < 16) { q = this.byId(this.adoptedMap().get(q.id)); if (!q) break; chain.push(q.id); }
+    if (!chain.length) return root;
+    await this.deletePatches(chain); return root;
+  }
+  // Duplicar: un sonido nuevo e independiente (otra fila, sus propias carpetas y su propio nombre).
+  async duplicateSound(p, suffix = ' 2') {
+    const src = this.currentVersion(this.rootOf(p)), pl = new Uint8Array(src.payload);
+    const nm = (readName(pl).name || src.name || 'Patch').slice(0, 16 - suffix.length) + suffix; pl.set(encodeName(nm), 0);
+    const c = await this.createVariant(src.id, pl, 'copy', `Copia de «${src.name}»`, '');
+    c.parentId = null; c.copyOf = this.rootOf(p).id; c.rootId = c.id; c.meta.adopted = false; delete c.meta.quickOct;
+    await this.store.putMany('patches', [c]); this.emit(); return c;
+  }
+
+  // ---------- Ordenar lo que dejó el modelo anterior (cadenas, ramas, borradores repetidos) ----------
+  // Plan sin tocar nada: por sonido, qué versión queda, qué sobra y qué propuestas siguen pendientes.
+  versionsPlan() {
+    const out = { sounds: [], collapse: 0, drop: [], keep: [], meta: 0 };
+    for (const [rid, ids] of this.groups()) {
+      if (ids.length < 2) continue;
+      const root = this.byId(rid), cv = this.currentVersion(root), chain = [];
+      let q = root, i = 0; while (this.adoptedMap().has(q.id) && i++ < 16) { q = this.byId(this.adoptedMap().get(q.id)); if (!q) break; chain.push(q.id); }
+      const s = { root: rid, keep: cv.id !== rid ? cv.id : null, dropChain: chain.slice(0, -1), drop: [], keep2: [], metaFix: false };
+      for (const id of ids) {
+        if (id === rid || chain.includes(id)) continue;
+        const v = this.byId(id), d = this.proposalDiff(v), target = cv.payload;
+        const nothing = !d.length || d.every(([o, x]) => target[o] === x) || this.sameSound(v.payload, root.payload) || this.sameSound(v.payload, cv.payload);
+        if (nothing) s.drop.push(id); else s.keep2.push(id);
+      }
+      const metas = ids.map((id) => this.byId(id).meta), key = (m) => JSON.stringify([m.category, m.subtype, [...(m.tags || [])].sort(), m.rating || 0, !!m.fav, m.notes || '', m.patternId || null]);
+      s.metaFix = new Set(metas.map(key)).size > 1;
+      if (s.dropChain.length || s.drop.length || s.metaFix || (s.keep && this.byId(s.keep).parentId !== rid)) {
+        out.sounds.push(s); out.collapse += s.dropChain.length ? 1 : 0; out.drop.push(...s.dropChain, ...s.drop); out.keep.push(...s.keep2); out.meta += s.metaFix ? 1 : 0;
+      }
+    }
+    return out;
+  }
+  // Aplica el plan: una versión por sonido (con lo que sonaba), fuera lo repetido, metadatos unificados.
+  // dropProposals: también descarta las propuestas que sí cambian algo. Se deshace entero (historial · op 'versions').
+  async tidyVersions(plan = this.versionsPlan(), { dropProposals = false } = {}) {
+    if (!plan.sounds.length) return { sounds: 0, dropped: 0 };
+    const touchedIds = new Set(plan.sounds.flatMap((s) => this.groups().get(s.root) || []));
+    const snap = { patches: [...touchedIds].map((id) => structuredClone(this.byId(id))), banks: structuredClone(this.banks), collections: structuredClone(this.collections) };
+    const drop = new Set(), ups = new Map();
+    for (const s of plan.sounds) {
+      const root = this.byId(s.root), group = (this.groups().get(s.root) || []).map((id) => this.byId(id));
+      // metadatos del sonido: la clasificación más reciente, todas las etiquetas, la mejor valoración
+      const ms = group.map((p) => p.meta), cls = ms.filter((m) => m.category).sort((a, b) => String(b.classAt || '').localeCompare(String(a.classAt || '')))[0] || root.meta;
+      const merged = { category: cls.category ?? null, subtype: cls.subtype ?? null, classStatus: cls.classStatus, classAt: cls.classAt, tags: [...new Set(ms.flatMap((m) => m.tags || []))], rating: Math.max(0, ...ms.map((m) => m.rating || 0)), fav: ms.some((m) => m.fav), notes: [...new Set(ms.map((m) => (m.notes || '').trim()).filter(Boolean))].join('\n'), patternId: root.meta.patternId || ms.find((m) => m.patternId)?.patternId || null };
+      for (const p of group) { Object.assign(p.meta, structuredClone(merged)); ups.set(p.id, p); }
+      if (s.keep) { const k = this.byId(s.keep); if (k.parentId !== root.id) { k.parentId = root.id; k.diff = null; } k.meta.adopted = true; const ops = s.dropChain.map((id) => this.byId(id)?.originText).filter(Boolean); if (ops.length) { k.ops = [...new Set([...ops, ...(k.ops || [k.originText].filter(Boolean))])].slice(-8); k.originText = k.ops.join(' · '); } ups.set(k.id, k); }
+      for (const id of [...s.dropChain, ...s.drop, ...(dropProposals ? s.keep2 : [])]) drop.add(id);
+      if (!dropProposals) for (const id of s.keep2) { const v = this.byId(id); if (!v.diff) v.diff = this.proposalDiff(v); v.meta.adopted = false; ups.set(v.id, v); }
+      if (!dropProposals) for (const id of s.keep2) { const v = this.byId(id); v.parentId = root.id; }
+    }
+    // packs y colecciones que apuntaban a lo que sobra: pasan al sonido (al exportar va su versión vigente)
+    const to = new Map(); for (const s of plan.sounds) for (const id of this.groups().get(s.root) || []) if (drop.has(id)) to.set(id, s.root);
+    for (const b of this.banks) b.slots = b.slots.map((x) => (x && to.has(x) ? (b.slots.includes(to.get(x)) ? null : to.get(x)) : x));
+    for (const c of this.collections) if (c.ids) c.ids = [...new Set(c.ids.map((x) => to.get(x) || x))];
+    this.patches = this.patches.filter((p) => !drop.has(p.id));
+    await this.store.delete('patches', [...drop]); await this.store.putMany('patches', [...ups.values()].filter((p) => !drop.has(p.id)));
+    await this.store.putMany('banks', this.banks); await this.store.putMany('collections', this.collections);
+    await this.log('versions', [...touchedIds], snap, null, `Versiones ordenadas: ${plan.sounds.length} sonido(s), ${drop.size} variante(s) sobrante(s) fuera`, true);
+    this.emit();
+    return { sounds: plan.sounds.length, dropped: drop.size };
+  }
   fileOf(p) { return this.files.find((f) => f.id === p.fileId); }
 
   // ---------- Análisis con caché ----------
@@ -218,10 +360,17 @@ export class Library {
   }
   // changes: objeto parcial de meta; registra estado previo para poder deshacer.
   async updateMeta(ids, changes, text, extra = {}) {
+    // v3.10: carpeta, etiquetas, valoración, notas… son del sonido: se escriben en el original y en todas sus variantes.
+    // Los valores calculados (funciones) se calculan con el patch indicado y se copian a los demás de su sonido.
+    const src = new Map();
+    if (Object.keys(changes).some((k) => !VERSION_KEYS.has(k))) { for (const id of ids) for (const m of this.groupIds(id)) if (!src.has(m)) src.set(m, id); ids = [...src.keys()]; }
     const before = {}, after = {}; const list = ids.map((id) => this.byId(id)).filter(Boolean);
+    const vals = new Map(); // id del patch indicado → valores calculados una vez
     for (const p of list) {
       before[p.id] = {}; after[p.id] = {};
-      for (const k of Object.keys(changes)) { before[p.id][k] = structuredClone(p.meta[k]); const val = typeof changes[k] === 'function' ? changes[k](p) : changes[k]; p.meta[k] = structuredClone(val); after[p.id][k] = structuredClone(val); }
+      const base = (src.has(p.id) && this.byId(src.get(p.id))) || p;
+      if (!vals.has(base.id)) vals.set(base.id, Object.fromEntries(Object.keys(changes).map((k) => [k, typeof changes[k] === 'function' ? changes[k](base) : changes[k]])));
+      for (const k of Object.keys(changes)) { before[p.id][k] = structuredClone(p.meta[k]); const val = vals.get(base.id)[k]; p.meta[k] = structuredClone(val); after[p.id][k] = structuredClone(val); }
       p.modifiedAt = now();
     }
     await this.store.putMany('patches', list);
@@ -234,9 +383,16 @@ export class Library {
     if (!h || !h.undoable || h.undone) throw new Error('Esta operación no se puede deshacer');
     if (h.op === 'variant') { await this.deletePatches(h.ids, true); }
     else if (h.op === 'delete') { if (!h.before?.patches) throw new Error('La papelera ya se vació'); await this.restoreDeleted(h); }
+    else if (h.op === 'versions') {
+      const back = h.before.patches.map((p) => structuredClone(p)), ids = new Set(back.map((p) => p.id));
+      this.patches = [...this.patches.filter((p) => !ids.has(p.id)), ...back];
+      this.banks = structuredClone(h.before.banks); this.collections = structuredClone(h.before.collections);
+      await this.store.putMany('patches', back); await this.store.putMany('banks', this.banks); await this.store.putMany('collections', this.collections);
+    }
     else if (h.op === 'edit') {
       const p = this.byId(h.ids[0]); if (!p) throw new Error('La variante ya no existe');
       const pl = new Uint8Array(p.payload); for (const [o, v] of Object.entries(h.before.bytes)) pl[+o] = v;
+      if (p.diff) { const d = new Map(p.diff.map(([o, x]) => [+o, x])); for (const o of Object.keys(h.before.bytes)) d.set(+o, pl[+o]); p.diff = [...d].sort((a, b) => a[0] - b[0]); }
       p.payload = pl; p.fp = fingerprints(pl); p.modifiedAt = now(); await this.store.putMany('patches', [p]);
     }
     else {
@@ -359,10 +515,10 @@ export class Library {
   }
   // Palabras del nombre (para filtrar) y efectos detectados (para etiquetar)
   wordsOf(p) { const k = p.name + '|' + p.fileName; if (!this._words) this._words = new Map(); const c = this._words.get(p.id); if (c && c.k === k) return c.w; const w = nameWords(p.name, p.fileName); this._words.set(p.id, { k, w }); return w; }
-  wordIndex(list = this.patches) { const n = new Map(); for (const p of list) for (const w of this.wordsOf(p)) n.set(w, (n.get(w) || 0) + 1); return [...n].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])); }
+  wordIndex(list = this.faces()) { const n = new Map(); for (const p of list) for (const w of this.wordsOf(p)) n.set(w, (n.get(w) || 0) + 1); return [...n].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])); }
   fxOf(p) { return fxTags([p.name, p.fileName], this.info(p).an); }
   get tagPalette() { return Array.isArray(this.settings.tagPalette) ? this.settings.tagPalette : TAG_PALETTE; }
-  allTags() { const n = new Map(); for (const p of this.patches) for (const t of p.meta.tags || []) n.set(t, (n.get(t) || 0) + 1); return [...n].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])); }
+  allTags() { const n = new Map(); for (const p of this.faces()) for (const t of p.meta.tags || []) n.set(t, (n.get(t) || 0) + 1); return [...n].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])); }
 
   async setCategory(ids, category, subtype = null) {
     const preds = {}; for (const id of ids) { const p = this.byId(id); if (p) { const c = this.info(p).cls; preds[id] = { category: c.category, certainty: c.certainty }; } }
@@ -384,14 +540,17 @@ export class Library {
   async deleteRule(id) { this.rules = this.rules.filter((x) => x.id !== id); await this.store.delete('rules', [id]); this.rulesVersion = (this.rulesVersion || 0) + 1; await this.log('rule', [], null, null, 'Regla eliminada'); this.emit(); }
 
   // ---------- Variantes (nunca modifican el original) ----------
-  async createVariant(parentId, payload, op, description, nameSuffix = '') {
+  // opts.adopted: nace como la versión del sonido (ediciones directas); si no, es una propuesta pendiente.
+  async createVariant(parentId, payload, op, description, nameSuffix = '', opts = {}) {
     const parent = this.byId(parentId); if (!parent) throw new Error('Patch de origen no encontrado');
     if (!(payload instanceof Uint8Array) || payload.length !== 340 || payload.some((b) => b > 127)) throw new Error('Carga inválida');
     let pl = new Uint8Array(payload);
     if (nameSuffix) pl.set(encodeName((readName(pl).name + nameSuffix).slice(0, 16)), 0);
-    const v = { ...structuredClone({ ...parent, payload: undefined }), id: uid(), kind: 'variant', parentId, rootId: parent.rootId || parent.id, fileId: null, payload: pl, fp: fingerprints(pl), name: readName(pl).name || parent.name, importedAt: now(), modifiedAt: now(), variantOp: op, variantNote: description, alsoFoundIn: [] };
-    v.meta = { ...structuredClone(parent.meta), review: 'pending', adopted: false };
-    v.origin = op; v.originText = description; v.createdAt = now();
+    const v = { ...structuredClone({ ...parent, payload: undefined, ops: undefined, diff: undefined, copyOf: undefined }), id: uid(), kind: 'variant', parentId, rootId: parent.rootId || parent.id, fileId: null, payload: pl, fp: fingerprints(pl), name: readName(pl).name || parent.name, importedAt: now(), modifiedAt: now(), variantOp: op, variantNote: description, alsoFoundIn: [] };
+    v.meta = { ...structuredClone(parent.meta), adopted: !!opts.adopted }; delete v.meta.quickOct;
+    v.origin = op; v.originText = description; v.ops = [description]; v.createdAt = now();
+    // una propuesta recuerda qué cambia respecto a aquello de lo que salió (para sumarla después a la versión)
+    if (!opts.adopted) { v.diff = []; for (let i = 0; i < 340; i++) if (parent.payload[i] !== pl[i]) v.diff.push([i, pl[i]]); }
     this.patches.push(v); await this.store.putMany('patches', [v]);
     await this.log('variant', [v.id], null, { parentId, op }, `Variante creada: ${description}`, true);
     this.emit(); return v;
@@ -406,7 +565,9 @@ export class Library {
     const pl = new Uint8Array(p.payload), before = {};
     for (const [o, v] of edits) { if (o < 0 || o > 339) throw new Error('Offset inválido'); const nv = Math.max(0, Math.min(127, v | 0)); if (pl[o] !== nv) { before[o] = pl[o]; pl[o] = nv; } }
     if (!Object.keys(before).length) return;
-    p.payload = pl; p.fp = fingerprints(pl); p.modifiedAt = now(); await this.store.putMany('patches', [p]);
+    p.payload = pl; p.fp = fingerprints(pl); p.modifiedAt = now();
+    if (p.diff) { const d = new Map(p.diff.map(([o, x]) => [+o, x])); for (const o of Object.keys(before)) d.set(+o, pl[+o]); p.diff = [...d].sort((a, b) => a[0] - b[0]); }
+    await this.store.putMany('patches', [p]);
     // Cambios seguidos sobre el mismo patch (p. ej. arrastrar un control) se agrupan en una sola entrada.
     const last = this.history.at(-1);
     if (last && last.op === 'edit' && last.ids[0] === id && !last.undone && Date.now() - Date.parse(last.at) < 4000) {
@@ -425,10 +586,18 @@ export class Library {
     for (const c of this.collections) for (const x of c.ids || []) if (set.has(x)) snap.colls.push([c.id, x]);
     const orphans = this.patches.filter((p) => set.has(p.parentId) && !set.has(p.id));
     snap.orphans = orphans.map((o) => [o.id, o.parentId]);
-    for (const o of orphans) { o.parentId = null; } // las variantes sobreviven
+    // Las variantes sobreviven: si queda un antepasado, siguen colgando de él (siguen siendo del mismo sonido, con
+    // los cambios que proponían guardados); si no queda ninguno, pasan a ser sonidos independientes.
+    for (const o of orphans) {
+      let up = this.byId(o.parentId), i = 0; while (up && set.has(up.id) && i++ < 32) up = up.parentId ? this.byId(up.parentId) : null;
+      if (up && !set.has(up.id)) { if (!o.diff) o.diff = this.proposalDiff(o); o.parentId = up.id; } else o.parentId = null;
+    }
+    // v3.10: un pack o una colección guardan sonidos. Si se quita una versión (o una propuesta) y su sonido sigue, el
+    // hueco pasa a apuntar al sonido (al exportar va su versión vigente); si se elimina el sonido entero, queda vacío.
+    const keep = new Map(); for (const p of gone) { const r = this.rootOf(p); if (r && !set.has(r.id)) keep.set(p.id, r.id); }
     this.patches = this.patches.filter((p) => !set.has(p.id));
-    for (const b of this.banks) b.slots = b.slots.map((s) => (set.has(s) ? null : s));
-    for (const c of this.collections) if (c.ids) c.ids = c.ids.filter((x) => !set.has(x));
+    for (const b of this.banks) b.slots = b.slots.map((s) => (set.has(s) ? (keep.has(s) && !b.slots.includes(keep.get(s)) ? keep.get(s) : null) : s));
+    for (const c of this.collections) if (c.ids) c.ids = [...new Set(c.ids.map((x) => (set.has(x) ? keep.get(x) : x)).filter(Boolean))];
     await this.store.delete('patches', ids); await this.store.putMany('patches', orphans); await this.store.putMany('banks', this.banks); await this.store.putMany('collections', this.collections);
     if (!silent) await this.log('delete', ids, snap, null, gone.length === 1 ? `«${gone[0].name}» a la papelera` : `${gone.length} patches a la papelera`, true);
     this.emit();
@@ -442,7 +611,7 @@ export class Library {
     const ids = new Set(back.map((p) => p.id)), touchedB = new Set(), touchedC = new Set(), touchedP = [];
     for (const [bid, i, x] of h.before.slots || []) { const b = this.banks.find((y) => y.id === bid); if (b && ids.has(x) && !b.slots[i]) { b.slots[i] = x; touchedB.add(b); } }
     for (const [cid, x] of h.before.colls || []) { const c = this.collections.find((y) => y.id === cid); if (c && ids.has(x) && !c.ids.includes(x)) { c.ids.push(x); touchedC.add(c); } }
-    for (const [oid, pid] of h.before.orphans || []) { const o = this.byId(oid); if (o && !o.parentId && ids.has(pid)) { o.parentId = pid; touchedP.push(o); } }
+    for (const [oid, pid] of h.before.orphans || []) { const o = this.byId(oid); if (o && o.parentId !== pid && ids.has(pid)) { o.parentId = pid; touchedP.push(o); } }
     await this.store.putMany('patches', [...back, ...touchedP]); await this.store.putMany('banks', [...touchedB]); await this.store.putMany('collections', [...touchedC]);
     return back.length;
   }
@@ -470,7 +639,7 @@ export class Library {
   // ---------- Familias, mapa y afinidad (con caché hasta el siguiente cambio) ----------
   families() {
     if (!this._fam) {
-      const fams = buildFamilies(this.patches);
+      const fams = buildFamilies(this.faces()); // v3.10: entre sonidos (una versión no es «duplicado» de su original)
       const of = new Map(); for (const f of fams) for (const m of f.members) of.set(m.id, f);
       this._fam = { list: fams, of };
     }
@@ -478,16 +647,16 @@ export class Library {
   }
   map() {
     if (!this._map) {
-      const xy = pca2(this.patches.map((p) => vectorize(p.payload)));
-      this._map = new Map(this.patches.map((p, i) => [p.id, xy[i]]));
+      const fs = this.faces(), xy = pca2(fs.map((p) => vectorize(p.payload)));
+      this._map = new Map(fs.map((p, i) => [p.id, xy[i]]));
     }
     return this._map;
   }
-  referenceSet() { const inBanks = new Set(this.banks.flatMap((b) => b.slots).filter(Boolean)); return this.patches.filter((p) => p.meta.fav || (p.meta.rating || 0) >= 4 || inBanks.has(p.id)); }
+  referenceSet() { const inBanks = new Set(this.banks.flatMap((b) => b.slots).filter(Boolean).map((id) => this.byId(id) ? this.currentVersion(this.rootOf(this.byId(id))).id : id)); return this.faces().filter((p) => p.meta.fav || (p.meta.rating || 0) >= 4 || inBanks.has(p.id)); }
   affinityRanking(limit = 40) {
     const refs = this.referenceSet(), ids = new Set(refs.map((r) => r.id)), rp = refs.map((r) => r.payload);
     if (!rp.length) return [];
-    return this.patches.filter((p) => !ids.has(p.id)).map((p) => ({ id: p.id, s: affinity(p.payload, rp) })).sort((a, b) => b.s - a.s).slice(0, limit);
+    return this.faces().filter((p) => !ids.has(p.id)).map((p) => ({ id: p.id, s: affinity(p.payload, rp) })).sort((a, b) => b.s - a.s).slice(0, limit);
   }
 
   // ---------- Exportación organizada a una carpeta del disco (File System Access API) ----------
@@ -525,7 +694,7 @@ export class Library {
   }
 
   // ---------- Duplicados ----------
-  duplicates() { return groupDuplicates(this.patches.map((p) => ({ id: p.id, payload: p.payload, fp: p.fp }))); }
+  duplicates() { return groupDuplicates(this.faces().map((p) => ({ id: p.id, payload: p.payload, fp: p.fp }))); }
 
   // ---------- Colecciones ----------
   async saveCollection(c) { const col = { id: c.id || uid(), name: c.name, kind: c.kind || 'manual', ids: c.ids || [], query: c.query || null }; const i = this.collections.findIndex((x) => x.id === col.id); if (i >= 0) this.collections[i] = col; else this.collections.push(col); await this.store.putMany('collections', [col]); this.emit(); return col; }

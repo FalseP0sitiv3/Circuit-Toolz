@@ -1025,3 +1025,26 @@ button.stat.w strong{color:var(--warn)}
 .tclip .kbdh kbd{font:11px var(--fm);border:1px solid var(--line2);border-radius:3px;padding:0 4px}
 .tagp.clip{border-color:var(--o)}
 .tgrp{display:inline-flex;align-items:center;gap:1px}
+
+/* v3.10 · carpeta en Escucha, frase de prueba y versiones */
+.hero .audfolder{flex:1 1 340px;min-width:260px}
+.hero .audfolder .mlabel,.tbox>.mlabel{display:flex;justify-content:space-between;gap:10px}
+.hero .sel{background:transparent;color:var(--paperInk);border:1.2px solid var(--paperInk);height:30px;max-width:240px;font-weight:600}
+.hero .sel option{background:var(--paper);color:var(--paperInk)}
+.hero .subc{border-color:#b9b4a8;color:var(--paperMute)}
+.hero .subc:hover{border-color:var(--paperInk);color:var(--paperInk)}
+.hero .subc.prop{border-style:dashed;border-color:var(--paperInk);color:var(--paperInk)}
+.hero .subc.on{background:var(--paperInk);border-color:var(--paperInk);color:var(--paper)}
+.hero .btn.primary{background:var(--paperInk);color:var(--paper);border-color:var(--paperInk)}
+.hero .btn.primary .kbd{border-color:var(--paperMute);color:var(--paper)}
+.hero h2 .badge{font:600 11px var(--fc);vertical-align:middle;margin-left:10px}
+.tnotes{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:8px}
+.tn{display:inline-flex;align-items:baseline;gap:6px}
+.tn i{font:600 10.5px var(--fc);font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.tn b{font-size:15px;color:var(--tx)}
+.tn .lt{font:11px var(--fm);color:var(--mute);margin-left:3px}
+.tn small{font-size:11.5px;color:var(--mute)}
+.tn.moved b{color:var(--o)}
+.tlabel{margin-top:4px}
+.propc{border:1px dashed var(--line2);border-radius:6px;padding:7px 9px;margin-top:6px}
+.tidybox{border-left:3px solid var(--warn)}

@@ -119,9 +119,10 @@ with sync_playwright() as p:
     pg.click('button[data-act="orgTab"][data-t="register"]'); pg.wait_for_timeout(300)
     ok('Octava: plan de todas las categorías', pg.locator('.regrow:not(.hd)').count() >= 2)
     pg.click('a[data-act="regOpen"][data-g="bass"]'); pg.wait_for_timeout(300); pg.screenshot(path=SHOTS + '/11_org_register.png')
-    nvar = pg.evaluate("window.__ctpl.lib.patches.filter(p=>p.kind==='variant').length")
-    if pg.locator('button[data-act="regFix"]').count(): pg.locator('button[data-act="regFix"]').first.click(); pg.wait_for_timeout(300)
-    ok('Registro: variante transpuesta creada', pg.evaluate("window.__ctpl.lib.patches.filter(p=>p.kind==='variant').length") == nvar + 1)
+    nf = pg.evaluate("window.__ctpl.lib.faces().length"); rid = None
+    if pg.locator('button[data-act="regFix"]').count(): rid = pg.locator('button[data-act="regFix"]').first.get_attribute('data-id'); pg.locator('button[data-act="regFix"]').first.click(); pg.wait_for_timeout(300)
+    # v3.10: la corrección va a la versión del sonido (o queda como propuesta en él), sin filas nuevas
+    ok('Registro: corrección en la versión del sonido o como propuesta, sin filas nuevas', rid and pg.evaluate(f"(()=>{{const L=window.__ctpl.lib, r=L.rootOf(L.byId('{rid}')); return L.currentVersion(r).kind==='variant' || L.proposalsOf(r).length > 0}})()") and pg.evaluate("window.__ctpl.lib.faces().length") == nf)
     pg.click('button[data-act="orgTab"][data-t="dups"]'); pg.wait_for_timeout(200)
     pg.click('button[data-act="orgTab"][data-t="disk"]'); pg.wait_for_timeout(300); pg.screenshot(path=SHOTS + '/12_org_disk.png')
     with pg.expect_download() as d: pg.click('button[data-act="planZip"]')
@@ -145,15 +146,14 @@ with sync_playwright() as p:
     # una edición nueva sobre otro original sin versión aceptada → borrador
     pg.evaluate("(()=>{const S=window.__ctpl.S, L=window.__ctpl.lib; const o=L.patches.find(p=>p.kind!=='variant'&&L.changeState(p)==='original'&&p.name!=='Acid Line'); S.sel=o.id; S.knob=0; window.__o2=o.id;})()"); pg.click('.tabs-main button[data-v="macros"]'); pg.wait_for_timeout(200)
     pg.locator('.mk[data-knob="0"]').focus(); pg.keyboard.press('ArrowUp'); pg.keyboard.press('ArrowUp'); pg.wait_for_timeout(450); pg.click('button[data-act="mSavePos"]'); pg.wait_for_timeout(300)
-    ok('Teclado: flechas giran el knob y guardar crea un borrador', pg.evaluate("(()=>{const L=window.__ctpl.lib, v=L.byId(window.__ctpl.S.sel); return v.kind==='variant' && v.parentId===window.__o2 && L.changeState(v)==='draft' && v.payload[204]===8;})()"))
+    ok('Teclado: flechas giran el knob y guardar crea la versión del sonido (el original se guarda)', pg.evaluate("(()=>{const L=window.__ctpl.lib, v=L.byId(window.__ctpl.S.sel); return v.kind==='variant' && v.parentId===window.__o2 && L.changeState(v)==='adopted' && v.payload[204]===8 && L.byId(window.__o2).payload[204]!==8;})()"))
     pg.screenshot(path=SHOTS + '/13b_knobs.png')
     # --- 2.3: Cambios ---
     pg.click('.tabs-main button[data-v="changes"]'); pg.wait_for_timeout(300)
-    ok('Cambios: lista los borradores con su origen y explica el flujo', pg.locator('.flow li').count() == 4 and pg.locator('table.t tr').count() > 1)
+    pg.click('button[data-act="chgShow"][data-v="adopted"]'); pg.wait_for_timeout(200)
+    ok('Cambios: lista los sonidos editados y explica el flujo', pg.locator('.flow li').count() == 4 and pg.locator('table.t tr').count() > 1)
     vid = pg.evaluate("window.__ctpl.S.sel")
-    pg.locator(f'button[data-act="chgAdopt"][data-id="{vid}"]').first.click(); pg.wait_for_timeout(300)
-    if pg.locator('.modal').count(): pg.click('.modal .btn.primary'); pg.wait_for_timeout(300)
-    ok('Aceptar: la variante sustituye al original en el plan de disco', pg.evaluate(f"(()=>{{const L=window.__ctpl.lib, v=L.byId('{vid}'), o=L.byId(v.parentId); return v.meta.adopted && L.changeState(o)==='superseded';}})()"))
+    ok('Editar: la versión sustituye al original en el plan de disco', pg.evaluate(f"(()=>{{const L=window.__ctpl.lib, v=L.byId('{vid}'), o=L.byId(v.parentId); return v.meta.adopted && L.changeState(o)==='superseded';}})()"))
     pg.screenshot(path=SHOTS + '/16_changes.png', full_page=True)
     # --- 2.3: Patrones ---
     pg.evaluate("window.__ctpl.S.sel=window.__ctpl.lib.patches.find(p=>p.name==='Acid Line'&&p.kind!=='variant').id"); pg.click('.tabs-main button[data-v="patterns"]'); pg.wait_for_timeout(300)
@@ -223,7 +223,7 @@ with sync_playwright() as p:
     ok('Aplicar plantilla crea variante con las macros', pg.evaluate("(()=>{const v=window.__ctpl.lib.byId(window.__ctpl.S.sel);return v.kind==='variant'&&v.payload[205]===21})()"))
     for v in ['analyze', 'banks', 'data', 'device', 'audition']: pg.click(f'.tabs-main button[data-v="{v}"]'); pg.wait_for_timeout(250); pg.screenshot(path=f'{SHOTS}/07_{v}.png')
     pg.reload(); pg.wait_for_selector('.top .brand'); pg.wait_for_timeout(500)
-    ok('Persistencia tras recargar (categorías, mediciones, ajustes)', pg.evaluate("window.__ctpl.lib.patches.length") >= 141 and pg.evaluate("window.__ctpl.S.templates.length") == 1 and pg.evaluate("window.__ctpl.S.dev.channels[0]") == 4 and pg.evaluate(f"!!window.__ctpl.lib.byId('{target}').acoustic") and pg.evaluate("window.__ctpl.lib.banks.length") >= 2)
+    ok('Persistencia tras recargar (categorías, mediciones, ajustes)', pg.evaluate("window.__ctpl.lib.faces().length") >= 130 and pg.evaluate("window.__ctpl.S.templates.length") == 1 and pg.evaluate("window.__ctpl.S.dev.channels[0]") == 4 and pg.evaluate(f"!!window.__ctpl.lib.byId('{target}').acoustic") and pg.evaluate("window.__ctpl.lib.banks.length") >= 2)
     ok('Sin errores JavaScript', not errors, errors[:3])
     m = b.new_context(viewport={'width': 393, 'height': 852}, is_mobile=True, has_touch=True); m.add_init_script(FAKE_MIDI); mp = m.new_page(); mp.on('pageerror', lambda e: errors.append('mobile: ' + str(e)))
     mp.route('**/fonts.googleapis.com/**', lambda r: r.abort()); mp.goto(URL); mp.wait_for_selector('.top .brand')

@@ -6,50 +6,29 @@
 //    selección, y guardar conjuntos como grupos («Wobble + Dark») para cargarlos con un clic.
 
 // ---------- octava rápida ----------
-function quickOctOf(p) { const v = p && lib.currentVersion(p); return v && v.kind === 'variant' && v.meta.quickOct ? v.meta.quickOct : 0; }
+// v3.10: se suma a la versión del sonido (una sola versión, con lo demás que hayas cambiado). meta.quickOct lleva la
+// cuenta de las octavas movidas a mano; si el sonido vuelve a quedar como el original, la versión se quita.
+function quickOctOf(p) { const v = p && faceOf(p); return v && v.kind === 'variant' && v.meta.quickOct ? v.meta.quickOct : 0; }
 function octBtnsHTML(p) {
   if (!p) return '';
   const n = quickOctOf(p), lbl = n ? `${n > 0 ? '+' : '−'}${Math.abs(n / 12)} oct` : 'Octava';
-  return html`<span class="octq" title="Bajar o subir una octava este patch (Alt ↓ / Alt ↑). Queda como versión aceptada: se exporta así.">
+  return html`<span class="octq" title="Bajar o subir una octava el patch (Alt ↓ / Alt ↑). Se suma a su versión: suena y se exporta así; el original sigue guardado.">
     <button class="btn small" data-act="qOct" data-n="-12" data-id="${p.id}">−8va</button><b class="mono ${n ? 'on' : ''}">${lbl}</b><button class="btn small" data-act="qOct" data-n="12" data-id="${p.id}">+8va</button></span>`;
 }
 async function quickOctave(p0, n) {
   if (!p0) return;
-  const base = p0.kind === 'variant' && p0.meta.quickOct ? lib.byId(p0.parentId) || p0 : p0;
-  const cv = lib.currentVersion(base);
+  const cv = faceOf(p0), root = lib.rootOf(p0);
   const t = transposeSemitones(cv.payload, n, regMethod(), {});
   if (!t || !t.payload) { toast('No se puede transponer este patch', 5000); return; }
-  const quick = cv.kind === 'variant' && cv.meta.quickOct;
-  const total = (quick ? cv.meta.quickOct : 0) + n;
-  let now = cv;
-  if (quick) {
-    if (!total) {
-      // vuelve a ser el original: la versión rápida sobra
-      await lib.adoptVariants([cv.id], false); await lib.deletePatches([cv.id], true); now = lib.currentVersion(base);
-    } else {
-      const edits = []; for (let i = 0; i < 340; i++) if (t.payload[i] !== cv.payload[i]) edits.push([i, t.payload[i]]);
-      await lib.editVariantBytes(cv.id, edits, `Altura ${fmtSemis(n)} st (a mano)`);
-      await lib.updateMeta([cv.id], { quickOct: total }, `Octava a mano: ${fmtSemis(total / 12)} oct`);
-      cv.originText = `Octava ${fmtSemis(total / 12)} (a mano)`;
-    }
-  } else {
-    const v = await lib.createVariant(cv.id, t.payload, 'register', `Octava ${fmtSemis(total / 12)} (a mano)`, '');
-    await lib.updateMeta([v.id], { quickOct: total }, `Octava a mano: ${fmtSemis(total / 12)} oct`);
-    await lib.adoptVariants([v.id], true); now = v;
-  }
-  if (S.sel && !lib.byId(S.sel)) S.sel = base.id;
-  if (S.sel && lib.byId(S.sel)?.kind === 'variant' && lib.byId(S.sel).meta.quickOct) S.sel = now.id;
+  const total = (cv.kind === 'variant' ? cv.meta.quickOct || 0 : 0) + n;
+  const now = await lib.editSound(cv, t.payload, 'register', `Octava ${fmtSemis(total / 12)} (a mano)`);
+  if (now.kind === 'variant') await lib.updateMeta([now.id], { quickOct: total }, `Octava a mano: ${fmtSemis(total / 12)} oct`);
+  if (S.sel) S.sel = faceOf(lib.byId(S.sel))?.id || now.id;
   S.rowsKey = ''; rerender();
-  const s = S.dev.session;
-  if (s) quickPlay(base, lib.currentVersion(base).payload);
-  toast(total ? `«${base.name}»: ${fmtSemis(total / 12)} oct respecto al original${t.problems?.length ? ' · ' + t.problems[0] : ''}` : `«${base.name}» vuelve a su octava original`, 4000);
+  if (S.dev.session) quickPlay(root, faceOf(root).payload);
+  toast(now.id === root.id && root.kind !== 'variant' ? `«${root.name}» vuelve a sonar como el original` : `«${root.name}»: ${fmtSemis(total / 12)} oct respecto al original${t.problems?.length ? ' · ' + t.problems[0] : ''}`, 4000);
 }
-function quickPlay(p, payload) {
-  const s = S.dev.session; if (!s) return;
-  s.stopAll();
-  const ph = S.phrase === 'auto' ? phraseKeyFor(p) : S.phrase, t = s.sendPatch(payload, S.dev.synth);
-  s.playPhrase(phraseObj(ph), S.dev.synth, { tempo: tempoNow(), root: phraseObj(ph).custom ? 0 : S.dev.root, start: t + (S.dev.patchDelay ?? 80) });
-}
+function quickPlay(p, payload) { playTest(p, payload); }
 
 // ---------- portapapeles de etiquetas ----------
 const clipTags = () => lib.settings.tagClip || [];

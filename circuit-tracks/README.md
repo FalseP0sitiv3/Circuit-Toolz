@@ -10,13 +10,15 @@ Free, local, browser-based tool for the **Novation Circuit Tracks**: understand 
 - Open `dist/Circuit_Tracks_Patch_Library_Editor_EN.html` (English) or `dist/Circuit_Tracks_Patch_Library_Editor.html` (Spanish) in **desktop Chrome or Edge**. Web MIDI (with SysEx) and folder access need a secure context (HTTPS or a local file).
 - Import .syx, .zip, folders or a JSON backup, connect the Circuit Tracks by USB in *Device*.
 - While listening, **Del** deletes a patch (to a bin, **Ctrl Z** undoes), **Alt 1–9** toggles quick tags and **?** lists every shortcut.
+- One sound, one version: whatever you edit (octave, macros, parameters…) adds up in a single version per sound, the one that plays and gets exported; the original is always kept. Bulk corrections the tool isn't sure about wait as proposals.
+- The test phrase shows which notes are played and how they sound with the patch's own transposition; **<** / **Shift <** move it an octave without touching the patch.
 - Nothing is uploaded anywhere: your library lives in your browser (IndexedDB). Patches are only ever sent to the device's RAM, never to its flash. Download backups from *Data*.
 
 ## Build and test
 - `npm test` — core tests (Node 20+)
 - `npm run build` — writes both HTML files to `dist/` and checks that every Spanish string has an English translation (`tools/i18n/en.json`)
 - `node tests/make-fixtures.mjs` — synthetic fixtures in `tests/out`
-- `python3 tests/browser_test.py`, `python3 tests/song_ui.py [file]`, `python3 tests/flows_ui.py tests/out`, `python3 tests/monkey_ui.py tests/out` — browser tests with a simulated Circuit Tracks (Playwright + Chrome)
+- `python3 tests/browser_test.py`, `python3 tests/song_ui.py [file]`, `python3 tests/listen_ui.py [file]`, `python3 tests/flows_ui.py tests/out`, `python3 tests/monkey_ui.py tests/out` — browser tests with a simulated Circuit Tracks (Playwright + Chrome)
 
 ## Configure for your website
 Edit `src/site.json` and rebuild: brand name, site URL, Ko-fi, GitHub and issues links (empty links are hidden), licence, and the file names used by the language switch.

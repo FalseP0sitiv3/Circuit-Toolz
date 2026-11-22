@@ -124,19 +124,98 @@ test('Modelo de cambios: borrador, aceptada, sustituido y plan de disco', async 
   plan = diskPlan(lib, lib.patches);
   const w = plan.entries.filter((e) => e.action === 'write');
   assert.equal(w.length, 1); assert.equal(w[0].id, v1.id); assert.equal(w[0].file, 'Bass - Bass A.syx'); assert.equal(w[0].replaces, o.id);
-  // corrección sobre la versión aceptada: la cadena sigue
-  const v2 = await lib.createVariant(v1.id, v1.payload, 'edit', 'Macros', ''); await lib.adoptVariants([v2.id], true);
-  assert.equal(lib.changeState(v1), 'superseded'); assert.equal(lib.currentVersion(o).id, v2.id);
-  assert.deepEqual(diskPlan(lib, lib.patches).entries.filter((e) => e.action === 'write').map((e) => e.id), [v2.id]);
+  // v3.10: una propuesta sobre la versión aceptada se SUMA a esa versión (nada de cadenas)
+  const pl2 = new Uint8Array(v1.payload); pl2[204] = 99;
+  const v2 = await lib.createVariant(v1.id, pl2, 'edit', 'Macros', ''); await lib.adoptVariants([v2.id], true);
+  assert.equal(lib.byId(v2.id), undefined, 'la propuesta aplicada desaparece'); assert.equal(lib.currentVersion(o).id, v1.id);
+  assert.equal(lib.byId(v1.id).payload[204], 99); assert.equal(lib.byId(v1.id).payload[42], 76, 'conserva lo anterior');
+  assert.deepEqual(diskPlan(lib, lib.patches).entries.filter((e) => e.action === 'write').map((e) => e.id), [v1.id]);
   // un pack con el original exporta la versión vigente
   const { readZip } = await import('../src/core/zip.js');
   const bank = await lib.createBank('P'); bank.slots[0] = o.id;
   const ents = (await readZip(lib.bankExport(bank))).entries; const sx = ents.find((e) => (e.path || e.name).endsWith('.syx'));
-  assert.deepEqual([...sx.bytes], [...lib.exportSyx(v2)], 'el pack lleva la versión aceptada, no el original');
-  // solo una aceptada por original
-  const v3 = await lib.createVariant(o.id, o.payload, 'edit', 'Otra', ''); await lib.adoptVariants([v3.id], true);
-  assert.equal(lib.byId(v1.id).meta.adopted, false); assert.equal(lib.changeState(v1), 'draft'); assert.equal(lib.changeState(v2), 'draft', 'rama abandonada'); assert.equal(lib.currentVersion(o).id, v3.id);
-  assert.deepEqual(diskPlan(lib, lib.patches).entries.filter((e) => e.action === 'write').map((e) => e.id), [v3.id]);
+  assert.deepEqual([...sx.bytes], [...lib.exportSyx(lib.byId(v1.id))], 'el pack lleva la versión aceptada, no el original');
+  // una propuesta hecha desde el original también se suma a la versión: sus cambios, no su carga entera
+  const pl3 = new Uint8Array(o.payload); pl3[60] = 5;
+  const v3 = await lib.createVariant(o.id, pl3, 'edit', 'Otra', ''); await lib.adoptVariants([v3.id], true);
+  const cur = lib.byId(v1.id);
+  assert.equal(lib.currentVersion(o).id, v1.id); assert.equal(cur.payload[60], 5); assert.equal(cur.payload[42], 76); assert.equal(cur.payload[204], 99);
+  assert.equal(lib.patches.length, 2, 'original + una versión');
+  assert.deepEqual(diskPlan(lib, lib.patches).entries.filter((e) => e.action === 'write').map((e) => e.id), [v1.id]);
+});
+
+test('v3.10 · Un sonido, una versión: editar suma, metadatos del sonido, volver, duplicar y ordenar lo antiguo', async () => {
+  const { Library, MemoryStore } = await import('../src/core/library.js');
+  const lib = new Library(new MemoryStore()); await lib.load();
+  await lib.importInputs([{ name: 'Bass A.syx', path: '', bytes: syx(initPayload('Bass A')) }, { name: 'Pad B.syx', path: '', bytes: syx(initPayload('Pad B')) }]);
+  const o = lib.patches.find((p) => p.name === 'Bass A'), pad = lib.patches.find((p) => p.name === 'Pad B');
+  // editar: la primera edición crea la versión (ya aceptada), las siguientes se suman en ella
+  const a = new Uint8Array(o.payload); a[42] = 52;
+  const v = await lib.editSound(o, a, 'register', 'Octava −1');
+  assert.equal(lib.changeState(v), 'adopted'); assert.equal(lib.currentVersion(o).id, v.id);
+  const b2 = new Uint8Array(v.payload); b2[204] = 40;
+  const v2 = await lib.editSound(o, b2, 'edit', 'Macro 1');
+  assert.equal(v2.id, v.id, 'misma versión'); assert.equal(lib.patches.length, 3);
+  assert.deepEqual(lib.byId(v.id).ops, ['Octava −1', 'Macro 1']);
+  // en las listas, un sonido = una fila (su versión vigente)
+  assert.deepEqual(lib.faces().map((p) => p.id).sort(), [v.id, pad.id].sort());
+  // los metadatos son del sonido: se escriben en el original y en su versión
+  await lib.setCategory([v.id], 'bass', 'sub');
+  assert.equal(lib.byId(o.id).meta.category, 'bass'); assert.equal(lib.byId(o.id).meta.subtype, 'sub');
+  await lib.addTags([o.id], ['Dark']); assert.deepEqual(lib.byId(v.id).meta.tags, ['Dark']);
+  assert.equal(lib.byId(v.id).meta.adopted, true, 'la marca de versión es solo de la versión');
+  // una propuesta en borrador no ocupa fila y se ve en el sonido
+  const pr = await lib.createVariant(v.id, new Uint8Array(v.payload).map((x, i) => (i === 66 ? 33 : x)), 'macro-reorder', 'Macros reordenadas');
+  assert.equal(lib.faces().length, 2); assert.deepEqual(lib.proposalsOf(o).map((x) => x.id), [pr.id]);
+  // volver a la octava original con otra edición que deja todo como el original: la versión sobra y se quita
+  const c = lib.byId(v.id), back = new Uint8Array(o.payload);
+  const r = await lib.editSound(c, back, 'register', 'Octava +1');
+  assert.equal(r.id, o.id); assert.equal(lib.currentVersion(o).id, o.id);
+  assert.equal(lib.byId(pr.id).parentId, o.id, 'la propuesta sigue en el sonido'); assert.deepEqual(lib.proposalDiff(lib.byId(pr.id)), [[66, 33]], 'con los cambios que proponía');
+  // aceptar la propuesta cuando no hay versión: pasa a ser la versión
+  await lib.adoptVariants([pr.id], true); assert.equal(lib.currentVersion(o).id, pr.id);
+  // volver al original: a la papelera, Ctrl Z la devuelve; un pack con la versión pasa a apuntar al sonido
+  const bk = await lib.createBank('P'); bk.slots[5] = pr.id; await lib.saveBank(bk);
+  await lib.revertToOriginal(o); assert.equal(lib.currentVersion(o).id, o.id);
+  assert.equal(lib.banks.find((x) => x.id === bk.id).slots[5], o.id, 'el hueco del pack sigue con el sonido');
+  await lib.undo(lib.lastUndoable().id); assert.equal(lib.currentVersion(o).id, pr.id);
+  // duplicar: otro sonido, independiente, con su propio nombre y sus propias etiquetas
+  const d = await lib.duplicateSound(o);
+  assert.equal(d.parentId, null); assert.equal(d.name, 'Bass A 2'); assert.equal(lib.faces().length, 3);
+  await lib.addTags([d.id], ['Copia']); assert.ok(!lib.byId(o.id).meta.tags.includes('Copia'));
+  assert.equal(lib.changeState(d), 'original');
+});
+
+test('v3.10 · Ordenar versiones antiguas: cadenas, ramas y borradores repetidos', async () => {
+  const { Library, MemoryStore } = await import('../src/core/library.js');
+  const lib = new Library(new MemoryStore()); await lib.load();
+  await lib.importInputs([{ name: 'Old.syx', path: '', bytes: syx(initPayload('Old')) }]);
+  const o = lib.patches[0], put = (p, i, x) => { const q = new Uint8Array(p.payload); q[i] = x; return q; };
+  // lo que dejaba el modelo anterior: cadena aceptada o → v1 → v2, una rama abandonada, un borrador igual al original
+  const v1 = await lib.createVariant(o.id, put(o, 42, 52), 'register', 'Octava −1'); v1.meta.adopted = true;
+  const v2 = await lib.createVariant(v1.id, put(v1, 204, 50), 'edit', 'Macros'); v2.meta.adopted = true;
+  const br = await lib.createVariant(o.id, put(o, 60, 9), 'template', 'Plantilla');
+  const same = await lib.createVariant(o.id, o.payload, 'copy', 'Copia editable');
+  v2.meta.tags = ['Dark']; v2.meta.rating = 4; lib.emit();
+  const bank = await lib.createBank('P'); bank.slots[3] = v1.id; await lib.saveBank(bank);
+  assert.equal(lib.currentVersion(o).id, v2.id);
+  const plan = lib.versionsPlan();
+  assert.equal(plan.sounds.length, 1); assert.deepEqual(plan.drop.sort(), [v1.id, same.id].sort()); assert.deepEqual(plan.keep, [br.id]);
+  const before = lib.exportSyx(lib.currentVersion(o));
+  const res = await lib.tidyVersions(plan);
+  assert.equal(res.dropped, 2);
+  const cv = lib.currentVersion(o);
+  assert.equal(cv.id, v2.id); assert.equal(cv.parentId, o.id, 'cuelga del original'); assert.deepEqual([...lib.exportSyx(cv)], [...before], 'suena igual que antes');
+  assert.match(cv.originText, /Octava −1/); assert.match(cv.originText, /Macros/);
+  assert.deepEqual(lib.byId(o.id).meta.tags, ['Dark'], 'metadatos unificados'); assert.equal(lib.byId(o.id).meta.rating, 4);
+  assert.equal(lib.byId(br.id).parentId, o.id); assert.equal(lib.changeState(lib.byId(br.id)), 'draft', 'la rama queda como propuesta');
+  assert.equal(lib.banks.find((b) => b.id === bank.id).slots[3], o.id, 'el pack apunta al sonido');
+  assert.equal(lib.versionsPlan().sounds.length, 0, 'ya está en orden');
+  // aceptar la rama: sus cambios se suman a la versión
+  await lib.adoptVariants([br.id], true); assert.equal(lib.currentVersion(o).payload[60], 9); assert.equal(lib.currentVersion(o).payload[204], 50);
+  // deshacer el orden lo devuelve todo
+  const h = lib.history.find((x) => x.op === 'versions'); await lib.undo(h.id);
+  assert.ok(lib.byId(v1.id) && lib.byId(same.id)); assert.equal(lib.banks.find((b) => b.id === bank.id).slots[3], v1.id);
 });
 
 test('Biblioteca nueva: borra patches y conserva lo elegido', async () => {

@@ -172,7 +172,7 @@ export function transposeOctaves(payload, octaves, method = 'osc') {
 // ---------- Plan de carpetas para el disco ----------
 const safe = (s, n = 48) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9 ()_\-.]+/g, '_').replace(/\s+/g, ' ').trim().slice(0, n) || 'Sin nombre';
 // opts: { layout: 'category'|'architecture'|'source', naming: '{name}'|'{cat} - {name}'|'{n} {name}', duplicates: 'skip'|'folder', variants: 'family'|'flat' }
-export function planScope(lib, filtered, scope) { return (scope === 'filter' ? filtered : lib.patches).filter((p) => p.meta.review !== 'discard'); }
+export function planScope(lib, filtered, scope) { return (scope === 'filter' ? filtered : lib.faces ? lib.faces() : lib.patches).filter((p) => p.meta.review !== 'discard'); }
 export function diskPlan(lib, patches, opts = {}) {
   // drafts: 'skip' (por defecto) | 'family'  ·  las variantes aceptadas ocupan el sitio y el nombre de su original
   const o = { layout: 'category', naming: '{cat} - {name}', duplicates: 'folder', variants: 'family', drafts: 'skip', ...opts };

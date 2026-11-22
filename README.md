@@ -13,7 +13,7 @@ Each tool is a single HTML file: no install, no account, nothing leaves your com
 | Tool | Version | Download (ES · EN) | Video |
 |---|---|---|---|
 | [Circuit Rhythm · Sample Library / Pack Builder](#circuit-rhythm--sample-library--pack-builder) | 2.8.0 | [ES](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library.html) · [EN](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library_EN.html) | [1 min](media/circuit-rhythm-video.mp4) |
-| [Circuit Tracks · Patch Library / Editor](#circuit-tracks--patch-library--editor) | 3.9.2 | [ES](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html) · [EN](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html) | [1 min](media/circuit-tracks-video.mp4) |
+| [Circuit Tracks · Patch Library / Editor](#circuit-tracks--patch-library--editor) | 3.10.0 | [ES](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html) · [EN](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html) | [1 min](media/circuit-tracks-video.mp4) |
 
 | Circuit Rhythm in 1 minute | Circuit Tracks in 1 minute |
 |---|---|
@@ -84,7 +84,7 @@ Hundreds of patches, random names, no idea how they sound. This tool reads them,
 
 **Hear and sort**
 
-- **Audition**: every patch is sent to the unit's RAM and played with a test phrase that suits it (bassline, acid, chords, arpeggio…). One key per category; too high or too low? Alt ↓ / Alt ↑ moves it an octave.
+- **Audition**: every patch is sent to the unit's RAM and played with a test phrase that suits it (bassline, acid, chords, arpeggio…). You see which notes are played and how they sound with the patch's own transposition; < / Shift < move the phrase an octave, Alt ↓ / Alt ↑ move the patch. One key per category, or pick folder and subfolder right there.
 - Explainable classification from the name, the folder, the synth settings and, optionally, a measurement through your audio interface. Folders, subfolders and quick tags.
 - Families of duplicates and variants, collection analysis and map.
 
@@ -97,7 +97,7 @@ Hundreds of patches, random names, no idea how they sound. This tool reads them,
 - **Anatomy**: the signal flow of every patch; click a block to edit it, and a plain-language recipe generated from the bytes.
 - **Macros**: what each knob moves, turned live on the unit. Templates for all 8 macros.
 - **Sound Lab**: mutate (8 variations per click), cross two patches block by block, or morph from A to B live.
-- Every change is a draft variant linked to the original; nothing is written to the unit's flash, ever.
+- **One sound, one version**: what you edit adds up in a single version per sound (the one that plays and gets exported); the original is always kept and one click takes you back. Bulk fixes the tool isn't sure about wait as proposals. Nothing is written to the unit's flash, ever.
 
 | Macros | Patterns |
 |---|---|
@@ -161,9 +161,9 @@ Independent project, not affiliated with Novation or Focusrite. Novation, Circui
 
 **Circuit Tracks · Patch Library / Editor**
 
-- Escucha cada patch en tu equipo (solo en la RAM) con una frase de prueba adecuada y decide con una tecla; Alt ↓ / Alt ↑ para cambiar de octava.
+- Escucha cada patch en tu equipo (solo en la RAM) con una frase de prueba adecuada, viendo qué notas suenan, y decide con una tecla; < / Mayús < mueven la frase y Alt ↓ / Alt ↑ el patch.
 - Clasificación explicada por nombre, carpeta, ajustes y medición opcional; carpetas, subcarpetas y etiquetas; familias de duplicados y variantes.
-- Anatomía del patch, macros en directo, Laboratorio de sonido (mutar, cruzar, mezclar de A a B) y variantes que nunca tocan la memoria del equipo.
+- Anatomía del patch, macros en directo y Laboratorio de sonido (mutar, cruzar, mezclar de A a B). Un sonido, una versión: lo que editas se suma en ella y el original siempre se guarda; nada toca la memoria del equipo.
 - Patrones y canciones grabados en el secuenciador con la herramienta como reloj maestro, y packs de 128 para Components.
 
 **Colabora:** invítame a un café en [Ko-fi](https://ko-fi.com/falsepositive), cuenta errores o ideas en [Issues](../../issues) (con la versión, tu equipo, firmware y navegador) o compártelo con otros usuarios de Circuit.

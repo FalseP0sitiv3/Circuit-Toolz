@@ -43,6 +43,29 @@ export const STYLES = {
   random: { label: 'Aleatorio en escala', oct: 48, gate: 0.6, density: 0.5, desc: 'Notas al azar dentro de la escala.' }
 };
 export const STYLE_FOR_CAT = { bass: 'offbeat', lead: 'lead', pad: 'pad', chords: 'chords', keys: 'chords', stab: 'stab', pluck: 'arp', arp: 'arp', sequence: 'arp', perc: 'perc', fx: 'drone', drone: 'drone', transition: 'drone', brass: 'lead', strings: 'pad', bell: 'arp' };
+// v3.10 · Frase de prueba de cada patch: el estilo sale de su subcarpeta (o de su categoría) y la octava del estilo,
+// con algún ajuste por subcarpeta. Sin categoría ni propuesta: notas de la escala en registro medio (ni bajo ni lead).
+// Los bajos de notas largas (subs, 808, reese, wobble) se prueban con notas largas: así se oyen la cola, el batido
+// del desafinado y el LFO; los rodantes y distorsionados, con semicorcheas; impactos y zaps, con golpes.
+export const SUB_STYLE = {
+  bass: { sub: 'sub', b808: 'sub', reese: 'sub', wobble: 'sub', acid: 'acid', rolling: 'rolling', dist: 'rolling', groovy: 'offbeat', fm: 'offbeat', pluck: 'perc', drone: 'drone' },
+  lead: { acid: 'acid' }, chords: { stab: 'stab', dub: 'stab', pad: 'pad' }, stab: { rave: 'stab', chord: 'stab', dub: 'stab' },
+  fx: { impact: 'perc', zap: 'perc' }
+};
+export const SUB_OCT = { 'perc/kick': -12, 'perc/tom': -12, 'perc/hat': 12, 'fx/impact': -12 };
+export function testStyle(cat, sub) { return (cat && SUB_STYLE[cat]?.[sub]) || STYLE_FOR_CAT[cat] || 'random'; }
+export function testOctave(style, cat, sub) { return (STYLES[style]?.oct ?? 48) + (SUB_OCT[`${cat}/${sub}`] || 0); }
+// Notas absolutas de una frase tal como se tocará (frase + base + tónica); para decir «se toca Do1–Do2».
+export function phraseRange(ph, root = 0) {
+  const ns = (ph?.notes || []).map((x) => x.n + (ph.base || 0) + root);
+  return ns.length ? { lo: Math.min(...ns), hi: Math.max(...ns), notes: ns } : { lo: null, hi: null, notes: [] };
+}
+// Mueve un patrón (sus notas) d semitonos, sin salirse del rango MIDI.
+export function transposePattern(pt, d) {
+  const ns = pt.notes || [], lo = ns.length ? Math.min(...ns.map((x) => x.n)) : 0, hi = ns.length ? Math.max(...ns.map((x) => x.n)) : 0;
+  if (lo + d < 0 || hi + d > 127) return null;
+  return { ...pt, notes: ns.map((x) => ({ ...x, n: x.n + d })), octave: (pt.octave ?? 48) + d, edited: true };
+}
 export const MACRO_SHAPES = { none: 'Sin carril de macro', rise: 'Sube', fall: 'Baja', triangle: 'Sube y baja', sine: 'Onda (1 ciclo por compás)', random: 'Aleatoria por tiempo' };
 
 // Progresiones (grados de la escala) típicas en menor; la semilla elige una.

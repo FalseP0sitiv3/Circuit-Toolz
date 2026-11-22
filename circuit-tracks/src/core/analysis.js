@@ -102,7 +102,7 @@ export function kmeans(rows, k = 8, iters = 25) {
 
 // Datos de la franja de análisis de la biblioteca.
 export function libraryAnalysis(lib, profileId = 'techno', k = 8) {
-  const ps = lib.patches, N = ps.length;
+  const ps = lib.faces ? lib.faces() : lib.patches, N = ps.length;
   const fam = lib.families(); let dup = 0;
   const dupIdsTmp = []; for (const f of fam.list) for (const m of f.members) if (m.rel && (m.rel.level === 'payload' || m.rel.level === 'synth')) { dup++; dupIdsTmp.push(m.id); }
   const tracks = ps.filter((p) => p.header.product === 0x64).length;

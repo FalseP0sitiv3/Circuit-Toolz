@@ -55,3 +55,18 @@ test('Patrones: cada estilo cambia con la semilla («Otra variación» siempre h
     assert.ok(sigs.size >= (style === 'drone' ? 4 : 8), `${style}: solo ${sigs.size} variantes con 12 semillas`);
   }
 });
+
+test('v3.10 · Frase de prueba: estilo por subcarpeta, octava, notas que se tocan y mover un patrón', async () => {
+  const { testStyle, testOctave, phraseRange, transposePattern, generatePattern, STYLES } = await import('../src/core/patterns.js');
+  assert.equal(testStyle('bass', 'sub'), 'sub'); assert.equal(testStyle('bass', 'reese'), 'sub', 'reese con notas largas: se oye el batido');
+  assert.equal(testStyle('bass', 'rolling'), 'rolling'); assert.equal(testStyle('bass', null), 'offbeat');
+  assert.equal(testStyle('fx', 'impact'), 'perc'); assert.equal(testStyle(null, null), 'random', 'sin categoría: registro medio, ni bajo ni lead');
+  assert.equal(testOctave('sub', 'bass', 'sub'), 36); assert.equal(testOctave('perc', 'perc', 'kick'), 36); assert.equal(testOctave('perc', 'perc', 'hat'), 60);
+  const pt = generatePattern({ style: 'sub', root: 0, seed: 3, octave: 24 });
+  const r = phraseRange({ notes: pt.notes, base: 0 }, 0);
+  assert.ok(r.lo >= 12 && r.hi <= 36, `${r.lo}–${r.hi}`); assert.equal(pt.octave, 24);
+  assert.deepEqual(phraseRange({ notes: [{ n: 0 }, { n: 7 }], base: 36 }, 2), { lo: 38, hi: 45, notes: [38, 45] }, 'frase fija: notas + base + tónica');
+  const down = transposePattern(pt, -12); assert.deepEqual(down.notes.map((x) => x.n), pt.notes.map((x) => x.n - 12)); assert.equal(down.octave, 12);
+  assert.equal(transposePattern({ notes: [{ n: 5 }] }, -12), null, 'no se sale del rango MIDI');
+  assert.ok(STYLES.random.oct === 48);
+});

@@ -11,12 +11,13 @@ Each tool is a single HTML file that you open in Chrome or Edge.
 
 | Tool | Version | Download (ES · EN) | Video |
 |---|---|---|---|
-| [Circuit Rhythm · Sample Library / Pack Builder](#circuit-rhythm--sample-library--pack-builder) | 2.8.1 | [ES](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library.html) · [EN](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library_EN.html) | [1 min](media/circuit-rhythm-video.mp4) |
-| [Circuit Tracks · Patch Library / Editor](#circuit-tracks--patch-library--editor) | 3.10.1 | [ES](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html) · [EN](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html) | [1 min](media/circuit-tracks-video.mp4) |
+| [Circuit Rhythm · Sample Library / Pack Builder](#circuit-rhythm--sample-library--pack-builder) | 2.8.1 | [ES](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library.html) · [EN](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library_EN.html) | [1 min](https://falsep0sitiv3.github.io/Circuit-Toolz/media/circuit-rhythm-video.mp4) |
+| [Circuit Tracks · Patch Library / Editor](#circuit-tracks--patch-library--editor) | 3.10.1 | [ES](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html) · [EN](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html) | [1 min](https://falsep0sitiv3.github.io/Circuit-Toolz/media/circuit-tracks-video.mp4) |
 
 | Circuit Rhythm in 1 minute | Circuit Tracks in 1 minute |
 |---|---|
-| [![Watch the Circuit Rhythm video](media/rhythm-video-poster.jpg)](media/circuit-rhythm-video.mp4) | [![Watch the Circuit Tracks video](media/tracks-video-poster.jpg)](media/circuit-tracks-video.mp4) |
+| [![Circuit Rhythm: a few seconds of the video. Click to watch it with sound](media/rhythm-preview.gif)](https://falsep0sitiv3.github.io/Circuit-Toolz/media/circuit-rhythm-video.mp4) | [![Circuit Tracks: a few seconds of the video. Click to watch it with sound](media/tracks-preview.gif)](https://falsep0sitiv3.github.io/Circuit-Toolz/media/circuit-tracks-video.mp4) |
+| [▶ Watch with sound (1 min)](https://falsep0sitiv3.github.io/Circuit-Toolz/media/circuit-rhythm-video.mp4) | [▶ Watch with sound (1 min)](https://falsep0sitiv3.github.io/Circuit-Toolz/media/circuit-tracks-video.mp4) |
 
 > ### ♥ Support the project
 > These tools are free and will stay free. If they save you time or end up in your music, you can keep them going:

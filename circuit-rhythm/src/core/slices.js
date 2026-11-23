@@ -4,6 +4,7 @@
 // Las slices se cuentan sobre la misma zona que la rejilla de Slices de la Rhythm: recortada y ajustada al compás.
 import { DEFAULT_RECIPE, toMono, trimRange, render } from './dsp.js';
 import { encodeWav16, quantize16 } from './wav.js';
+import { applyKeep, keepIsIdentity } from './shorten.js';
 
 export const SLICE_FADE_MS = 2;          // fundido corto en cada corte para que no haga clic
 export const SLICE_MAX_SEC = 30;         // tope por archivo de la Rhythm (solo en formato Rhythm)
@@ -47,6 +48,16 @@ export function slicesOriginal(decoded, recipe, n = 1, { fadeMs = SLICE_FADE_MS 
     });
     return { channels, sampleRate: z.sr };
   });
+}
+
+// v2.9: entero «como el original, con tus cortes»: la zona (recorte y ajuste al compás) y, si el loop está
+// acortado, las slices elegidas unidas igual que para la Rhythm (mismos fundidos cruzados en las uniones y en el
+// punto de bucle). Todos los canales, la frecuencia original y el nivel sin tocar.
+export function cutOriginal(decoded, recipe) {
+  const r = { ...DEFAULT_RECIPE, ...recipe };
+  const [part] = slicesOriginal(decoded, r, 1);
+  if (!r.keep || keepIsIdentity(r.keep)) return part;
+  return { ...part, channels: part.channels.map((c) => applyKeep(c, r.keep, part.sampleRate)), kept: true };
 }
 
 // Formato Rhythm: la zona preparada entera (mismo nivel para todas las slices), partida en 48 kHz mono.

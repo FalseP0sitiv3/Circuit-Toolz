@@ -3,6 +3,7 @@
 // para pegar solo lo que quieras. Copiar un sample (Alt Mayús V) y pegarlo en el que escuchas o en la
 // selección (Alt V; la V sola ya es «Vox» al decidir). Los grupos guardan un conjunto para cargarlo con un clic.
 // Vive en los ajustes: S.set.tagClip (etiquetas, como en 2.4), S.set.clipF ({ cat, kind, sub, off: [] }) y S.set.tagGroups.
+import { whatOf, whatsOf, canonPlace, pickByScores, LOOP_FAMILIES } from '../core/place.js';
 const clipList = () => (Array.isArray(S.set.tagClip) ? S.set.tagClip : []);
 const clipF = () => (S.set.clipF && typeof S.set.clipF === 'object' ? S.set.clipF : {});
 const clipOn = (k) => !(clipF().off || []).includes(k);
@@ -35,11 +36,27 @@ function subFor(fromCat, sub, toCat) {
   const x = l && taxonomy(S.set.tax, toCat).find((y) => String(y.label).toLowerCase() === l);
   return x ? x.id : null;
 }
+// v2.9: lo que suena del portapapeles. «Drum loop › Closed-Hats» es Closed hat en un loop: pegado en un
+// one-shot (sin pegar el tipo) deja Closed hat; en un loop, Drum loop › Closed-Hats. La subcarpeta de un
+// loop dice qué suena, así que va con la categoría.
+function clipWhat(s) {
+  const f = clipF(); if (!clipOn('cat') || !f.cat) return null;
+  if (!clipOn('sub') || !f.sub || whatOf(f.cat, f.sub) === f.cat) return { cat: f.cat, subIsWhat: false };
+  const ws = whatsOf(f.cat, f.sub), c = clsOf(s);
+  return { cat: (ws.length > 1 && pickByScores(c.auto?.scores || c.scores)(ws)) || ws[0], subIsWhat: true };
+}
+// dónde acabaría el sample con lo del portapapeles: { cat, sub } (sub solo si lo decide lo que suena)
+function clipPlace(s) {
+  const w = clipWhat(s); if (!w) return null;
+  const kind = (clipOn('kind') && clipF().kind) || kindOf(s);
+  const p = canonPlace({ cat: w.cat, kind }, null);
+  return { cat: p.cat, sub: p.moved || w.subIsWhat ? p.sub : null, subIsWhat: w.subIsWhat || p.moved };
+}
 function pendingIn(s) {
-  const f = clipF(), cur = fieldsOf(s);
-  if (clipOn('cat') && f.cat && s.user?.cat !== f.cat) return true;
+  const f = clipF(), cur = fieldsOf(s), pl = clipPlace(s);
+  if (pl && (s.user?.cat !== pl.cat || (pl.sub && s.user?.sub !== pl.sub))) return true;
   if (clipOn('kind') && f.kind && s.user?.kind !== f.kind && cur.kind !== f.kind) return true;
-  const to = clipOn('cat') && f.cat ? f.cat : cur.cat, sb = clipOn('sub') ? subFor(f.cat, f.sub, to) : null;
+  const to = pl ? pl.cat : cur.cat, sb = clipOn('sub') && !pl?.subIsWhat ? subFor(f.cat, f.sub, to) : null;
   if (sb && s.user?.sub !== sb) return true;
   return clipOn('tags') && clipList().some((x) => !tagsOf(s).includes(x));
 }
@@ -71,9 +88,12 @@ async function clipPaste(s) {
   const f = clipF(), tags = clipOn('tags') ? clipList() : [], parts = [];
   let noSub = 0, ensured = false;
   for (const x of list) {
-    if (clipOn('cat') && f.cat) setCatQuiet(x, f.cat);
-    if (clipOn('kind') && f.kind) x.user.kind = f.kind;
-    if (clipOn('sub') && f.cat && f.sub) {
+    // el tipo primero: así lo que suena se coloca con el tipo que va a tener
+    if (clipOn('kind') && f.kind && x.user.kind !== f.kind) { x.user.kind = f.kind; invalidateAll(); }
+    const w = clipWhat(x);
+    if (w) setCatQuiet(x, w.cat);
+    placeUser(x);
+    if (clipOn('sub') && f.cat && f.sub && !(w && w.subIsWhat) && !(x.user.cat && LOOP_FAMILIES.has(x.user.cat) && !LOOP_FAMILIES.has(f.cat))) {
       const to = x.user.cat || catFor(x) || clsOf(x).cat;
       let sb = subFor(f.cat, f.sub, to);
       if (!sb && to === f.cat) { ensured = ensureSub(f.cat, f.sub) || ensured; sb = f.sub; }

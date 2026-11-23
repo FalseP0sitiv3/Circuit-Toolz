@@ -1,5 +1,6 @@
 // ui/app_views.js — vistas
 import { CATS, compatible } from '../core/classify.js';
+import { whatsOf, LOOP_HOME } from '../core/place.js';
 import { isLoopSample, kindOf, LAYOUTS, roleOf, budget, sampleSeconds, rawSeconds, beatMatch, MAX_TOTAL_S, MAX_SAMPLE_S, SLOTS, PAGE, featureDistance, LAYOUT_IDS } from '../core/pack.js';
 import { CC } from '../core/midi.js';
 
@@ -81,7 +82,8 @@ function filtered() {
   const inPack = inPackSet();
   let list = S.samples.filter((s) => {
     const c = clsOf(s);
-    if (S.f.cat !== 'all' && (S.f.cat === 'none' ? c.cat : c.cat !== S.f.cat)) return false;
+    // v2.9: una categoría de instrumento también muestra sus loops (Closed hat → Drum loop › Closed-Hats)
+    if (S.f.cat !== 'all' && (S.f.cat === 'none' ? c.cat : c.cat !== S.f.cat && !whatsFor(s).includes(S.f.cat))) return false;
     if (S.f.cert !== 'all' && c.cert !== S.f.cert) return false;
     if (S.f.kind && kindOf(s) !== S.f.kind) return false;
     const a = s.analysis || {};
@@ -122,7 +124,12 @@ function filtered() {
   return list;
 }
 function catCounts() {
-  const n = {}; for (const s of S.samples) { const c = clsOf(s).cat || 'none'; n[c] = (n[c] || 0) + 1; } return n;
+  const n = {};
+  for (const s of S.samples) {
+    const c = clsOf(s).cat || 'none'; n[c] = (n[c] || 0) + 1;
+    for (const w of whatsFor(s)) if (w !== c) n[w] = (n[w] || 0) + 1; // también cuenta en su instrumento
+  }
+  return n;
 }
 
 function renderLibrary(v) {
@@ -137,7 +144,7 @@ function renderLibrary(v) {
         <div class="row"><input type="search" id="q" class="grow" placeholder="${t('Buscar en nombre, carpeta, nota…  ( / )')}" value="${esc(S.f.q)}">
           <select id="fsort" title="${t('Orden')}">${[['folder', t('Por carpeta')], ['name', t('Por nombre')], ['cat', t('Por categoría')], ['dur', t('Por duración')], ['rating', t('Mejor valorados')], ['added', t('Recientes')]].map(([k, l]) => `<option value="${k}" ${S.f.sort === k ? 'selected' : ''}>${l}</option>`).join('')}</select>${collSelectHTML()}</div>
         <div class="cats"><button class="cat ${S.f.cat === 'all' ? 'on' : ''}" data-act="fcat" data-v="all" style="--c:#888">${t('Todo')} <span class="n">${S.samples.length}</span></button>
-          ${CATS.map((c) => `<button class="cat ${S.f.cat === c.id ? 'on' : ''}" data-act="fcat" data-v="${c.id}" style="--c:${catVar(c.id)}">${catLabel(c.id)} <span class="n">${cc[c.id] || 0}</span></button>`).join('')}
+          ${CATS.map((c) => `<button class="cat ${S.f.cat === c.id ? 'on' : ''}" data-act="fcat" data-v="${c.id}" style="--c:${catVar(c.id)}" ${LOOP_HOME[c.id] ? `title="${t('One-shots y loops de {c}', { c: catLabel(c.id) })}"` : ''}>${catLabel(c.id)} <span class="n">${cc[c.id] || 0}</span></button>`).join('')}
           <button class="cat ${S.f.cat === 'none' ? 'on' : ''}" data-act="fcat" data-v="none">${t('Sin categoría')} <span class="n">${cc.none || 0}</span></button></div>
         <div class="row">
           <select id="fflag">${[['all', t('Todos')], ['review', t('Por revisar (dudosos y sin pistas)')], ['unheard', t('Sin escuchar')], ['fav', t('Favoritos')], ['rated', t('4–5 estrellas')], ['inpack', t('En el pack actual')], ['long', t('Más de 30 s')], ['phase', t('Estéreo que se cancela en mono')], ['problems', t('Con problemas')], ['confirmed', t('Confirmados o tuyos')], ['anypack', t('En algún pack')], ['dups', t('Con copias idénticas')], ['warnings', t('Con avisos')], ['discard', t('Descartados')], ['sel', t('Seleccionados ({n})', { n: S.multi.size })]].map(([k, l]) => `<option value="${k}" ${S.f.flag === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
@@ -149,7 +156,7 @@ function renderLibrary(v) {
       </div>
       <div class="list" id="list"><div class="spacer" style="height:${list.length * ROW_H}px"></div></div>
       <div class="listfoot"><span>${t('{n} de {m}', { n: list.length.toLocaleString(LOCALE), m: S.samples.length.toLocaleString(LOCALE) })}</span>
-        ${S.multi.size ? `<b>${t('{n} seleccionados', { n: S.multi.size })}</b><button class="btn small" data-act="multi-pack">${t('Al pack')}</button><button class="btn small" data-act="multi-listen">${t('Escuchar')}</button><button class="btn small" data-act="multi-org">${t('Carpeta y etiquetas')}</button><button class="btn small" data-act="multi-clear">✕</button>` : `<span class="dim">${t('Mayús/Ctrl+clic para elegir varios')}</span>`}<button class="btn small ghost" data-act="lib-csv" title="${t('La lista filtrada en una hoja de cálculo: ruta, categoría, subcarpeta, tipo, etiquetas, valoración, lo medido y en qué packs está')}">CSV</button></div>
+        ${S.multi.size ? `<b>${t('{n} seleccionados', { n: S.multi.size })}</b><button class="btn small" data-act="multi-pack">${t('Al pack')}</button><button class="btn small" data-act="multi-listen">${t('Escuchar')}</button><button class="btn small" data-act="multi-org">${t('Carpeta y etiquetas')}</button><button class="btn small" data-act="multi-clear">✕</button>` : `<span class="dim">${t('Mayús/Ctrl+clic para elegir varios')}</span>`}<button class="btn small ghost" data-act="lib-export" title="${t('Exportar en lote la selección o la lista filtrada: tal cual, como el original con tus cortes o para la Rhythm (08 Datos)')}">⤓ ${t('Exportar…')}</button><button class="btn small ghost" data-act="lib-csv" title="${t('La lista filtrada en una hoja de cálculo: ruta, categoría, subcarpeta, tipo, etiquetas, valoración, lo medido y en qué packs está')}">CSV</button></div>
     </section>
     <section id="detail"></section></div>`;
   paintList();
@@ -238,8 +245,13 @@ const CERT_EXPLAIN = () => ({
   none: t('No hay pistas. Escúchalo y decide.'),
 });
 
+// v2.9: la tecla dice qué suena. En un loop se encienden las dos: Drum loop y el instrumento que suena en él.
 function keysHTML(c, s) {
-  return `<div class="keys">${CATS.map((k) => `<button class="kbtn ${s.user?.cat === k.id ? 'on' : ''} ${!s.user?.cat && c.cat === k.id ? 'prop-hint' : ''}" style="--c:${catVar(k.id)}" data-act="decide" data-v="${k.id}"><span class="k">${k.key}</span>${catLabel(k.id)}</button>`).join('')}</div>`;
+  const u = s.user || {}, sub = subForOrg(s, c.cat);
+  const mine = new Set(u.cat ? [u.cat, ...whatsOf(u.cat, sub)] : []);
+  const prop = new Set(!u.cat && c.cat ? [c.cat, ...whatsOf(c.cat, sub)] : []);
+  const hint = kindOf(s) === 'loop' ? `<p class="keyhint">${t('Es un loop: la tecla de lo que suena lo lleva a Drum loop o Melodic loop, a la subcarpeta de ese instrumento (H → Drum loop › Closed-Hats). FX y Vox se quedan en su carpeta. W lo pasa a one-shot.')}</p>` : '';
+  return `<div class="keys">${CATS.map((k) => `<button class="kbtn ${mine.has(k.id) ? 'on' : ''} ${prop.has(k.id) ? 'prop-hint' : ''}" style="--c:${catVar(k.id)}" data-act="decide" data-v="${k.id}"><span class="k">${k.key}</span>${catLabel(k.id)}</button>`).join('')}</div>${hint}`;
 }
 function rateHTML(s) {
   const r = s.user?.rating || 0;
@@ -492,7 +504,7 @@ function renderListen(v) {
       ${shortHTML(s)}
       <div class="panel" style="margin-top:12px"><div class="legend">
         <span><span class="kbd">${t('Espacio')}</span> ${t('escuchar')}</span><span><span class="kbd">${t('Intro')}</span> ${t('aceptar propuesta')}</span><span><span class="kbd">K S C H O Y T E</span> ${t('baterías')}</span><span><span class="kbd">B L P X V</span> ${t('bajo, lead/synth, pad/atmos, FX, voz')}</span>
-        <span><span class="kbd">D M</span> ${t('loops')}</span><span><span class="kbd">W</span> ${t('loop / one-shot')}</span><span><span class="kbd">1–5</span> ${t('valorar')}</span><span><span class="kbd">F</span> ${t('favorito')}</span><span><span class="kbd">${t('Supr')}</span> ${t('eliminar')}</span><span><span class="kbd">${t('Mayús')} ${t('Supr')}</span> ${t('descartar')}</span><span><span class="kbd">Alt 1–9</span> ${t('etiqueta rápida')}</span><span><span class="kbd">?</span> ${t('todos los atajos')}</span><span><span class="kbd">← →</span> ${t('anterior / siguiente')}</span><span><span class="kbd">R</span> ${t('original / Rhythm')}</span><span><span class="kbd">G</span> ${t('subcarpeta propuesta')}</span></div></div>`
+        <span><span class="kbd">D M</span> ${t('loops de varios instrumentos')}</span><span><span class="kbd">W</span> ${t('loop / one-shot')}</span><span><span class="kbd">1–5</span> ${t('valorar')}</span><span><span class="kbd">F</span> ${t('favorito')}</span><span><span class="kbd">${t('Supr')}</span> ${t('eliminar')}</span><span><span class="kbd">${t('Mayús')} ${t('Supr')}</span> ${t('descartar')}</span><span><span class="kbd">Alt 1–9</span> ${t('etiqueta rápida')}</span><span><span class="kbd">?</span> ${t('todos los atajos')}</span><span><span class="kbd">← →</span> ${t('anterior / siguiente')}</span><span><span class="kbd">R</span> ${t('original / Rhythm')}</span><span><span class="kbd">G</span> ${t('subcarpeta propuesta')}</span></div></div>`
       : `<div class="panel empty"><h2>${t('Nada que escuchar aquí')}</h2><p>${L.queue.length ? t('Has llegado al final de la cola.') : t('La cola está vacía con esta selección.')}</p><button class="btn" data-act="lrebuild">${t('Volver a montar la cola')}</button></div>`}</section></div>`;
   if (s) { drawWave($('#wave'), s); afterDetail(s); }
 }
@@ -657,7 +669,7 @@ function renderData(v) {
         <span class="lbl">${t('Nombres en la SD')}</span><span><select id="set-sep"><option value="__" ${S.set.sep === '__' ? 'selected' : ''}>00__Kick.wav</option><option value="_" ${S.set.sep === '_' ? 'selected' : ''}>00_Kick.wav</option></select> <span class="muted" style="font-size:12px">${t('Novation escribe «__» y pone de ejemplo «_»')}</span></span>
       </div>
     </section>
-    <section class="panel"><h2>${t('Ordenar en disco')}</h2>${organizeHTML()}</section>
+    <section class="panel" id="org-panel"><h2>${t('Ordenar en disco · exportar en lote')}</h2>${organizeHTML()}</section>
     <section class="panel"><h2>${t('Leer la tarjeta SD')}</h2>${sdHTML()}</section>
     <section class="panel"><h2>${t('Calibración')}</h2>${calibrationHTML()}</section>
     <section class="panel"><h2>${t('Reglas aprendidas')}</h2>

@@ -10,7 +10,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const rd = (p) => readFileSync(join(root, p), 'utf8');
 const ORDER = [
   'src/core/wav.js', 'src/core/loud.js', 'src/core/dsp.js', 'src/core/shorten.js', 'src/core/analyze.js', 'src/core/classify.js', 'src/core/zip.js', 'src/core/pack.js', 'src/core/slices.js', 'src/core/tune.js', 'src/core/hits.js',
-  'src/core/patterns.js', 'src/core/song.js', 'src/core/map.js', 'src/core/organize.js', 'src/core/taxonomy.js',
+  'src/core/patterns.js', 'src/core/song.js', 'src/core/map.js', 'src/core/place.js', 'src/core/organize.js', 'src/core/taxonomy.js',
   'src/core/library.js', 'src/core/midi.js', 'src/ui/i18n.js', 'src/ui/audio.js', 'src/ui/app_data.js', 'src/ui/app_views.js', 'src/ui/app_events.js', 'src/ui/app_ext.js', 'src/ui/app_song.js', 'src/ui/app_org.js', 'src/ui/app_kind.js', 'src/ui/app_mapsel.js', 'src/ui/app_coll.js', 'src/ui/app_sound.js', 'src/ui/app_tagclip.js', 'src/ui/app_short.js', 'src/ui/app_parts.js', 'src/ui/app_mono.js', 'src/ui/app_trash.js', 'src/ui/app_dock.js', 'src/ui/app_public.js',
 ];
 

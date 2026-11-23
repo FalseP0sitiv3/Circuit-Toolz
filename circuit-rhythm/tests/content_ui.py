@@ -58,7 +58,8 @@ with sync_playwright() as pw:
     kc = k.get_attribute('data-cat'); k.click(); time.sleep(0.4)
     ok(U('Kick 99.wav').get('cat') == kc, 'en un one-shot, la pista decide la categoría (' + str(kc) + ')')
     segs = [x.strip() for x in page.locator('#detail .dest .dseg b').all_inner_texts()]
-    ok(len(segs) >= 3 and segs[1] == ('One-shots') and page.locator('#detail .dest .dseg.prop').count() >= 1, 'un one-shot: Categoría / One-shots / subcarpeta propuesta (discontinua): ' + ' / '.join(segs))
+    # v2.9: la carpeta de un instrumento solo tiene one-shots: sin «One-shots» dentro
+    ok(len(segs) >= 2 and 'One-shots' not in segs and segs[0].endswith('Kicks') and page.locator('#detail .dest .dseg.prop').count() >= 1, 'un one-shot: Kicks / subcarpeta propuesta (discontinua): ' + ' / '.join(segs))
     found = []
     for v in ['library', 'listen', 'map', 'packs', 'patterns', 'songs', 'device', 'data']:
         J('(v) => { const c = window.__crsl; c.S.view = v; c.renderAll(); }', v); time.sleep(0.4)

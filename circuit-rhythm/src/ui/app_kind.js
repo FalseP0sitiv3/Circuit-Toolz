@@ -1,13 +1,15 @@
 // ui/app_kind.js — v1.7: loop / one-shot en cualquier categoría, conservar lo detectado al decidir,
 // reanalizar un sample y exportarlo suelto. v1.8: exportar entero o en slices, para la Rhythm o como el original.
 import { kindOf, autoKindOf, tooShortForLoop, safeName } from '../core/pack.js';
-import { slicesOriginal, slicesRhythm, originalFormat, encodeOriginal, encodeRhythm, sliceName } from '../core/slices.js';
+import { slicesOriginal, slicesRhythm, cutOriginal, originalFormat, encodeOriginal, encodeRhythm, sliceName } from '../core/slices.js';
 import { taxonomy, subLabelOf } from '../core/taxonomy.js';
+import { canonPlace, loopPlace, whatOf, pickByScores, LOOP_FAMILIES } from '../core/place.js';
 
 // ---------- loop / one-shot ----------
 function kindWhy(s) {
   const c = clsOf(s);
   if (s.user?.kind) return t('lo marcaste tú');
+  if (c.textLoop && !c.oneshotHint && autoKindOf(s) === 'loop') return t('el nombre o la carpeta dicen «loop»');
   if (['dloop', 'mloop'].includes(c.cat)) return t('por la categoría');
   if (autoKindOf(s) === 'loop') return t('el nombre o la carpeta dicen «loop»');
   if (c.textLoop && !c.oneshotHint && tooShortForLoop(s)) return t('dura menos de 1 s: demasiado corto para ser un loop');
@@ -26,8 +28,57 @@ function kindHTML(s) {
 async function setKind(s, kind) {
   if (!s) return;
   if (kind) s.user.kind = kind; else delete s.user.kind;
+  // v2.9: el sitio sigue al tipo: Closed hat ↔ Drum loop › Closed-Hats
+  invalidateAll(); placeUser(s, null, { keepSub: true });
   invalidateAll(); await saveSample(s);
   refresh();
+}
+
+// ---------- v2.9: un sample, un sitio (core/place.js) ----------
+// Lo que decides se guarda ya colocado: un instrumento en bucle va a su familia de loops con la subcarpeta de lo
+// que suena, y un loop que pasa a one-shot vuelve a su instrumento. Así H en un loop de hats, D y la subcarpeta
+// Closed-Hats, o W sobre un Closed hat dejan lo mismo: Drum loop › Closed-Hats.
+const placePick = (s) => { const c = clsOf(s); return pickByScores(c.auto?.scores || c.scores); };
+// kind: el tipo que debe quedar (por defecto, el que tiene). keepSub: conservar la subcarpeta que ya dice algo
+// del instrumento (Shakers); sin ella, la tecla que acabas de pulsar decide lo que suena.
+function placeUser(s, kind = null, { keepSub = true } = {}) {
+  const u = s.user; if (!u || !u.cat) return false;
+  clsOf(s);
+  const k = kind || kindOf(s);
+  const p = canonPlace({ cat: u.cat, kind: k, sub: keepSub ? u.sub : null }, placePick(s));
+  if (!p.moved) return false;
+  u.cat = p.cat;
+  if (p.sub) { if (ensureSub(p.cat, p.sub)) saveSettings(); u.sub = p.sub; } else delete u.sub;
+  invalidateAll(); clsOf(s);
+  if (kindOf(s) !== k) { u.kind = k; invalidateAll(); }
+  return true;
+}
+// Elegir la categoría (tecla, botón, pista, portapapeles, parecido, dock): todo pasa por aquí.
+// D / M dicen que es un loop: si ya se sabía qué suena y es de esa familia, va a su subcarpeta.
+// Un instrumento se coloca según el tipo que tenía el sample: en un loop, a su familia de loops.
+function assignCat(s, cat, { learn = true, keep = true } = {}) {
+  const before = clsOf(s), kindBefore = kindOf(s), hadCat = !!s.user.cat;
+  const prevWhat = hadCat ? whatOf(s.user.cat, s.user.sub) : (before.placedFrom || before.cat);
+  // la subcarpeta propuesta que se ve («Drum loop › Shakers»): al aceptar la propuesta, se queda tal cual
+  const propSub = !hadCat && before.cat === cat ? propsOf(s).sub?.id : null;
+  if (keep) keepOnDecide(s, s.user.cat || before.cat, cat);
+  s.user.cat = cat;
+  if (LOOP_FAMILIES.has(cat)) {
+    if (s.user.kind === 'oneshot') delete s.user.kind;
+    const lp = loopPlace(prevWhat, null), cur = s.user.sub, has = (id) => id && taxonomy(S.set.tax, cat).some((x) => x.id === id);
+    const want = propSub && whatOf(cat, propSub) !== cat ? propSub : lp && lp.cat === cat ? lp.sub : null;
+    if (want && !has(cur)) { if (ensureSub(cat, want)) saveSettings(); s.user.sub = want; }
+    invalidateAll();
+  } else { invalidateAll(); placeUser(s, kindBefore, { keepSub: false }); }
+  if (learn) learnFrom(S.learned, s, cat);
+}
+// Al abrir la herramienta (y al importar o restaurar): lo decidido antes de la 2.9 pasa a su sitio.
+async function placeAll(list = S.samples, { quiet = false } = {}) {
+  const ch = list.filter((s) => s.user?.cat && placeUser(s));
+  if (!ch.length) return 0;
+  invalidateAll(); await saveSamples(ch);
+  if (!quiet) toast(t('{n} samples colocados por lo que suena y su tipo: los loops de batería van a Drum loop y los de bajo, synth y atmos a Melodic loop, en la subcarpeta de su instrumento.', { n: ch.length }), 'ok', 9000);
+  return ch.length;
 }
 
 // ---------- al decidir la categoría: conservar lo detectado ----------
@@ -89,7 +140,7 @@ function exportModal(s, pick = null) {
       <div class="seg">${[1, 2, 4, 8, 16].map((k) => `<button class="${n === k ? 'on' : ''}" data-act="s-exp-n" data-v="${k}" data-id="${s.id}">${k === 1 ? t('Entero') : k}</button>`).join('')}</div>
       <span class="lbl">${t('Archivos')}</span><div class="mono muted" style="font-size:12.5px">${esc(files)}</div>
     </div>
-    <p class="note">${t('Las slices son partes iguales de lo que se exporta (recortado y ajustado al compás), como la rejilla de Slices de la Rhythm. Cada corte lleva un fundido de 2 ms para que no haga clic.')}${keepActive(s) ? ' ' + t('Este loop está acortado: «Para la Rhythm» entero sale acortado; las slices se cuentan sobre el loop completo.') : ''}${recipeOf(s).reverse ? ' ' + t('El reverse solo se aplica al sample entero para la Rhythm.') : ''}</p>
+    <p class="note">${t('Las slices son partes iguales de lo que se exporta (recortado y ajustado al compás), como la rejilla de Slices de la Rhythm. Cada corte lleva un fundido de 2 ms para que no haga clic.')}${keepActive(s) ? ' ' + t('Este loop está acortado: entero sale acortado, en los dos formatos; las slices se cuentan sobre el loop completo.') : ''}${recipeOf(s).reverse ? ' ' + t('El reverse solo se aplica al sample entero para la Rhythm.') : ''}</p>
     <div class="row" style="justify-content:space-between;margin-top:12px"><button class="btn ghost" data-act="s-exp-orig" data-id="${s.id}" title="${t('El archivo original, tal cual, sin recortar')}">⤓ ${t('Archivo original tal cual')}</button>
       <span class="row"><button class="btn" data-act="modal-close">${t('Cancelar')}</button><button class="btn primary" data-act="s-exp-go" data-id="${s.id}">⤓ ${t('Exportar')}</button></span></div>`);
   S._expN = n;
@@ -103,7 +154,8 @@ async function exportRun(s) {
     // entero para la Rhythm: exactamente lo que va al pack (con acortar y reverse)
     if (fmt === 'rhythm' && n === 1) { download(await wavOf(s), `${base} (48k mono).wav`, 'audio/wav'); return; }
     const d = await decodedOf(s), r = recipeOf(s);
-    const parts = fmt === 'rhythm' ? slicesRhythm(d, r, n) : slicesOriginal(d, r, n);
+    // v2.9: entero «como el original» también sale acortado si el loop lo está (cutOriginal)
+    const parts = fmt === 'rhythm' ? slicesRhythm(d, r, n) : n === 1 ? [cutOriginal(d, r)] : slicesOriginal(d, r, n);
     const of = originalFormat(d), enc = (p) => (fmt === 'rhythm' ? encodeRhythm(p) : encodeOriginal(p, of));
     if (n === 1) { download(enc(parts[0]), `${base}.wav`, 'audio/wav'); return; }
     const files = parts.map((p, i) => ({ name: `${sliceName(base, i, n)}.wav`, data: enc(p) }));

@@ -4,19 +4,27 @@
 Sort your samples and patches while you listen, prepare them for the unit and build packs.
 Each tool is a single HTML file that you open in Chrome or Edge.
 
-[![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20the%20project-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/falsepositive)
-[![Report a bug or idea](https://img.shields.io/badge/Issues-Bugs%20%26%20ideas-7c3aed?style=for-the-badge&logo=github&logoColor=white)](../../issues)
+[![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20the%20project-C05597?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/falsepositive)
+[![Report a bug or idea](https://img.shields.io/badge/Issues-Bugs%20%26%20ideas-966BDB?style=for-the-badge&logo=github&logoColor=white)](../../issues)
 
 *Herramientas gratuitas para la Circuit Rhythm y la Circuit Tracks. [Resumen en español ↓](#en-español)*
 
 | Tool | Version | Download (ES · EN) | Video |
 |---|---|---|---|
-| [Circuit Rhythm · Sample Library / Pack Builder](#circuit-rhythm--sample-library--pack-builder) | 2.8.1 | [ES](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library.html) · [EN](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library_EN.html) | [1 min](media/circuit-rhythm-video.mp4) |
+| [Circuit Rhythm · Sample Library / Pack Builder](#circuit-rhythm--sample-library--pack-builder) | 2.9.0 | [ES](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library.html) · [EN](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library_EN.html) | [1 min](media/circuit-rhythm-video.mp4) |
 | [Circuit Tracks · Patch Library / Editor](#circuit-tracks--patch-library--editor) | 3.10.1 | [ES](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html) · [EN](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html) | [1 min](media/circuit-tracks-video.mp4) |
 
 | Circuit Rhythm in 1 minute | Circuit Tracks in 1 minute |
 |---|---|
 | [![Watch the Circuit Rhythm video](media/rhythm-video-poster.jpg)](media/circuit-rhythm-video.mp4) | [![Watch the Circuit Tracks video](media/tracks-video-poster.jpg)](media/circuit-tracks-video.mp4) |
+
+## What's new · Circuit Rhythm 2.9
+
+![Circuit Tools · What's new · Rhythm, version 2.9](media/rhythm-whats-new-2.9.jpg)
+
+- **One sample, one folder.** What plays and the type decide the folder. A hi-hat loop is always `14 Drum Loops / Closed-Hats`, whether you press H, pick the subfolder or switch the type with W.
+- **Batch export with your cuts.** The whole library, the filtered list or a selection, sorted into folders: as is, like the original with your cuts (trim, fit to bar, shortened loops; same sample rate, channels and bit depth) or for the Rhythm.
+- **Slices in the original format.** Loops can come out in 2–16 slices, each loop in its own folder.
 
 > ### ♥ Support the project
 > These tools are free and will stay free. If they save you time or end up in your music, you can keep them going:
@@ -31,6 +39,8 @@ Each tool is a single HTML file that you open in Chrome or Edge.
 
 ## Circuit Rhythm · Sample Library / Pack Builder
 
+![Circuit Tools · Rhythm](media/rhythm-header.jpg)
+
 Thousands of samples with useless names, and only 128 slots and 228 seconds per pack. This tool measures every sample, tells you what it is and why, lets you decide with one key, and builds packs that fit.
 
 ![Library: every sample measured and classified, with the folder it will be sorted into](media/rhythm-library.jpg)
@@ -38,8 +48,10 @@ Thousands of samples with useless names, and only 128 slots and 228 seconds per 
 **Sort your collection**
 
 - Every sample is measured (length, pitch, tempo, brightness, attack, stereo…) and given one of 15 categories **with the reason**: what the name says, what the folder says and what it sounds like. Contradictions are shown, not hidden.
-- Loop or one-shot, a subfolder (for drum loops, the instrument in it: Closed-Hats, Shakers, Breaks…) and your own tags. The card shows exactly where the sample will be saved: `14 Drum Loops / Closed-Hats / hatloop 128`.
-- **Organise on disk** copies your collection into that folder structure. Your original files are never touched.
+- **One sample, one folder.** What plays and the type (loop or one-shot) decide where it goes: one-shots to their instrument (`04 Closed-Hats`), loops to `14 Drum Loops` or `15 Melodic Loops` with what plays inside (`Closed-Hats`, `Perc`, `Bass`…). One key is enough; W switches loop / one-shot and the sample moves with it. Subfolders and your own tags on top. The card shows exactly where the sample will be saved: `14 Drum Loops / Closed-Hats / hatloop 128`.
+- **Organise on disk · batch export** copies the whole library, the filtered list or a selection into that folder structure: as is, like the original with your cuts (trim, fit to bar, shortened loops, in the original sample rate, channels and bit depth), or for the Rhythm. Loops can come out in 2–16 slices. Your original files are never touched.
+
+![Batch export: as is, like the original with your cuts, or for the Rhythm](media/rhythm-export.jpg)
 
 **Listen and decide**
 
@@ -76,6 +88,8 @@ More: [circuit-rhythm/README.md](circuit-rhythm/README.md)
 ---
 
 ## Circuit Tracks · Patch Library / Editor
+
+![Circuit Tools · Tracks](media/tracks-header.jpg)
 
 Hundreds of patches, random names, no idea how they sound. This tool reads them, explains them and plays each one on your Circuit Tracks so you decide by ear.
 
@@ -154,7 +168,8 @@ Independent project, not affiliated with Novation or Focusrite. Novation, Circui
 **Circuit Rhythm · Sample Library / Pack Builder**
 
 - Mide cada sample y le propone una de 15 categorías explicando por qué (nombre, carpeta y sonido). Decides con una tecla mientras escuchas.
-- Loop o one-shot, subcarpeta (en los loops, el instrumento que suena: Closed-Hats, Shakers, Breaks…) y etiquetas. La ficha muestra la carpeta exacta donde se guardará, y «Ordenar en disco» copia tu colección así, sin tocar los originales.
+- **Novedades de la 2.9:** un sample, un sitio (lo que suena y el tipo deciden la carpeta: un loop de hats es siempre `14 Drum Loops / Closed-Hats`, con una tecla) y exportar en lote la biblioteca, la lista filtrada o la selección como el original con tus cortes, sin convertir, con los loops en slices si quieres.
+- Loop o one-shot, subcarpeta y etiquetas. La ficha muestra la carpeta exacta donde se guardará, y «Ordenar en disco · exportar en lote» copia tu colección así (tal cual, con tus cortes o para la Rhythm), sin tocar los originales.
 - Saca los golpes de un loop, acorta loops que se repiten y exporta sus slices unidas o por separado y relacionadas, repara el mono de los estéreos que se cancelan (tu archivo sigue en estéreo), afina al tono del pack e iguala el volumen por página.
 - Packs de 128 con el límite de 228 s a la vista, exportación a Components, a la microSD, ZIP o WAV numerados. Generador de patrones y de canciones completas.
 

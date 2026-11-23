@@ -34,7 +34,7 @@ Object.assign(ACT, {
 document.addEventListener('change', async (ev) => {
   if (ev.target.id !== 'dock-cat') return;
   const s = dockSample(); if (!s) return;
-  if (ev.target.value) { s.user.cat = ev.target.value; s.user.heard = true; delete s.user.via; learnFrom(S.learned, s, ev.target.value); saveLearned(); } else { delete s.user.cat; delete s.user.via; }
+  if (ev.target.value) { assignCat(s, ev.target.value); s.user.heard = true; delete s.user.via; saveLearned(); } else { delete s.user.cat; delete s.user.via; }
   invalidateAll(); await saveSample(s); renderHeader(); paintDock();
 });
 // Elegir un sample fuera de la biblioteca lo abre en el dock, en el sitio

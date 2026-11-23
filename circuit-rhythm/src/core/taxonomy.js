@@ -19,8 +19,9 @@ export const SUBTYPES = {
   fx: [['riser', 'Subidas'], ['down', 'Bajadas'], ['impact', 'Impactos'], ['noise', 'Ruido'], ['glitch', 'Glitch']],
   vox: [['phrase', 'Frases'], ['chop', 'Chops'], ['shout', 'Gritos y efectos']],
   // v2.5: lo que suena en el loop. «Drum loop» dice que es un loop de batería; la subcarpeta dice de qué.
+  // v2.9: también Toms, así cada instrumento de batería tiene su carpeta de loops
   dloop: [['full', 'Full'], ['break', 'Breaks'], ['top', 'Tops'], ['kick', 'Kicks'], ['clap', 'Snares & Claps'], ['hat', 'Closed-Hats'],
-    ['ohat', 'Open-Hats'], ['shaker', 'Shakers'], ['perc', 'Perc'], ['cymbal', 'Cymbals']],
+    ['ohat', 'Open-Hats'], ['shaker', 'Shakers'], ['tom', 'Toms'], ['perc', 'Perc'], ['cymbal', 'Cymbals']],
   // v2.6: los loops se ordenan por instrumento, con los mismos nombres que las carpetas de categoría
   mloop: [['bass', 'Bass'], ['synth', 'Synth'], ['chord', 'Chords'], ['texture', 'Atmos']],
 };
@@ -75,7 +76,7 @@ const TEXT_SUB = {
     hat: ['hatloop', 'hihat', 'hh', 'chh', 'ch', 'closedhat', 'hatclosed', 'closed', 'hat', 'hats'], cymbal: ['ride', 'rides', 'crash', 'cym', 'cymbal', 'cymbals'],
     kick: ['kick', 'kicks', 'kik', 'bd', 'bassdrum', 'kickloop'], clap: ['clap', 'claps', 'snare', 'snares', 'snr', 'sd'],
     break: ['break', 'breaks', 'breakbeat', 'amen', 'jungle'], top: ['top', 'tops', 'toploop'],
-    perc: ['perc', 'percs', 'percussion', 'percloop', 'conga', 'bongo', 'tom', 'toms'], full: ['full', 'fullbeat'] },
+    tom: ['tom', 'toms', 'floortom', 'tomloop'], perc: ['perc', 'percs', 'percussion', 'percloop', 'conga', 'bongo'], full: ['full', 'fullbeat'] },
   mloop: { bass: ['bass', 'bassline', 'sub'], chord: ['chord', 'chords', 'keys', 'piano'], texture: ['texture', 'atmos', 'pad', 'ambient', 'drone'], synth: ['synth', 'lead', 'arp', 'melody', 'riff', 'seq'] },
 };
 export function nameTokens(s) { return new Set([...tokenize(s.name || ''), ...tokenize(String(s.path || '').split('/').slice(-2, -1)[0] || '')]); }
@@ -183,7 +184,7 @@ function soundSub(a, cat) {
 // En un loop, lo que el nombre, la carpeta o el sonido dicen de un instrumento («hh» → Closed hat) no cambia
 // la categoría (sigue siendo un loop): dice qué suena en él, y eso es su subcarpeta. Devuelve el id o null.
 const CONTENT_OF = {
-  dloop: { kick: 'kick', snare: 'clap', clap: 'clap', hat: 'hat', ohat: 'ohat', cymbal: 'cymbal', tom: 'perc', perc: 'perc' },
+  dloop: { kick: 'kick', snare: 'clap', clap: 'clap', hat: 'hat', ohat: 'ohat', cymbal: 'cymbal', tom: 'tom', perc: 'perc' },
   mloop: { bass: 'bass', synth: 'synth', atmos: 'texture', fx: 'texture' },
 };
 const SHAKER_WORDS = new Set(TEXT_SUB.dloop.shaker);

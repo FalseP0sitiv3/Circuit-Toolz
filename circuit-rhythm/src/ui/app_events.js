@@ -46,10 +46,9 @@ let learnTimer = 0;
 async function decide(s, cat) {
   if (!s) return;
   const before = clsOf(s);
-  const wasProp = !s.user.cat && before.cat === cat;
-  keepOnDecide(s, s.user.cat || before.cat, cat);
-  s.user.cat = cat; s.user.heard = true;
-  learnFrom(S.learned, s, cat);
+  const wasProp = !s.user.cat && (before.cat === cat || before.placedFrom === cat);
+  // v2.9: la tecla dice qué suena; si es un loop, va a Drum loop / Melodic loop con su instrumento
+  assignCat(s, cat); s.user.heard = true;
   clearTimeout(learnTimer); learnTimer = setTimeout(saveLearned, 800);
   invalidateAll();
   await saveSample(s);
@@ -464,6 +463,7 @@ async function init() {
   catch (e) { document.getElementById('view').innerHTML = `<div class="panel empty"><h2>${t('No se pudo abrir la biblioteca del navegador')}</h2><p class="bad">${esc(e.message || e)}</p><p>${t('Abre el archivo con Chrome o Edge. En modo privado el navegador puede no guardar nada.')}</p></div>`; return; }
   if (!S.samples.length) S.view = 'library';
   await autoPurge();
+  await placeAll();
   renderAll();
   if (S.samples.length && navigator.storage?.persist) navigator.storage.persist().catch(() => {});
   window.__crsl = { origin: __ORIGIN__, S, ACT, scanRoot, trashCount, curPat, packKit, recordEvents, revision, calibration, organizePlan, mapPoints, decide, place, play, renderAll, filtered, clsOf, packChecks, exportComponents, importFiles, importComponentsPack, Player, songState, curTimeline, readProject, songEvents, renderSongAudio, renderedOf, wavOf, budget, sampleSeconds, newPack, savePack, repOf, invalidateAll, addToPack, organizePlanOf: (s) => orgPlan().items.find((x) => x.id === s.id)?.dest };

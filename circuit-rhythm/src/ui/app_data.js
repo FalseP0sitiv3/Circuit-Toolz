@@ -4,11 +4,12 @@ import { render, overview, DEFAULT_RECIPE, toMono } from '../core/dsp.js';
 import { analyze } from '../core/analyze.js';
 import { classify, learnFrom, nameInfo, CATS } from '../core/classify.js';
 import { zipEntries, zipRead, zipWrite } from '../core/zip.js';
-import { autoTrimOf, emptyPack, componentsFiles, sdPlan, projectUsage, shortName, safeName, SLOTS, budget, sampleSeconds, MAX_TOTAL_S, PROJECT_SIZE } from '../core/pack.js';
+import { placeProposal } from '../core/place.js';
+import { kindOf, autoTrimOf, emptyPack, componentsFiles, sdPlan, projectUsage, shortName, safeName, SLOTS, budget, sampleSeconds, MAX_TOTAL_S, PROJECT_SIZE } from '../core/pack.js';
 import { Library, sha256hex, walkDir, fileFromRoot, ensurePermission, AUDIO_EXT, PACK_EXT, isJunk } from '../core/library.js';
 import { RhythmMidi } from '../core/midi.js';
 
-const APP_VERSION = '2.8.1';
+const APP_VERSION = '2.9.0';
 const MAX_FILE = 200 * 1024 * 1024;
 
 const S = {
@@ -48,9 +49,14 @@ function toast(msg, kind = 'ok', ms = 4200) {
   setTimeout(() => el.remove(), ms);
 }
 
+// v2.9: la propuesta en su sitio: si es un instrumento y el sample es un loop, «Drum loop › instrumento» (core/place.js)
 function clsOf(s) {
-  const key = S.learnVer + '|' + (s.user && s.user.cat) + '|' + (s.analysis ? s.analysis.v : 0);
-  if (!s._cls || s._clsKey !== key) { s._cls = classify(s, S.learned); s._clsKey = key; }
+  const key = S.learnVer + '|' + (s.user && s.user.cat) + '|' + (s.user && s.user.kind) + '|' + (s.analysis ? s.analysis.v : 0);
+  if (!s._cls || s._clsKey !== key) {
+    s._cls = classify(s, S.learned);
+    s._cls = placeProposal(s._cls, kindOf(s));
+    s._clsKey = key;
+  }
   return s._cls;
 }
 function invalidateAll() { S.learnVer++; S.ver++; }
@@ -178,6 +184,7 @@ async function importEntries(entries, label) {
   }
   if (batch.length) await saveSamples(batch);
   await S.lib.kvSet('pending', S.pending);
+  await placeAll(added.filter((x) => x.user?.cat), { quiet: true }); // v2.9: lo restaurado de una copia, en su sitio
   busy.done();
   for (const p of packs) await importComponentsPack(await p.getFile());
   S.ver++;
@@ -486,6 +493,7 @@ async function restoreJSON(file) {
     else { S.pending[r.id] = { user: r.user, recipe: r.recipe, name: r.name, path: r.path }; pend++; }
   }
   await saveSamples(upd);
+  await placeAll(upd, { quiet: true });
   Object.assign(S.pending, data.pending || {});
   await S.lib.kvSet('pending', S.pending);
   for (const p of data.packs || []) { if (!S.packs.find((q) => q.id === p.id)) { S.packs.push(p); await S.lib.put('packs', p); } }

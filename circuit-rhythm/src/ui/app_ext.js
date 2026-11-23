@@ -3,6 +3,7 @@
 import { generate, vary, recordEvents, toMidi, noteFor, STYLES, SCALES, DEFAULT_KIT, LANE_ROLES } from '../core/patterns.js';
 import { pca, nearYourFavourites } from '../core/map.js';
 import { organizePlan, manifestCSV } from '../core/organize.js';
+import { cutOriginal, slicesOriginal, slicesRhythm, originalFormat, encodeOriginal, encodeRhythm } from '../core/slices.js';
 import { fitToBeats, sampleSeconds, rawSeconds, isLoopSample, kindOf } from '../core/pack.js';
 import { CC, MACRO_DEFAULTS } from '../core/midi.js';
 
@@ -285,49 +286,84 @@ function sendEvents(ev) {
   return base + (ev.length ? ev[ev.length - 1].t : 0) - performance.now();
 }
 
-// ---------- ordenar en disco ----------
+// ---------- ordenar en disco / exportar en lote ----------
+// v2.9: tres formatos — el archivo tal cual; como el original con tus cortes (recorte, ajuste al compás,
+// acortar; misma frecuencia, canales y bits, sin tocar el nivel); o para la Rhythm (48 kHz · mono · 16 bit).
+// Con cortes o para la Rhythm, los loops pueden salir partidos en slices y los separados en partes salen
+// como sus partes. Qué se exporta: toda la biblioteca, la lista filtrada o la selección.
+const ORG_FMTS = ['asis', 'cuts', 'rhythm'];
+function orgFmt() { const f = S.set.org?.fmt; return ORG_FMTS.includes(f) ? f : S._orgConv ? 'rhythm' : 'asis'; }
+function orgSlices() { const n = S.set.org?.slices; return [2, 4, 8, 16].includes(n) ? n : 1; }
+function orgScope() { const sc = S._orgScope || 'all'; return sc === 'sel' && !S.multi.size ? 'all' : sc; }
+function orgSource() {
+  const sc = orgScope();
+  let list = sc === 'sel' ? [...S.multi].map((id) => S.byId[id]).filter(Boolean) : sc === 'list' ? filtered() : S.samples;
+  // un loop separado en partes sale como sus partes, aunque no estén en la lista
+  if (orgFmt() !== 'asis') { const ids = new Set(list.map((s) => s.id)); for (const s of list.slice()) for (const x of partsOf(s)) if (!ids.has(x.id)) { ids.add(x.id); list.push(x); } }
+  return list.filter((s) => !s.analysis?.error);
+}
 function orgOpts() {
-  return { by: document.getElementById('org-by')?.value || 'category', subs: S._orgSubs !== false, kinds: S._orgKinds !== false, tagsInName: !!S._orgTags, converted: document.getElementById('org-conv')?.checked || false, includeDiscarded: false, minCert: document.getElementById('org-cert')?.value || 'onehint', reviewDir: t('_Por revisar'), kindDir: { loop: t('Loops'), oneshot: t('One-shots') } };
+  return { by: S._orgBy || 'category', subs: S._orgSubs !== false, kinds: S._orgKinds !== false, tagsInName: !!S._orgTags, format: orgFmt(), slices: orgSlices(), includeDiscarded: false, minCert: S._orgCert || 'onehint', reviewDir: t('_Por revisar'), kindDir: { loop: t('Loops'), oneshot: t('One-shots') } };
 }
 function orgPlan() {
-  return organizePlan(S.samples.filter((s) => !s.analysis?.error).map((s) => { const c = clsOf(s); return { id: s.id, name: s.name, path: s.path, ext: s.ext, cat: c.cat, cert: c.cert, discard: s.user?.discard, sub: c.cat && subForOrg(s, c.cat) ? subName(c.cat, subForOrg(s, c.cat)) : null, kind: kindOf(s), tags: (s.user?.tags || []).map(tagName), rating: s.user?.rating || 0, fav: !!s.user?.fav }; }), orgOpts());
+  return organizePlan(orgSource().map((s) => { const c = clsOf(s); return { id: s.id, name: s.name, path: s.path, ext: s.ext, cat: c.cat, cert: c.cert, discard: s.user?.discard, sub: c.cat && subForOrg(s, c.cat) ? subName(c.cat, subForOrg(s, c.cat)) : null, kind: kindOf(s), split: partsOf(s).length > 0, tags: (s.user?.tags || []).map(tagName), rating: s.user?.rating || 0, fav: !!s.user?.fav }; }), orgOpts());
 }
 function organizeHTML() {
   if (!S.samples.length) return `<p class="muted">${t('Importa samples primero.')}</p>`;
-  const plan = orgPlan();
-  return `<div class="prep"><span class="lbl">${t('Ordenar')}</span><select id="org-by"><option value="category">${t('por categoría')}</option><option value="folder" ${S._orgBy === 'folder' ? 'selected' : ''}>${t('por carpeta de origen')}</option></select>
+  const plan = orgPlan(), fmt = orgFmt(), sc = orgScope(), nSl = orgSlices();
+  const scopes = [['all', t('Toda la biblioteca'), S.samples.length], ['list', t('La lista filtrada'), filtered().length], ['sel', t('La selección'), S.multi.size]];
+  const opt = (v, title, desc) => `<label class="exopt"><input type="radio" name="orgfmt" value="${v}" ${fmt === v ? 'checked' : ''}><span><b>${title}</b><span class="muted">${desc}</span></span></label>`;
+  return `<div class="prep">
+    <span class="lbl">${t('Qué')}</span><span class="seg">${scopes.map(([k, l, n]) => `<button class="${sc === k ? 'on' : ''}" data-act="org-scope" data-v="${k}" ${k === 'sel' && !n ? 'disabled' : ''}>${l} <span class="mono">${n}</span></button>`).join('')}</span>
+    <span class="lbl">${t('Formato')}</span><div>${opt('asis', t('Tal cual'), t('el archivo original, sin cortar: una copia exacta'))}
+      ${opt('cuts', t('Como el original, con tus cortes'), t('recorte, ajuste al compás y loops acortados; misma frecuencia, canales y bits, sin tocar el nivel'))}
+      ${opt('rhythm', t('Para la Rhythm'), t('48 kHz · mono · 16 bit, con su preparación'))}</div>
+    <span class="lbl">${t('Loops')}</span><span class="row" style="gap:8px"><span class="seg">${[1, 2, 4, 8, 16].map((k) => `<button class="${nSl === k ? 'on' : ''}" data-act="org-slices" data-v="${k}" ${fmt === 'asis' ? 'disabled' : ''}>${k === 1 ? t('Enteros') : k}</button>`).join('')}</span><span class="muted" style="font-size:12.5px">${fmt === 'asis' ? t('Para partirlos en slices, elige «con tus cortes» o «para la Rhythm».') : nSl > 1 ? t('cada loop en su carpeta: «Nombre ({n} slices)/Nombre 01.wav…»', { n: nSl }) : t('enteros; elige 2–16 para partir cada loop en slices iguales')}</span></span>
+    <span class="lbl">${t('Ordenar')}</span><select id="org-by"><option value="category">${t('por categoría')}</option><option value="folder" ${S._orgBy === 'folder' ? 'selected' : ''}>${t('por carpeta de origen')}</option></select>
     <span class="lbl">${t('Certeza mínima')}</span><select id="org-cert">${[['user', t('Decidido por ti')], ['confirmed', t('Confirmado o más')], ['onehint', t('Una pista o más')], ['any', t('Cualquiera')]].map(([k, l]) => `<option value="${k}" ${(S._orgCert || 'onehint') === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
-    <span class="lbl">${t('Subcarpetas')}</span><label class="inl"><input type="checkbox" id="org-subs" ${S._orgSubs !== false ? 'checked' : ''}> ${t('dentro de cada categoría: la que marcaste o, si no, la propuesta')}</label>
-    <span class="lbl">${t('Loops')}</span><label class="inl"><input type="checkbox" id="org-kinds" ${S._orgKinds !== false ? 'checked' : ''}> ${t('separar Loops y One-shots dentro de cada categoría')}</label>
-    <span class="lbl">${t('Etiquetas')}</span><label class="inl"><input type="checkbox" id="org-tags" ${S._orgTags ? 'checked' : ''}> ${t('añadirlas al nombre del archivo: «Nombre [Oscuro, Analógico].wav»')}</label>
-    <span class="lbl">${t('Formato')}</span><label class="inl"><input type="checkbox" id="org-conv" ${S._orgConv ? 'checked' : ''}> ${t('convertidos a 48 kHz · mono · 16 bit (con su preparación)')}</label></div>
-    <p class="note">${t('Cada sample va a Categoría / Tipo / Subcarpeta, como ves en su ficha («Se guarda en»). Las etiquetas no crean carpetas.')}</p>
-    <p class="note">${t('{n} archivos en {f} carpetas', { n: plan.items.length, f: Object.keys(plan.folders).length })} · ${Object.entries(plan.folders).slice(0, 8).map(([k, n]) => `${esc(k)} <span class="mono">${n}</span>`).join(' · ')}${plan.skipped.discard ? ' · ' + t('{n} descartados no se copian', { n: plan.skipped.discard }) : ''}</p>
-    <div class="row"><button class="btn primary" data-act="org-dir">${t('Escribir en una carpeta')}</button><button class="btn" data-act="org-zip">${t('Descargar ZIP')}</button></div>
+    <span class="lbl">${t('Subcarpetas')}</span><label class="inl"><input type="checkbox" id="org-subs" ${S._orgSubs !== false ? 'checked' : ''}> ${t('dentro de cada carpeta: la que marcaste o, si no, la propuesta')}</label>
+    <span class="lbl">${t('FX y Vox')}</span><label class="inl"><input type="checkbox" id="org-kinds" ${S._orgKinds !== false ? 'checked' : ''}> ${t('separar Loops y One-shots (los demás loops ya van a Drum Loops y Melodic Loops)')}</label>
+    <span class="lbl">${t('Etiquetas')}</span><label class="inl"><input type="checkbox" id="org-tags" ${S._orgTags ? 'checked' : ''}> ${t('añadirlas al nombre del archivo: «Nombre [Oscuro, Analógico].wav»')}</label></div>
+    <p class="note">${t('La carpeta es lo que suena; los loops van a Drum Loops o Melodic Loops con lo que suena dentro, como ves en su ficha («Se guarda en»). Las etiquetas no crean carpetas.')}${fmt === 'cuts' ? ' ' + t('Con tus cortes: sin nivel, mono, afinación ni reverse, que son solo para la Rhythm. Los WAV salen con la profundidad del original (MP3, FLAC y OGG, en 24 bit).') : ''}</p>
+    <p class="note">${t('{n} archivos en {f} carpetas', { n: plan.items.length, f: Object.keys(plan.folders).length })} · ${Object.entries(plan.folders).slice(0, 8).map(([k, n]) => `${esc(k)} <span class="mono">${n}</span>`).join(' · ')}${plan.skipped.discard ? ' · ' + t('{n} descartados no se copian', { n: plan.skipped.discard }) : ''}${plan.skipped.split ? ' · ' + t('{n} loops separados salen como sus partes', { n: plan.skipped.split }) : ''}</p>
+    <div class="row"><button class="btn primary" data-act="org-dir" ${plan.items.length ? '' : 'disabled'}>${t('Escribir en una carpeta')}</button><button class="btn" data-act="org-zip" ${plan.items.length ? '' : 'disabled'}>${t('Descargar ZIP')}</button></div>
     <p class="note">${t('Siempre en una subcarpeta nueva con fecha. El manifiesto CSV lleva la ruta antigua y la nueva, la categoría, la subcarpeta, loop o one-shot, las etiquetas, la valoración y los favoritos. Tus archivos originales no se tocan.')}</p>`;
 }
+// el audio de cada archivo del plan; las slices de un mismo sample se calculan una vez
+async function orgData(it, fmt, memo) {
+  const s = S.byId[it.id];
+  if (fmt === 'asis') return bytesOf(s);
+  if (fmt === 'rhythm' && !it.slice) return wavOf(s);
+  const d = await decodedOf(s), r = recipeOf(s);
+  if (fmt === 'cuts' && !it.slice) return encodeOriginal(cutOriginal(d, r), originalFormat(d));
+  if (memo.id !== s.id) { memo.id = s.id; memo.parts = fmt === 'rhythm' ? slicesRhythm(d, r, it.slice.n) : slicesOriginal(d, r, it.slice.n); memo.of = originalFormat(d); }
+  const p = memo.parts[it.slice.i];
+  return fmt === 'rhythm' ? encodeRhythm(p) : encodeOriginal(p, memo.of);
+}
 async function organizeRun(toDir) {
-  const plan = orgPlan(); const opts = orgOpts();
+  const plan = orgPlan(), fmt = plan.format;
   const root = `Circuit Rhythm Library ${new Date().toISOString().slice(0, 16).replace('T', ' ').replace(':', '')}`;
   let dir = null;
   if (toDir) { if (!window.showDirectoryPicker) { toast(t('Este navegador no puede escribir en carpetas. Usa «Descargar ZIP».'), 'warn'); return; } try { dir = await window.showDirectoryPicker({ id: 'crsl-org', mode: 'readwrite' }); } catch { return; } }
-  const files = [];
-  const busy = startBusy(t('Ordenando en disco'), plan.items.length);
-  let failed = 0;
+  const files = [], memo = {}, bad = new Set();
+  const busy = startBusy(fmt === 'asis' ? t('Ordenando en disco') : t('Exportando'), plan.items.length);
+  let failed = 0, done = 0;
   try {
     for (let k = 0; k < plan.items.length; k++) {
       if (busy.cancel) break;
       const it = plan.items[k]; busy.step(k, it.dest);
+      if (bad.has(it.id)) { failed++; continue; }
       let data;
-      try { data = opts.converted ? await wavOf(S.byId[it.id]) : await bytesOf(S.byId[it.id]); } catch { failed++; continue; }
+      try { data = await orgData(it, fmt, memo); } catch { failed++; bad.add(it.id); continue; }
       if (dir) { await writePath(dir, root + '/' + it.dest, data); } else files.push({ name: root + '/' + it.dest, data });
+      done++;
       if (k % 5 === 0) await yieldUI();
     }
     const man = manifestCSV(plan, root);
     if (dir) await writePath(dir, root + '/manifest.csv', man); else files.push({ name: root + '/manifest.csv', data: man });
   } finally { busy.done(); }
   if (!dir) download(await zipWrite(files, { compress: false }), root + '.zip', 'application/zip');
-  toast(t('Ordenados {n} archivos en «{r}».', { n: plan.items.length - failed, r: esc(root) }) + (failed ? ` <span class="warn">${t('{n} no se pudieron leer (¿carpeta sin reconectar?)', { n: failed })}</span>` : ''), failed ? 'warn' : 'ok', 9000);
+  toast(t('{n} archivos en «{r}».', { n: done, r: esc(root) }) + (failed ? ` <span class="warn">${t('{n} no se pudieron leer (¿carpeta sin reconectar?)', { n: failed })}</span>` : ''), failed ? 'warn' : 'ok', 9000);
 }
 async function writePath(dir, path, data) {
   const segs = path.split('/'); let d = dir;
@@ -476,6 +512,10 @@ Object.assign(ACT, {
   'kit-default': async () => { if (!S.pack) return; S.pack.kit = null; packKit(); await savePack(S.pack); renderView(); },
   'kit-send': () => { try { packKit().forEach((sl, i) => { if (sl != null) S.midi.selectSlot(i, sl); }); toast(t('Kit enviado: cada pista elige su slot con CC 8.')); } catch (e) { toast(esc(errT(e.message)), 'bad'); } },
   sweep: (el) => sweepMacro(+el.dataset.i, (+document.getElementById('dev-slot')?.value || 1) - 1),
+  'org-scope': (el) => { S._orgScope = el.dataset.v; renderView(); },
+  'org-slices': (el) => { S.set.org = { ...(S.set.org || {}), slices: +el.dataset.v }; saveSettings(); renderView(); },
+  // desde la Biblioteca: la selección o la lista filtrada, en 08 Datos
+  'lib-export': () => { S._orgScope = S.multi.size ? 'sel' : 'list'; go('data'); setTimeout(() => document.getElementById('org-panel')?.scrollIntoView({ block: 'start' }), 30); },
   'org-dir': () => organizeRun(true).catch((e) => toast(esc(errT(e.message)), 'bad')),
   'org-zip': () => organizeRun(false).catch((e) => toast(esc(errT(e.message)), 'bad')),
   'sd-read': () => readSdCard().catch((e) => toast(esc(errT(e.message)), 'bad')),
@@ -506,7 +546,8 @@ document.addEventListener('change', async (ev) => {
     const cc = +el.dataset.tcc, val = el.type === 'checkbox' ? (el.checked ? 1 : 0) : +el.value;
     (S.trackParams ||= {})[cc] = val;
     try { S.midi.cc(S.set.track, cc, val); } catch (e) { toast(esc(errT(e.message)), 'bad'); }
-  } else if (el.id === 'org-by' || el.id === 'org-cert' || el.id === 'org-conv' || el.id === 'org-subs' || el.id === 'org-kinds' || el.id === 'org-tags') { S._orgSubs = document.getElementById('org-subs').checked; S._orgKinds = document.getElementById('org-kinds').checked; S._orgTags = document.getElementById('org-tags').checked; S._orgBy = document.getElementById('org-by').value; S._orgCert = document.getElementById('org-cert').value; S._orgConv = document.getElementById('org-conv').checked; renderView(); }
+  } else if (el.id === 'org-by' || el.id === 'org-cert' || el.id === 'org-subs' || el.id === 'org-kinds' || el.id === 'org-tags') { S._orgSubs = document.getElementById('org-subs').checked; S._orgKinds = document.getElementById('org-kinds').checked; S._orgTags = document.getElementById('org-tags').checked; S._orgBy = document.getElementById('org-by').value; S._orgCert = document.getElementById('org-cert').value; renderView(); }
+  else if (el.name === 'orgfmt') { S.set.org = { ...(S.set.org || {}), fmt: el.value }; saveSettings(); renderView(); }
 });
 document.addEventListener('input', (ev) => {
   const el = ev.target;

@@ -4,6 +4,7 @@ import { taxonomy, addSubfolder, renameSubfolder, moveSubfolder, removeSubfolder
 import { featureVec } from '../core/map.js';
 import { CATS } from '../core/classify.js';
 import { catFolderName } from '../core/organize.js';
+import { LOOP_HOME, LOOP_FAMILIES, whatOf, whatsOf, keepsBothKinds } from '../core/place.js';
 
 const GROUP_LABEL = () => ({ fx: t('Efectos'), char: t('Carácter'), use: t('Uso') });
 const taxOf = (cat) => taxonomy(S.set.tax, cat);
@@ -27,11 +28,16 @@ function propsOf(s) {
     const cat = catFor(s) || clsOf(s).cat, auto = clsOf(s).auto?.cat;
     // v1.7: si cambiaste la categoría, también se ofrece lo detectado con la que proponía la herramienta
     const det = detectTags(s, cat); if (auto && auto !== cat) for (const x of detectTags(s, auto)) if (!det.some((y) => y.tag === x.tag)) det.push(x);
-    p = { cat, sub: proposeSub(s, cat, S.set.tax), tags: det.filter((x) => !tagsOf(s).includes(x.tag)) }; _pc.set(s.id, p);
+    let sub = proposeSub(s, cat, S.set.tax);
+    // v2.9: la propuesta colocada («Closed hat» en un loop) ya dice qué suena: esa es la subcarpeta, salvo que el
+    // nombre diga algo más concreto (Shakers)
+    const c = clsOf(s);
+    if (!s.user?.cat && c.placedSub && cat === c.cat && (!sub || sub.src !== 'name') && taxOf(cat).some((x) => x.id === c.placedSub)) sub = { id: c.placedSub, src: 'what', why: c.placedFrom };
+    p = { cat, sub, tags: det.filter((x) => !tagsOf(s).includes(x.tag)) }; _pc.set(s.id, p);
   }
   return p;
 }
-const whyOf = (x) => (x.src === 'name' ? t('por el nombre {w}', { w: esc(x.why) }) : t('por el sonido: {w}', { w: t(x.why) }));
+const whyOf = (x) => (x.src === 'name' ? t('por el nombre {w}', { w: esc(x.why) }) : x.src === 'what' ? t('es lo que suena: {c}', { c: catLabel(x.why) }) : t('por el sonido: {w}', { w: t(x.why) }));
 
 // ---------- cambios ----------
 async function setSub(list, sub) {
@@ -42,8 +48,7 @@ async function setSub(list, sub) {
 // Usado por las pistas clicables y por el portapapeles. Aprende igual que al decidir con una tecla.
 function setCatQuiet(s, cat) {
   if (!cat || s.user.cat === cat) return false;
-  keepOnDecide(s, s.user.cat || clsOf(s).cat, cat);
-  s.user.cat = cat; s.user.heard = true; learnFrom(S.learned, s, cat); saveLearned();
+  assignCat(s, cat); s.user.heard = true; saveLearned();
   return true;
 }
 // la subcarpeta id de fábrica, recreada si tu lista de subcarpetas de esa categoría ya no la tiene
@@ -53,7 +58,6 @@ function ensureSub(cat, id) {
   S.set.tax = { ...(S.set.tax || {}), [cat]: [...taxOf(cat).map((x) => ({ ...x })), { id, label }] };
   return true;
 }
-const MELODIC_CLUE = new Set(['bass', 'synth', 'atmos', 'fx', 'vox']);
 // Qué haría usar una pista (cat y palabra o rasgo) en este sample: { cat, sub, label, done }
 function clueUse(s, clueCat, tok) {
   if (!clueCat) return null;
@@ -61,8 +65,9 @@ function clueUse(s, clueCat, tok) {
   const loopy = ['dloop', 'mloop'].includes(eff) || kindOf(s) === 'loop';
   let cat = clueCat, sub = null;
   if (loopy && !['dloop', 'mloop'].includes(clueCat)) {
-    const lc = ['dloop', 'mloop'].includes(eff) ? eff : MELODIC_CLUE.has(clueCat) ? 'mloop' : 'dloop';
-    sub = contentSubFor(lc, clueCat, tok);
+    // v2.9: en la familia de loops del sample o, si aún no la tiene, en la del instrumento (FX y Vox no tienen)
+    const lc = ['dloop', 'mloop'].includes(eff) ? eff : LOOP_HOME[clueCat];
+    sub = lc ? contentSubFor(lc, clueCat, tok) : null;
     if (sub) cat = lc;
   }
   const label = catLabel(cat) + (sub ? ' › ' + t(subLabelOf(S.set.tax, cat, sub) || defaultSubLabel(cat, sub) || sub) : '');
@@ -95,13 +100,17 @@ function refresh() { if (S.view === 'library' && (S.libMode || 'list') === 'list
 // La misma regla que «Ordenar en disco»: Categoría / (Loops | One-shots) / Subcarpeta / nombre. Cada tramo dice
 // qué lo decide, así se ve de un vistazo qué hace cada cosa que marcas. Las etiquetas no crean carpetas.
 function subForOrg(s, cat) { const id = s.user?.sub || propsOf(s).sub?.id; return id && cat && taxOf(cat).some((x) => x.id === id) ? id : null; }
+// v2.9: los instrumentos que suenan en un sample: el suyo, o el de la subcarpeta de su loop (Closed-Hats → hat)
+function whatsFor(s) { const c = clsOf(s); if (!c.cat) return []; if (!LOOP_FAMILIES.has(c.cat)) return [c.cat]; return whatsOf(c.cat, subForOrg(s, c.cat)).filter((x) => x !== c.cat); }
+// v2.9: un sample, un sitio. La carpeta es lo que suena; los loops de batería y de bajo, synth y atmos van a
+// Drum Loops / Melodic Loops con lo que suena dentro. Loops y One-shots solo se separan en FX y Vox.
 function destSegments(s) {
   const cat = catFor(s), segs = [];
-  if (!cat) return [{ v: t('_Por revisar'), cap: t('Categoría'), warn: true, hint: t('Elige la categoría con su tecla') }];
-  segs.push({ v: catFolderName(cat), cap: t('Categoría'), prop: !s.user?.cat });
-  if (S._orgKinds !== false && !['dloop', 'mloop'].includes(cat)) segs.push({ v: kindOf(s) === 'loop' ? t('Loops') : t('One-shots'), cap: t('Tipo'), prop: !s.user?.kind });
-  const sub = S._orgSubs !== false ? subForOrg(s, cat) : null;
-  if (sub) segs.push({ v: subName(cat, sub), cap: t('Subcarpeta'), prop: !s.user?.sub });
+  if (!cat) return [{ v: t('_Por revisar'), cap: t('Lo que suena'), warn: true, hint: t('Elige la categoría con su tecla') }];
+  const fam = LOOP_FAMILIES.has(cat), sub = S._orgSubs !== false ? subForOrg(s, cat) : null;
+  segs.push({ v: catFolderName(cat), cap: fam ? t('Loop') : t('Lo que suena'), prop: !s.user?.cat });
+  if (S._orgKinds !== false && keepsBothKinds(cat)) segs.push({ v: kindOf(s) === 'loop' ? t('Loops') : t('One-shots'), cap: t('Tipo'), prop: !s.user?.kind });
+  if (sub) segs.push({ v: subName(cat, sub), cap: fam && whatOf(cat, sub) !== cat ? t('Lo que suena') : t('Subcarpeta'), prop: !s.user?.sub });
   return segs;
 }
 function destHTML(s) {
@@ -110,7 +119,7 @@ function destHTML(s) {
   const anyProp = segs.some((x) => x.prop);
   return `<div class="orow dest"><span class="lbl">${t('Se guarda en')}</span><div>
     <div class="dpath">${segs.map((x) => `<span class="dseg ${x.prop ? 'prop' : ''} ${x.warn ? 'warn' : ''}" title="${esc(x.hint || '')}"><b>${esc(x.v)}</b><i>${x.cap}</i></span><span class="dsl">/</span>`).join('')}<span class="dseg file"><b>${file}</b><i>${t('Archivo')}</i></span></div>
-    <div class="dnote">${t('Así lo deja «Ordenar en disco» (08 Datos): la categoría es la carpeta, el tipo y la subcarpeta van dentro. Las etiquetas no crean carpetas: sirven para buscar y filtrar.')}${anyProp ? ' ' + t('Lo discontinuo es propuesta: se usa tal cual si no lo cambias.') : ''}</div>
+    <div class="dnote">${t('Así lo deja «Ordenar en disco» (08 Datos): la carpeta es lo que suena, y los loops van a Drum Loops o Melodic Loops con lo que suena dentro. Las etiquetas no crean carpetas: sirven para buscar y filtrar.')}${anyProp ? ' ' + t('Lo discontinuo es propuesta: se usa tal cual si no lo cambias.') : ''}</div>
   </div></div>`;
 }
 
@@ -243,7 +252,7 @@ function taxHTML() {
   const pal = palette(), GL = GROUP_LABEL(), tags = allTags();
   return `<div class="taxw">
   <section class="panel"><h2>${t('Carpetas y subcarpetas')}</h2>
-    <p class="note" style="margin-top:0">${t('Cada categoría es una carpeta; dentro, tus subcarpetas. «Ordenar en disco» (08 Datos) copia la colección con esta estructura.')}</p>
+    <p class="note" style="margin-top:0">${t('Cada categoría es una carpeta; dentro, tus subcarpetas. En Drum loop y Melodic loop, la subcarpeta dice qué suena: ahí van los loops de cada instrumento. «Ordenar en disco» (08 Datos) copia la colección con esta estructura.')}</p>
     <div class="taxgrid">${CATS.map((c) => { const subs = taxOf(c.id), custom = Array.isArray(S.set.tax?.[c.id]); return `<div class="taxc"><div class="row"><b style="color:${catVar(c.id)}">${catLabel(c.id)}</b><span class="muted mono">${Object.entries(cnt).filter(([k]) => k.startsWith(c.id + '|')).reduce((a, [, n]) => a + n, 0)}</span><span class="grow"></span>${custom ? `<button class="btn small ghost" data-act="o-tax-reset" data-c="${c.id}" title="${t('Volver a las de fábrica')}">↺</button>` : ''}</div>
       <ul class="taxl">${subs.map((x, i) => `<li><input class="otax" data-c="${c.id}" data-v="${x.id}" value="${esc(t(x.label))}" maxlength="32" aria-label="${t('Nombre de la subcarpeta')}"><span class="mono muted">${cnt[c.id + '|' + x.id] || 0}</span>
         <button class="btn small ghost" data-act="o-tax-up" data-c="${c.id}" data-v="${x.id}" ${i ? '' : 'disabled'} aria-label="${t('Subir')}">↑</button><button class="btn small ghost" data-act="o-tax-down" data-c="${c.id}" data-v="${x.id}" ${i < subs.length - 1 ? '' : 'disabled'} aria-label="${t('Bajar')}">↓</button><button class="btn small ghost" data-act="o-tax-del" data-c="${c.id}" data-v="${x.id}" aria-label="${t('Quitar')}">✕</button></li>`).join('')}
@@ -309,11 +318,11 @@ Object.assign(ACT, {
   'o-word': (el) => { const w = el.dataset.v, on = S.f.words || []; S.f.words = on.includes(w) ? on.filter((x) => x !== w) : [...on, w]; renderView(); },
   'o-play': (el) => play(S.byId[el.dataset.id]),
   'o-open': (el) => { S.sel = el.dataset.id; S.libMode = 'list'; S.f = { ...S.f, q: '', cat: 'all', cert: 'all', flag: 'all', tag: '', sub: '', words: [] }; renderView(); },
-  'o-kn-ok': async (el) => { const s = S.byId[el.dataset.id]; s.user.cat = el.dataset.v; s.user.via = 'similar'; invalidateAll(); await saveSample(s); renderView(); },
+  'o-kn-ok': async (el) => { const s = S.byId[el.dataset.id]; assignCat(s, el.dataset.v, { learn: false, keep: false }); s.user.via = 'similar'; invalidateAll(); await saveSample(s); renderView(); },
   'o-kn-no': async (el) => { const s = S.byId[el.dataset.id]; s.user.knnNo = el.dataset.v; S.ver++; await saveSample(s); renderView(); },
   'o-kn-all': async () => {
     const th = S._knnTh ?? 0.8, list = knnData().guesses.filter((x) => x.g.conf >= th);
-    const ch = list.map((x) => { const s = S.byId[x.id]; s.user.cat = x.g.cat; s.user.via = 'similar'; return s; });
+    const ch = list.map((x) => { const s = S.byId[x.id]; assignCat(s, x.g.cat, { learn: false, keep: false }); s.user.via = 'similar'; return s; });
     invalidateAll(); await saveSamples(ch);
     toast(t('{n} categorías aplicadas por parecido. Puedes deshacer cada una con «Quitar mi decisión» en su ficha.', { n: ch.length }), 'ok', 6000); renderView();
   },

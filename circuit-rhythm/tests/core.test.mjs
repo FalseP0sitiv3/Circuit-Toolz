@@ -13,7 +13,8 @@ import { organizePlan, manifestCSV } from '../src/core/organize.js';
 import { songFamily, arrange, timeline, scenePlan, songEvents, writeProject, readProject, roadmap, mixEvents, STRATEGY_IDS, RANGES, timerPattern } from '../src/core/song.js';
 import { taxonomy, addSubfolder, renameSubfolder, moveSubfolder, removeSubfolder, resetTax, proposeSub, detectTags, wordIndex, wordsOf, neighbourGuess, vecDist, SUBTYPES, contentSubFor, defaultSubLabel } from '../src/core/taxonomy.js';
 import { readFileSync } from 'node:fs';
-import { zoneOf, sliceBounds, slicesOriginal, slicesRhythm, originalFormat, encodeOriginal, encodeRhythm, sliceName } from '../src/core/slices.js';
+import { zoneOf, sliceBounds, slicesOriginal, slicesRhythm, cutOriginal, originalFormat, encodeOriginal, encodeRhythm, sliceName } from '../src/core/slices.js';
+import { canonPlace, loopPlace, oneshotPlace, whatOf, whatsOf, placeProposal, pickByScores, keepsBothKinds, LOOP_HOME } from '../src/core/place.js';
 import { repetition, applyKeep, parseSel, selText, validKeep, keepIsIdentity, REPEAT_HIGH } from '../src/core/shorten.js';
 import { rawSeconds, kindOf, autoKindOf, isLoopSample, autoTrimOf } from '../src/core/pack.js';
 import { tunePlan, shiftToPc, shiftToSemitone, effectiveMidi, pitchLabel, tuneRatio } from '../src/core/tune.js';
@@ -521,15 +522,18 @@ await test('ordenar en disco: loops y one-shots por separado, etiquetas en el no
   ];
   const d = (p) => Object.fromEntries(p.items.map((i) => [i.id, i.dest]));
   const p1 = d(organizePlan(L, { kinds: true }));
-  ok(p1.a === '09 Bass/Loops/Subs/Moog Bass 13.wav' && p1.b === '09 Bass/One-shots/Subs/Sub 1.wav', JSON.stringify(p1));
+  // v2.9: un bajo en bucle va a Melodic Loops › Bass; la carpeta de Bass solo tiene one-shots y no necesita «One-shots»
+  ok(p1.a === '15 Melodic Loops/Bass/Moog Bass 13.wav' && p1.b === '09 Bass/Subs/Sub 1.wav', JSON.stringify(p1));
   ok(p1.c === '14 Drum Loops/Break.wav', 'las categorías de loops no repiten carpeta');
-  const p2 = d(organizePlan(L, { kinds: false }));
-  ok(p2.a === '09 Bass/Subs/Moog Bass 13.wav', 'sin separar, como antes');
+  const fx = [{ id: 'f', name: 'Noise Loop.wav', path: 'x/Noise Loop.wav', ext: 'wav', cat: 'fx', cert: 'user', kind: 'loop' }, { id: 'g', name: 'Hit.wav', path: 'x/Hit.wav', ext: 'wav', cat: 'fx', cert: 'user', sub: 'Impactos', kind: 'oneshot' }];
+  const pf = d(organizePlan(fx, { kinds: true }));
+  ok(pf.f === '12 FX/Loops/Noise Loop.wav' && pf.g === '12 FX/One-shots/Impactos/Hit.wav', 'FX y Vox: Loops y One-shots dentro ' + JSON.stringify(pf));
+  ok(d(organizePlan(fx, { kinds: false })).f === '12 FX/Noise Loop.wav', 'sin separar');
   const p3 = d(organizePlan(L, { kinds: true, tagsInName: true, kindDir: { loop: 'Loops', oneshot: 'One-shots' } }));
   ok(p3.a.endsWith('/Moog Bass 13 [Oscuro, Analogico].wav') && p3.b.endsWith('/Sub 1.wav'), p3.a);
   const csv = manifestCSV(organizePlan(L, { kinds: true }), 'R').split('\n');
   ok(csv[0] === 'source,destination,category,subfolder,type,tags,rating,favourite', csv[0]);
-  ok(csv.some((l) => l.includes('"bass","Subs","loop","Oscuro; Analógico",4,yes')), csv.join('\n'));
+  ok(csv.some((l) => l.includes('"mloop","Bass","loop","Oscuro; Analógico",4,yes')), csv.join('\n'));
 });
 
 
@@ -797,6 +801,86 @@ await test('mono reparado: contrafase, retardo entre canales, cancelación parci
   const rep = render(dec, { normalize: 'none', gainDb: 0, autoTrim: false });
   ok(rep.report.monoUsed === 'align', 'render usa la reparación');
 });
+
+// ---------- v2.9: un sample, un sitio; exportar en lote con tus cortes ----------
+await test('un sample, un sitio: lo que suena + el tipo deciden la carpeta (sin dos caminos para lo mismo)', () => {
+  // un loop de hats es Drum loop › Closed-Hats, se marque como se marque
+  const viaKey = canonPlace({ cat: 'hat', kind: 'loop' });
+  ok(viaKey.cat === 'dloop' && viaKey.sub === 'hat' && viaKey.moved, 'H en un loop: ' + JSON.stringify(viaKey));
+  const viaSub = canonPlace({ cat: 'dloop', kind: 'loop', sub: 'hat' });
+  ok(viaSub.cat === 'dloop' && viaSub.sub === 'hat' && !viaSub.moved, 'D + Closed-Hats: igual');
+  ok(canonPlace({ cat: 'perc', kind: 'loop' }).cat === 'dloop' && canonPlace({ cat: 'perc', kind: 'loop' }).sub === 'perc', 'Perc en bucle → Drum loop › Perc');
+  ok(canonPlace({ cat: 'tom', kind: 'loop' }).sub === 'tom' && SUBTYPES.dloop.some(([id]) => id === 'tom'), 'Toms tienen su carpeta de loops');
+  ok(canonPlace({ cat: 'hat', kind: 'loop', sub: 'shaker' }).sub === 'shaker', 'un Closed hat › Shakers en bucle → Drum loop › Shakers');
+  ok(canonPlace({ cat: 'bass', kind: 'loop', sub: 'sub' }).cat === 'mloop' && canonPlace({ cat: 'bass', kind: 'loop' }).sub === 'bass', 'bajo en bucle → Melodic loop › Bass');
+  ok(canonPlace({ cat: 'synth', kind: 'loop', sub: 'chord' }).sub === 'chord' && canonPlace({ cat: 'atmos', kind: 'loop' }).sub === 'texture', 'acordes → Chords; atmos → Atmos');
+  ok(!canonPlace({ cat: 'fx', kind: 'loop' }).moved && !canonPlace({ cat: 'vox', kind: 'loop' }).moved, 'FX y Vox se quedan en su carpeta');
+  ok(keepsBothKinds('fx') && keepsBothKinds('vox') && !keepsBothKinds('hat') && !keepsBothKinds('dloop'), 'Loops/One-shots solo en FX y Vox');
+  ok(!canonPlace({ cat: 'hat', kind: 'oneshot' }).moved && !canonPlace({ cat: 'dloop', kind: 'loop', sub: 'full' }).moved, 'lo que ya está en su sitio no se mueve');
+  // W: el loop vuelve a su instrumento
+  const back = canonPlace({ cat: 'dloop', kind: 'oneshot', sub: 'hat' });
+  ok(back.cat === 'hat' && back.sub === null, 'Drum loop › Closed-Hats a one-shot → Closed hat');
+  ok(oneshotPlace('dloop', 'clap').cat === 'snare' && oneshotPlace('dloop', 'clap', pickByScores({ clap: 2, snare: 1 })).cat === 'clap', 'Snares & Claps: el que tenga más pistas');
+  const sh = oneshotPlace('dloop', 'shaker', pickByScores({ hat: 3 }));
+  ok(sh.cat === 'hat' && sh.sub === 'shaker' && oneshotPlace('dloop', 'shaker').cat === 'perc', 'Shakers → Perc › Shakers (o Closed hat › Shakers con pistas de hat)');
+  ok(oneshotPlace('dloop', 'full', pickByScores({ kick: 2 })).cat === 'kick' && oneshotPlace('mloop', 'chord').sub === 'chord', 'Full → el instrumento con más pistas; Chords → Synth › Acordes');
+  // ida y vuelta
+  for (const c of [...Object.keys(LOOP_HOME)]) {
+    const l = loopPlace(c); const o = oneshotPlace(l.cat, l.sub, pickByScores({ [c]: 1 }));
+    ok(o.cat === c, `ida y vuelta ${c}: ${l.cat}/${l.sub} → ${o.cat}`);
+  }
+  ok(whatOf('dloop', 'hat') === 'hat' && whatOf('dloop', 'full') === 'dloop' && whatOf('kick') === 'kick', 'lo que suena');
+  ok(whatsOf('dloop', 'clap').join() === 'snare,clap' && whatsOf('mloop', 'texture').join() === 'atmos', 'varios a la vez');
+  // la propuesta de la herramienta, colocada
+  const c = classify({ name: 'Hat Loop 128.wav', path: 'Loops/Hat Loop 128.wav' });
+  const pc = placeProposal({ ...c, cat: 'hat', scores: { hat: 2 } }, 'loop');
+  ok(pc.cat === 'dloop' && pc.placedFrom === 'hat' && pc.placedSub === 'hat', 'propuesta Closed hat en un loop → Drum loop › Closed-Hats');
+  ok(placeProposal({ cat: 'hat', cert: 'confirmed' }, 'oneshot').cat === 'hat', 'en un one-shot no cambia');
+  const pu = placeProposal({ cat: 'dloop', cert: 'user', auto: { cat: 'perc', scores: {} } }, 'loop');
+  ok(pu.cat === 'dloop' && pu.auto.cat === 'dloop' && pu.auto.placedFrom === 'perc', 'tu decisión manda; la propuesta que se ve junto a ella, también colocada');
+  // Ordenar en disco: si llega sin colocar, también va a su sitio
+  const pl = organizePlan([{ id: 'h', name: 'hatloop', path: 'x/hatloop.wav', ext: 'wav', cat: 'hat', cert: 'user', sub: 'Cortos', kind: 'loop' }, { id: 'p', name: 'perc', path: 'x/perc.wav', ext: 'wav', cat: 'dloop', cert: 'user', sub: 'Perc', kind: 'loop' }]);
+  const dd = Object.fromEntries(pl.items.map((i) => [i.id, i.dest]));
+  ok(dd.h === '14 Drum Loops/Closed-Hats/hatloop.wav' && dd.p === '14 Drum Loops/Perc/perc.wav', JSON.stringify(dd));
+  ok(proposeSub({ name: 'Tom Loop 120.wav', path: 'Loops/Tom Loop 120.wav' }, 'dloop')?.id === 'tom' && contentSubFor('dloop', 'tom') === 'tom', 'toms en el nombre o en una pista → Toms');
+});
+
+await test('exportar con tus cortes: recorte, ajuste al compás y acortar, con la frecuencia, los canales y los bits del original', () => {
+  const sr = 44100, n = sr * 2, L = new Float32Array(n), R = new Float32Array(n);
+  for (let i = 0; i < n; i++) { L[i] = Math.round(Math.sin(i / 7) * 12000) / 32768; R[i] = Math.round(Math.cos(i / 11) * 9000) / 32768; }
+  const d = parseAudio(encodeWavGeneric([L, R], sr, 24, false));
+  // sin receta: idéntico al original
+  const same = cutOriginal(d, { autoTrim: false });
+  ok(same.channels.length === 2 && same.sampleRate === sr && same.channels[0].length === n, 'mismo formato');
+  ok(same.channels[0].every((v, i) => v === d.channels[0][i]), 'sin cortes: muestra a muestra igual');
+  // recorte a mano 0,5–1,5 s
+  const tr = cutOriginal(d, { autoTrim: false, trimStart: 0.5, trimEnd: 1.5 });
+  ok(tr.channels[1].length === sr && Math.abs(tr.channels[1][500] - d.channels[1][sr / 2 + 500]) < 1e-9, 'recortado: 1 s del original');
+  ok(Math.abs(tr.channels[0][0]) < Math.abs(d.channels[0][sr / 2]) + 1e-9, 'fundido en el corte');
+  // acortar: 1 y 2 de 4 → la mitad, estéreo
+  const k = cutOriginal(d, { autoTrim: false, keep: { n: 4, sel: [0, 1] } });
+  ok(k.kept && k.channels.length === 2 && Math.abs(k.channels[0].length - n / 2) <= 2, 'acortado a la mitad: ' + k.channels[0].length);
+  const bytes = encodeOriginal(k, originalFormat(d)), back = parseAudio(bytes);
+  ok(back.sampleRate === sr && back.channels.length === 2 && back.bits === 24, 'WAV de 24 bit, 44,1 kHz y estéreo');
+  // en lote: formatos, slices de los loops y partes en lugar del original separado
+  const lib = [
+    { id: 'a', name: 'Top Loop', path: 'x/Top Loop.wav', ext: 'aif', cat: 'dloop', cert: 'user', sub: 'Tops', kind: 'loop' },
+    { id: 'b', name: 'Kick', path: 'x/Kick.wav', ext: 'aif', cat: 'kick', cert: 'user', kind: 'oneshot' },
+    { id: 'c', name: 'Break', path: 'x/Break.wav', ext: 'wav', cat: 'dloop', cert: 'user', sub: 'Breaks', kind: 'loop', split: true },
+    { id: 'c1', name: 'Break 1', path: 'Partes/Break/Break 1.wav', ext: 'wav', cat: 'dloop', cert: 'user', sub: 'Breaks', kind: 'loop' },
+  ];
+  const asis = organizePlan(lib, { format: 'asis', slices: 8 });
+  ok(asis.items.length === 4 && asis.items.find((i) => i.id === 'b').dest.endsWith('Kick.aif') && !asis.items.some((i) => i.slice), 'tal cual: todo, con su extensión y sin slices');
+  const cuts = organizePlan(lib, { format: 'cuts', slices: 4 });
+  const ds = cuts.items.map((i) => i.dest);
+  ok(cuts.format === 'cuts' && cuts.skipped.split === 1 && !cuts.items.some((i) => i.id === 'c'), 'el separado sale como sus partes');
+  ok(ds.includes('14 Drum Loops/Tops/Top Loop (4 slices)/Top Loop 01.wav') && ds.includes('14 Drum Loops/Tops/Top Loop (4 slices)/Top Loop 04.wav'), ds.join('\n'));
+  ok(ds.includes('01 Kicks/Kick.wav'), 'los one-shots enteros, en WAV');
+  ok(cuts.items.filter((i) => i.id === 'a').every((i, k) => i.slice.i === k && i.slice.n === 4), 'cada slice sabe cuál es');
+  ok(organizePlan(lib, { format: 'rhythm' }).items.length === 3 && organizePlan(lib, { converted: true }).format === 'rhythm', 'para la Rhythm (y la opción de antes)');
+  ok(manifestCSV(cuts, 'R').split('\n').length === 1 + cuts.items.length, 'una fila por archivo en el manifiesto');
+});
+
 
 console.log(results.join('\n'));
 console.log(`\n${pass} correctas, ${fail} con fallo`);

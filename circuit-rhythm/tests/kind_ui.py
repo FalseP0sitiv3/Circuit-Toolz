@@ -132,20 +132,21 @@ with sync_playwright() as pw:
     sel(kick); page.keyboard.press('k'); time.sleep(0.2)
     J('() => { const { S } = window.__crsl; const s = S.byId[S.sel]; s.user.tags = ["Oscuro"]; s.user.kind = "loop"; }')
     J('() => { const c = window.__crsl; c.S.view = "data"; c.renderAll(); }'); time.sleep(0.3)
-    ok(page.locator('#org-kinds').is_checked(), 'Ordenar en disco: separar loops y one-shots, activado por defecto')
+    ok(page.locator('#org-kinds').is_checked(), 'Ordenar en disco: separar loops y one-shots (FX y Vox), activado por defecto')
     page.check('#org-tags'); time.sleep(0.3)
     page.select_option('#org-cert', 'any'); time.sleep(0.3)
     with page.expect_download(timeout=60000) as d: page.click('[data-act="org-zip"]')
     z = zipfile.ZipFile(d.value.path()); nl = z.namelist()
-    kdir = 'Loops'
     kb = kick.rsplit('.', 1)[0]
     hit = [x for x in nl if kb in x]
-    ok(any(f'/{kdir}/' in x and '[' in x for x in hit), f'el kick marcado como loop va en Kicks/Loops con su etiqueta en el nombre ({hit})')
-    ok(any('/One-shots/' in x for x in nl), 'y el resto de one-shots en su carpeta')
+    # v2.9: un kick en bucle va a Drum Loops › Kicks; la carpeta de Kicks solo tiene one-shots, sin «One-shots» dentro
+    ok(any('/14 Drum Loops/Kicks/' in x and '[' in x for x in hit), f'el kick marcado como loop va a Drum Loops/Kicks con su etiqueta en el nombre ({hit})')
+    ok(not any('/One-shots/' in x for x in nl if '/01 Kicks/' in x) and any('/01 Kicks/' in x for x in nl), 'y los demás kicks, en Kicks sin «One-shots» dentro')
+    ok(all(('/Loops/' in x or '/One-shots/' in x) for x in nl if '/12 FX/' in x or '/13 Vox/' in x), 'FX y Vox sí separan Loops y One-shots')
     man = [x for x in nl if x.endswith('manifest.csv')][0]
     rows = list(csv.reader(io.StringIO(z.read(man).decode())))
     ok(rows[0] == ['source', 'destination', 'category', 'subfolder', 'type', 'tags', 'rating', 'favourite'], 'manifiesto con todo lo marcado')
-    ok(any(kb in r[0] and r[2] == 'kick' and r[4] == 'loop' and r[5] for r in rows[1:]), 'y la fila del kick dice loop y su etiqueta')
+    ok(any(kb in r[0] and r[2] == 'dloop' and r[3] == 'Kicks' and r[4] == 'loop' and r[5] for r in rows[1:]), 'y la fila del kick dice Drum loop › Kicks, loop y su etiqueta')
 
     bad = [e for e in errors if 'favicon' not in e]
     ok(not bad, 'sin errores en la consola' + (': ' + ' | '.join(bad[:3]) if bad else ''))

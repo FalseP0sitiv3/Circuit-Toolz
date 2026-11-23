@@ -9,6 +9,8 @@ Free, local, browser-based tool for the **Novation Circuit Rhythm**: measure and
 ## Use it
 - Open `dist/Circuit_Rhythm_Sample_Library_EN.html` (English) or `dist/Circuit_Rhythm_Sample_Library.html` (Spanish) in **desktop Chrome or Edge**. Web MIDI and folder access need a secure context (HTTPS or a local file).
 - While listening, **Del** deletes a sample (to a bin, **Ctrl Z** undoes; deleted files are ignored when the folder is rescanned, and emptying the bin can also delete them from disk), **Alt 1–9** toggles quick tags and **?** lists every shortcut.
+- **One sample, one folder**: the key for what plays plus the type (loop or one-shot, **W**) decide where a sample is sorted. A hi-hat loop is always *Drum Loops / Closed-Hats*, whether you press **H**, pick the subfolder or switch the type.
+- **Batch export** (*08 Data*, or **⤓ Export…** under the library list): the whole library, the filtered list or a selection, sorted into folders — as is, like the original with your cuts (trim, fit to bar, shortened loops; same sample rate, channels and bit depth) or for the Rhythm. Loops can come out in 2–16 slices.
 - **Shorten loops** (*01 Library → Shorten loops*, or *04 Packs → ✂*): finds loops whose halves or bars repeat and keeps one part (or bar 1 + the final fill), with click-free crossfades at joins and at the loop point. Preview in a loop before applying; non-destructive.
 - Nothing is uploaded anywhere: your library lives in your browser (IndexedDB). Download backups from *08 Data*.
 

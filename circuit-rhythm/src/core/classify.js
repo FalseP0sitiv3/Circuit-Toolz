@@ -221,7 +221,7 @@ export function classify(sample, learned = null) {
   const a = autoClassify(sample, learned);
   if (sample.user && sample.user.cat) {
     return { cat: sample.user.cat, cert: 'user', basis: 'user', reasons: a.reasons, conflict: null,
-      auto: { cat: a.cat, cert: a.cert, conflict: a.conflict }, isLoop: a.isLoop, textLoop: a.textLoop, oneshotHint: a.oneshotHint };
+      auto: { cat: a.cat, cert: a.cert, conflict: a.conflict, scores: a.scores }, isLoop: a.isLoop, textLoop: a.textLoop, oneshotHint: a.oneshotHint };
   }
   return a;
 }

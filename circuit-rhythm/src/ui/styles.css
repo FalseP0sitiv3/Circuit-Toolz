@@ -381,10 +381,16 @@ table.shopts td.acts .btn + .btn, .shtab td.acts .btn + .btn { margin-left: 4px;
 .stools{display:inline-flex;gap:4px;flex-wrap:wrap;align-items:center}
 /* v1.8: exportar entero o en slices */
 .expo{display:grid;grid-template-columns:96px 1fr;gap:10px 12px;align-items:start;margin-top:8px}
-.expo .exopt{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;cursor:pointer}
-.expo .exopt input{margin-top:3px}
-.expo .exopt b{display:block}
-.expo .exopt .muted{display:block;font-size:13px}
+.exopt{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;cursor:pointer}
+.exopt input{margin-top:3px}
+.exopt b{display:block}
+.exopt .muted{display:block;font-size:13px}
+/* v2.9: exportar en lote, con sitio para las opciones */
+@media (min-width:900px){#org-panel{grid-column:span 2}}
+#org-panel .prep{align-items:start}
+#org-panel .prep>.lbl{padding-top:5px}
+#org-panel .seg{flex-wrap:wrap}
+#org-panel .seg .mono{color:var(--dim);margin-left:4px;font-size:12px}
 .expo .seg button{min-width:52px}
 /* v2.0: seleccionar en el mapa */
 .mapsel .mrow{display:grid;grid-template-columns:78px 1fr;gap:6px 8px;align-items:center;margin:6px 0}
@@ -431,6 +437,7 @@ table.shopts td.acts .btn + .btn, .shtab td.acts .btn + .btn { margin-left: 4px;
 .why-list .clue:hover{border-color:var(--dim);background:#ffffff08}
 .why-list .clue.on{border-color:#3ecf8e55;cursor:default}
 .cluehint{margin:4px 0 0;font-size:12px;color:var(--dim)}
+.keyhint{margin:6px 0 0;font-size:12px;color:var(--dim)}
 .tclip .cf{gap:6px}
 .tclip .cf.off{opacity:.45;text-decoration:line-through}
 .tclip .cf b{font-weight:500;color:var(--dim);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase}

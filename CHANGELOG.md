@@ -1,0 +1,51 @@
+# Changelog
+
+What changed in each version. The current builds are in each tool's `dist/` folder; `SHA256SUMS.txt` lists their checksums. Back to the [README](README.md).
+
+## Circuit Rhythm · Sample Library / Pack Builder
+
+### 2.9 · 23 Nov 2026
+
+![Circuit Tools · What's new · Rhythm, version 2.9](media/rhythm-whats-new-2.9.jpg)
+
+- **One sample, one folder.** What plays and the type decide the folder. A hi-hat loop is always `14 Drum Loops / Closed-Hats`, whether you press H, pick the subfolder or switch the type with W.
+- **Batch export with your cuts.** The whole library, the filtered list or a selection, sorted into folders: as is, like the original with your cuts (trim, fit to bar, shortened loops; same sample rate, channels and bit depth) or for the Rhythm.
+- **Slices in the original format.** Loops can come out in 2–16 slices, each loop in its own folder.
+
+### 2.8
+
+- **Mono that repairs.** A stereo sample that cancels when summed is fixed for the Rhythm (inverted channel, channels a few ms apart, or a frequency-aligned sum). Your file and anything exported "as the original" stay in stereo.
+- 2.8.1: links to the source code and to Issues in the footer and in *About*.
+
+### 2.7
+
+- **Slices, separately.** The slices you keep from a shortened loop can come out as separate, linked samples (the loop, the loop with the fill…), on adjacent pads.
+
+### 2.5 – 2.6
+
+- A drum loop's subfolder says what plays in it (Closed-Hats, Shakers, Perc…).
+- Each detected clue is one click away; copy and paste category, type, subfolder and tags.
+- *Saved in* shows the exact folder that *Organise on disk* will create. Consistent folder names.
+
+### 2.3 – 2.4
+
+- **Work the sound.** Hits from a loop, tuning to the key of the pack and perceived loudness matched page by page.
+- Tag clipboard (Alt Shift V / Alt V).
+
+## Circuit Tracks · Patch Library / Editor
+
+### 3.10 · 22 Nov 2026
+
+- **One sound, one version.** What you edit adds up in a single version per sound; the original is always kept, and bulk fixes the tool isn't sure about wait as proposals.
+- **The test phrase, in view.** It shows which notes it plays and how they sound; < / Shift < move it an octave without touching the patch.
+- Audition: category, subfolder and tags now act on the patch that is playing.
+- 3.10.1: links to the source code and to Issues in the footer and in *About*.
+
+### 3.9
+
+- **Quick octave.** −8va / +8va (Alt ↓ / Alt ↑) while you listen.
+- Tag clipboard.
+
+### 3.8
+
+- **Sound Lab.** Mutate a patch, cross two of them block by block, or morph from A to B live on the unit.

@@ -1,8 +1,8 @@
 # Circuit Tracks · Patch Library / Editor
 
-Free, local, browser-based tool for the **Novation Circuit Tracks**: understand how each patch is built, listen to it and measure it on the device, edit macros with templates, sort your synth collection into your own folders and subfolders (Bass → Subs, Drones, Groovy…, with proposals read from each patch's name and settings), build packs, generate patterns and record them into the sequencer, and turn them into **full songs** (arrangement strategies, 8 patterns per track, guided recording, scene road map and song .mid).
+Free browser tool for the **Novation Circuit Tracks**: understand how each patch is built, listen to it and measure it on the device, edit macros with templates, sort your synth collection into your own folders and subfolders (Bass → Subs, Drones, Groovy…, with proposals read from each patch's name and settings), build packs, generate patterns and record them into the sequencer, and turn them into **full songs** (arrangement strategies, 8 patterns per track, guided recording, scene road map and song .mid).
 
-*Herramienta gratuita y local para el Circuit Tracks. Interfaz en español e inglés.*
+*Herramienta gratuita para el Circuit Tracks. Interfaz en español e inglés.*
 
 > Independent project, not affiliated with Novation or Focusrite. Novation, Circuit Tracks, Circuit Rhythm and Components are trademarks of Focusrite Audio Engineering Ltd.
 

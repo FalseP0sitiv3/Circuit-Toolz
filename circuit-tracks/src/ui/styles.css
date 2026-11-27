@@ -1048,3 +1048,21 @@ button.stat.w strong{color:var(--warn)}
 .tlabel{margin-top:4px}
 .propc{border:1px dashed var(--line2);border-radius:6px;padding:7px 9px;margin-top:6px}
 .tidybox{border-left:3px solid var(--warn)}
+
+/* v3.11 · octava de la frase, portapapeles con carpeta y «Se guarda en» */
+.phmode{display:inline-flex;margin-top:8px;border:1px solid var(--line2);border-radius:var(--r);overflow:hidden}
+.phmode button{border:0;background:none;padding:4px 10px;font:600 11.5px var(--fs);color:var(--mute);cursor:pointer}
+.phmode button+button{border-left:1px solid var(--line2)}
+.phmode button.on{background:var(--raise2);color:var(--tx)}
+.phmode button:hover:not(.on){color:var(--dim)}
+.phdev{margin-top:8px;color:var(--warn)}
+.phdev b{color:var(--warn)}
+.phdev .btn{margin-left:6px}
+.phwhy{margin-top:6px}
+.clipf{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:6px 0 4px}
+.clipk{border:1px solid var(--line2);border-radius:12px;background:none;padding:2px 9px;font-size:12px;color:var(--mute);cursor:pointer}
+.clipk b{font-weight:600}
+.clipk.on{border-color:var(--o);color:var(--tx)}
+.tagp.clip.off{border-color:var(--line2);opacity:.55}
+.savein{font-size:12px;word-break:break-word}
+.savein b{font-weight:600;color:var(--tx)}

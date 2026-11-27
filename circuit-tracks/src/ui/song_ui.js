@@ -174,7 +174,8 @@ async function sgPlay(fromSection = 0) {
     return { on, off: Math.max(on + 5, offT), c, n, v: Math.max(1, Math.min(127, e.v)) };
   });
   let k = 0; S.sgPlaying = true;
-  const pump = () => { const until = ss.clock() + 1500; while (k < msgs.length && msgs[k].on < until) { const m = msgs[k++]; ss.raw([0x90 | m.c, m.n, m.v], m.on); ss.raw([0x80 | m.c, m.n, 0], m.off); } };
+  // v3.11: put (cola justo a tiempo de la sesión) en lugar de raw: al parar no siguen saliendo los 1,5 s ya preparados
+  const pump = () => { const until = ss.clock() + 1500; while (k < msgs.length && msgs[k].on < until) { const m = msgs[k++]; ss.put([0x90 | m.c, m.n, m.v], m.on); ss.put([0x80 | m.c, m.n, 0], m.off); } };
   pump(); sgTimer = setInterval(pump, 400);
   const total = tl.bars * 16;
   const tick = () => {

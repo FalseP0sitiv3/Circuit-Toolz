@@ -98,7 +98,7 @@ export function registerReport(patches, catOf, category = 'bass', target = null,
   const items = list.map((p) => {
     const r = pitchInfo(p.payload), m = p.acoustic?.desc;
     let measured = null;
-    if (m && !m.silent && m.f0 && p.acoustic.protocol?.note !== undefined) {
+    if (m && !m.silent && m.f0 && p.acoustic.protocol?.note !== undefined && measureFits(p)) { // v3.11: solo si es de este sonido
       const st = 12 * Math.log2(m.f0 / 440) + 69 - p.acoustic.protocol.note;
       measured = { f0: m.f0, octaveOffset: m.octaveOffset, semis: Math.round(st), cents: Math.round((st - Math.round(st)) * 100), clarity: m.pitchClarity };
     }
@@ -120,6 +120,55 @@ export function registerReport(patches, catOf, category = 'bass', target = null,
   const off = items.filter((x) => x.off);
   return { category, mode, goal, distribution: [...counts.entries()].sort((a, b) => a[0] - b[0]), items, off,
     summary: { octave: off.filter((x) => x.problem === 'octava').length, tone: off.filter((x) => x.problem === 'tono').length, both: off.filter((x) => x.problem === 'octava y tono').length, doubtful: off.filter((x) => x.confidence === 'dudosa').length, detuned: items.filter((x) => x.detuned).length } };
+}
+
+// ---------- v3.11 · Dónde suena cada sonido y dónde se toca su frase de prueba ----------
+// Semitonos que el patch mueve la nota que recibe. Manda una medición de esa misma carga (f0 clara a una nota
+// conocida: la prueba directa); si no hay, sus parámetros (octava de teclado y semitonos del oscilador que manda).
+// rec: el registro con la medición (acoustic) · payload: la carga que se va a tocar (por defecto, la del registro).
+// Una medición vale si es de esa carga: desde 3.11 guarda la huella de su sonido (protocol.fp = fp.synth, sin el
+// nombre; library.stampAcoustic se la pone a las de antes cuando cambia la carga).
+export const measureFits = (rec) => { const a = rec?.acoustic; return !!a && (!a.protocol?.fp || !rec.fp?.synth || a.protocol.fp === rec.fp.synth); };
+export function measuredSemis(rec) {
+  const a = rec?.acoustic, m = a?.desc;
+  if (!measureFits(rec) || !m || m.silent || !m.f0 || a.protocol?.note === undefined || (m.pitchClarity ?? 1) <= 0.6) return null;
+  return Math.round(12 * Math.log2(m.f0 / 440) + 69 - a.protocol.note) || 0; // sin −0
+}
+export function soundOffset(rec, payload = rec?.payload, { ignoreKbd = false } = {}) {
+  const r = pitchInfo(payload), calc = ignoreKbd ? r.osc[r.root] : r.effective;
+  const ms = payload === rec?.payload ? measuredSemis(rec) : null;
+  if (ms !== null) return { semis: ms, calc, source: 'medido', confidence: 'medida' };
+  return { semis: calc, calc, source: 'parámetros', confidence: r.confidence };
+}
+const modeOf = (vals) => { const c = new Map(); for (const v of vals) c.set(v, (c.get(v) || 0) + 1); return [...c.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0]?.[0] ?? null; };
+// Lo habitual de cada grupo: la moda de lo que mueven sus sonidos, por categoría y por categoría / subcarpeta.
+// items: [{ cat, sub, semis }] · targets: objetivos de «Octava y tono» ({ bass: { target: '-12' }, 'bass:sub': … }).
+export function offsetNorms(items, { targets = {}, min = 3 } = {}) {
+  const by = new Map(), add = (k, v) => (by.get(k) || by.set(k, []).get(k)).push(v);
+  for (const x of items) { if (!x.cat) continue; add(x.cat, x.semis); if (x.sub) add(x.cat + '/' + x.sub, x.semis); }
+  const groups = new Map();
+  for (const [k, v] of by) groups.set(k, { norm: modeOf(v), n: v.length });
+  return { groups, targets, min };
+}
+// La referencia de un grupo: el objetivo que fijaste en «Octava y tono» (subcarpeta y si no categoría) o, si no hay,
+// lo habitual de la subcarpeta (con al menos `min` sonidos) o de la categoría. Con pocos sonidos no hay referencia.
+export function normFor(norms, cat, sub) {
+  if (!cat) return { norm: null, n: 0, source: 'pocos', key: '' };
+  const tg = (k) => { const t = norms.targets?.[k]?.target; return t === undefined || t === null || t === '' || t === 'skip' || Number.isNaN(+t) ? null : +t; };
+  for (const k of sub ? [cat + ':' + sub, cat] : [cat]) { const t = tg(k); if (t !== null) return { norm: t, n: norms.groups.get(k.replace(':', '/'))?.n || 0, source: 'objetivo', key: k.replace(':', '/') }; }
+  for (const k of sub ? [cat + '/' + sub, cat] : [cat]) { const g = norms.groups.get(k); if (g && g.n >= norms.min) return { norm: g.norm, n: g.n, source: 'coleccion', key: k }; }
+  return { norm: null, n: norms.groups.get(cat)?.n || 0, source: 'pocos', key: cat };
+}
+// Dónde se toca la frase. base: su octava (estilo + la que elegiste para el grupo) · semis: lo que mueve este
+// patch · norm: lo que mueven los de su grupo.
+//  · dev: cuántas octavas se aparta el patch de su grupo (solo octavas enteras: un patch a una quinta no es
+//    «otra octava»; misma regla que «Octava y tono»: 7 semitonos o más).
+//  · 'fit' (en su registro): la frase sube o baja esas octavas y el patch suena donde los de su grupo.
+//  · 'circuit': la misma frase para todo el grupo, como tus patrones en el equipo: el que está fuera suena fuera.
+export function placePhrase(base, semis, norm, mode = 'fit') {
+  const d = norm === null || norm === undefined ? 0 : semis - norm, dev = Math.abs(d) >= 7 ? Math.round(d / 12) : 0;
+  const comp = mode === 'fit' ? -dev * 12 : 0;
+  return { played: base + comp, comp, dev, mode };
 }
 
 // Transponer n semitonos. Métodos:
@@ -172,7 +221,8 @@ export function transposeOctaves(payload, octaves, method = 'osc') {
 // ---------- Plan de carpetas para el disco ----------
 const safe = (s, n = 48) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9 ()_\-.]+/g, '_').replace(/\s+/g, ' ').trim().slice(0, n) || 'Sin nombre';
 // opts: { layout: 'category'|'architecture'|'source', naming: '{name}'|'{cat} - {name}'|'{n} {name}', duplicates: 'skip'|'folder', variants: 'family'|'flat' }
-export function planScope(lib, filtered, scope) { return (scope === 'filter' ? filtered : lib.faces ? lib.faces() : lib.patches).filter((p) => p.meta.review !== 'discard'); }
+// scope: 'all' (toda la biblioteca), 'filter' (el filtro de la biblioteca) o 'sel' (la selección; v3.11, como en la Rhythm 2.9)
+export function planScope(lib, filtered, scope, selection = []) { return (scope === 'filter' ? filtered : scope === 'sel' && selection.length ? selection : lib.faces ? lib.faces() : lib.patches).filter((p) => p.meta.review !== 'discard'); }
 export function diskPlan(lib, patches, opts = {}) {
   // drafts: 'skip' (por defecto) | 'family'  ·  las variantes aceptadas ocupan el sitio y el nombre de su original
   const o = { layout: 'category', naming: '{cat} - {name}', duplicates: 'folder', variants: 'family', drafts: 'skip', ...opts };

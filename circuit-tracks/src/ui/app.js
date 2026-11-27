@@ -11,7 +11,7 @@ import { analyzeRecording, MT } from '../core/acoustic.js';
 import { compatibility, COMPAT_LABEL, auditChecks, mood, MOOD_SOURCE, libraryAnalysis } from '../core/analysis.js';
 import { buildPack, DEFAULT_LAYOUT } from '../core/packbuilder.js';
 import { anatomy } from '../core/anatomy.js';
-import { architectureGroups, describeArchitecture, register, registerReport, transposeOctaves, transposeSemitones, pitchInfo, describePitch, fmtSemis, NOTE_NAMES, ARCH_LEVELS, diskPlan, planManifest, planScope } from '../core/organize.js';
+import { architectureGroups, describeArchitecture, register, registerReport, transposeOctaves, transposeSemitones, pitchInfo, describePitch, fmtSemis, NOTE_NAMES, ARCH_LEVELS, diskPlan, planManifest, planScope, soundOffset, offsetNorms, normFor, placePhrase } from '../core/organize.js';
 import { extractTemplate, applyTemplate, profileTemplates, templateSummary } from '../core/templates.js';
 
 // ---------- plantillas con escapado por defecto ----------
@@ -101,7 +101,7 @@ async function saveSettings() {
   const d = S.dev;
   await lib.store.putMany('settings', [
     { id: 'device', value: { outId: d.outId, inId: d.inId, synth: d.synth, tempo: d.tempo, root: d.root, audioId: d.audioId, measureNote: d.measureNote, channels: d.channels, chMidi: d.chMidi, chDrum: d.chDrum, patchDelay: d.patchDelay, drumKit: d.drumKit } },
-    { id: 'audition', value: { autoPlay: S.autoPlay, autoNext: S.autoNext, qsrc: S.qsrc, followClock: S.followClock, strip: S.strip } },
+    { id: 'audition', value: { autoPlay: S.autoPlay, autoNext: S.autoNext, qsrc: S.qsrc, followClock: S.followClock, strip: S.strip, loopPhrase: !!S.loopPhrase } },
     { id: 'phrases', value: S.customPhrases }, { id: 'templates', value: S.templates }]);
 }
 const findPattern = (id) => (lib.settings.patterns || []).find((x) => x.id === id);
@@ -114,8 +114,10 @@ const phraseObj = (k) => (k && k.startsWith?.('pat:') ? (findPattern(k.slice(4))
 // (testStyle); semilla del sonido (su original), así sus versiones suenan con lo mismo; «Otro» la cambia.
 function autoStyleFor(p) { const g = phraseGroupOf(p); return testStyle(g.cat, g.sub); }
 function autoSeedOf(p) { const r = lib.rootOf(p); let h = 7; for (const ch of String(r.fp?.payload || r.id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return (h % 9973) + 1 + (S.autoSeed[r.id] || 0) * 7919; }
-function autoPat(p) {
-  const r = lib.rootOf(p), style = autoStyleFor(r), g = phraseGroupOf(r), oct = testOctave(style, g.cat, g.sub) + phraseShiftOf(g);
+// oct: dónde tocarlo (v3.11: lo decide testPlan, con la octava colocada para este patch); sin él, la de su grupo.
+function autoPat(p, oct = null) {
+  const r = lib.rootOf(p), style = autoStyleFor(r), g = phraseGroupOf(r);
+  if (oct === null) oct = testOctave(style, g.cat, g.sub) + phraseShiftOf(g);
   const key = `${r.id}|${S.autoSeed[r.id] || 0}|${style}|${S.dev.root}|${tempoNow()}|${oct}`;
   if (S.autoCache?.key === key) return S.autoCache.pat;
   const pat = generatePattern({ style, root: S.dev.root || 0, scale: 'minor', steps: 16, tempo: tempoNow(), seed: autoSeedOf(r), octave: oct });
@@ -135,8 +137,10 @@ function nnHint(p, compact = false) {
 }
 // Ficha y patch acoplado: la frase de prueba del sonido (la misma que en Escucha).
 function inspPattern(p) { return html`<div class="isec">${testBox(p, 'insp')}</div>`; }
+// El patrón generado tal como suena ahora para este patch (con su octava colocada).
+function heardAutoPat(p) { const tp = testPlan(p, 'auto'); return tp.src === 'gen' ? tp.pat : autoPat(p); }
 async function autoAttach(p) {
-  const pt = autoPat(p), name = `${p.name || 'Patch'} · ${STYLES[pt.style]?.label || pt.style}`.slice(0, 60);
+  const pt = heardAutoPat(p), name = `${p.name || 'Patch'} · ${STYLES[pt.style]?.label || pt.style}`.slice(0, 60);
   const rec = { ...pt, name, id: 'pat' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), opts: { ...DEFAULTS, style: pt.style, root: pt.root, scale: pt.scale, steps: pt.steps, tempo: pt.tempo, seed: autoSeedOf(p), octave: pt.octave }, savedAt: Date.now(), auto: true };
   await lib.setSetting('patterns', [...(lib.settings.patterns || []), rec]);
   await lib.updateMeta([lib.rootOf(p).id], { patternId: rec.id }, `Patrón «${name}» adjuntado a ${p.name}`);
@@ -227,7 +231,7 @@ function render() {
   if (lib3) renderRows();
   afterRender();
 }
-function rerender() { const y = $('#vlist')?.scrollTop, cy = $('.center .pane-b')?.scrollTop, iy = $('.insp .pane-b')?.scrollTop, fy = $('#full')?.scrollTop, ql = $('.ql')?.scrollTop, dy = $('.dock')?.scrollTop, wy = window.scrollY; render(); if ($('.dock') && dy) $('.dock').scrollTop = dy; if (wy) window.scrollTo(0, wy); if ($('#vlist') && y) { $('#vlist').scrollTop = y; renderRows(); } if ($('.center .pane-b') && cy) $('.center .pane-b').scrollTop = cy; if ($('.insp .pane-b') && iy) $('.insp .pane-b').scrollTop = iy; if ($('#full') && fy) $('#full').scrollTop = fy; if ($('.ql') && ql) $('.ql').scrollTop = ql; }
+function rerender() { if (S.looping && lib.rootOf(cur() || {})?.id !== S.looping) A.audStop(); const y = $('#vlist')?.scrollTop, cy = $('.center .pane-b')?.scrollTop, iy = $('.insp .pane-b')?.scrollTop, fy = $('#full')?.scrollTop, ql = $('.ql')?.scrollTop, dy = $('.dock')?.scrollTop, wy = window.scrollY; render(); if ($('.dock') && dy) $('.dock').scrollTop = dy; if (wy) window.scrollTo(0, wy); if ($('#vlist') && y) { $('#vlist').scrollTop = y; renderRows(); } if ($('.center .pane-b') && cy) $('.center .pane-b').scrollTop = cy; if ($('.insp .pane-b') && iy) $('.insp .pane-b').scrollTop = iy; if ($('#full') && fy) $('#full').scrollTop = fy; if ($('.ql') && ql) $('.ql').scrollTop = ql; }
 function renderNav() {
   const items = [['audition', 'Escucha', IC.aud], ['library', 'Library', IC.lib], ['analyze', 'Analyze', IC.search], ['audit', 'Audit', IC.audit], ['macros', 'Macros', IC.macros], ['banks', 'Packs', IC.banks], ['device', 'Equipo', IC.dev], ['data', 'Datos', IC.data]];
   return html`<nav class="panel nav" aria-label="Secciones">${items.map(([id, label, ic]) => html`<button class="${S.view === id ? 'on' : ''}" data-act="view" data-v="${id}">${raw(ic)}<span>${label}</span></button>`)}
@@ -482,7 +486,7 @@ function renderInspector() {
   return html`<aside class="pane insp"><div class="pane-b">
     <div class="label"><div class="k">Patch${lib.changeState(p) === 'adopted' ? ' · editado' : p.copyOf ? ' · copia' : ''} · ${COMPAT_LABEL[cp.status]}</div><h2>${p.name || '(sin nombre)'}</h2>
       <div class="tags">${cat ? html`<span class="${m.category ? '' : 'prop'}">${catName(cat, m.category ? m.subtype : c.subtype)}</span>` : ''}${md ? html`<span class="${md.source === 'measured' || md.source === 'user' ? '' : 'prop'}" title="${MOOD_SOURCE[md.source]}">${md.label}</span>` : ''}<span>${['Mono', 'Mono AG', 'Poly'][p.payload[32]]}</span>${(m.tags || []).slice(0, 4).map((t) => html`<span>${t}</span>`)}</div>
-      <dl class="meta"><dt>Al tocar Do</dt><dd>${describePitch(lib.settings.kbdMidi === 'no' ? reg.lowestSemis : reg.effective)}${reg.confidence === 'dudosa' ? ' (dudoso)' : ''}${reg.keyboardOctave ? ` · tecl. ${fmtSemis(reg.keyboardOctave)}` : ''}</dd><dt>Origen</dt><dd>${p.folderPath || p.fileName || '—'}</dd><dt>Pack</dt><dd>${packs.join(', ') || '—'}</dd></dl>
+      <dl class="meta"><dt>Al tocar Do</dt><dd>${(() => { const so = soundOff(p); return html`${describePitch(so.semis)}${so.source === 'medido' ? ' · medido' : reg.confidence === 'dudosa' ? ' (dudoso)' : ''}`; })()}${reg.keyboardOctave ? ` · tecl. ${fmtSemis(reg.keyboardOctave)}` : ''}</dd><dt>Origen</dt><dd>${p.folderPath || p.fileName || '—'}</dd><dt>Pack</dt><dd>${packs.join(', ') || '—'}</dd></dl>
       <div class="acts"><span class="stars">${[1, 2, 3, 4, 5].map((n) => html`<span class="${n <= (m.rating || 0) ? 'on' : ''}" data-act="rate" data-n="${n}">★</span>`)}</span><span class="sp"></span><button class="ib ${m.fav ? 'on' : ''}" data-act="fav" data-id="${p.id}" aria-label="Favorito">${raw(IC.heart)}</button><button class="ib" data-act="exportSyx" title="Exportar .syx">.syx</button><button class="ib" data-act="addToBank" title="Añadir al pack">+ Pack</button></div><div class="spec"></div></div>
     ${chgInspector(p)}
     ${inspFolder(p, inf)}
@@ -498,6 +502,12 @@ function renderInspector() {
   </div></aside>`;
 }
 // ---------- Ficha: carpeta (categoría / subcarpeta) y etiquetas ----------
+// «Se guarda en»: dónde lo deja «Ordenar en disco» (estructura y nombre de ahora).
+function diskPathHTML(p) {
+  const d = diskPathOf(p); if (!d) return '';
+  return html`<div class="mlabel sm" style="margin-top:10px"><span>Se guarda en</span><a href="#" data-act="goDisk" title="Estructura y nombre de archivo">Ordenar en disco</a></div>
+    ${d.skip ? html`<p class="note">${d.skip}</p>` : html`<p class="mono savein" title="Lo que deja «Ordenar en disco» con sus opciones de ahora">${d.dir} / <b>${d.file}</b></p>${d.prop ? html`<p class="note">Con la propuesta: se usa tal cual si no la cambias.</p>` : ''}`}`;
+}
 function inspFolder(p, inf) {
   const m = p.meta, c = inf.cls, saved = !!m.category, cat = m.category || c.category;
   const sub = saved ? m.subtype : c.subtype, propSub = c.category === cat && c.subtype !== (saved ? m.subtype : null) ? c.subtype : null;
@@ -513,6 +523,7 @@ function inspFolder(p, inf) {
     <div class="row2" style="margin-top:8px">${!saved && c.category ? html`<button class="btn small primary" data-act="accept">Aceptar</button>` : ''}<select class="sel" data-act="setCat" aria-label="Categoría" style="height:27px;font-size:12px;max-width:160px"><option value="">${saved ? 'Otra categoría…' : 'Elegir categoría…'}</option>${CATEGORIES.map((x) => html`<option value="${x.id}" ${x.id === m.category ? 'selected' : ''}>${x.label}</option>`)}</select><button class="btn small" data-act="toggleEvidence">${S.showEv ? 'Ocultar' : 'Por qué'}</button></div>
     ${cat ? html`<div class="mlabel sm" style="margin-top:10px"><span>Subcarpeta de ${CAT_LABEL[cat]}</span><a href="#" data-act="orgFolders" data-c="${cat}">editar</a></div>
       <div class="subchips">${list.map((x) => html`<button class="subc ${saved && m.subtype === x.id ? 'on' : ''} ${propSub === x.id ? 'prop' : ''}" data-act="setSub" data-c="${cat}" data-s="${x.id}" aria-pressed="${saved && m.subtype === x.id}" title="${propSub === x.id ? 'Propuesta' : ''}">${x.label}</button>`)}${S.subNew === cat ? html`<input class="field subnew" data-act="subNewIn" data-c="${cat}" placeholder="Nombre y Intro" maxlength="40" autofocus>` : html`<button class="subc add" data-act="subNew" data-c="${cat}">+ Nueva</button>`}</div>${subWhy}` : ''}
+    ${diskPathHTML(p)}
     ${S.showEv ? html`<table class="t" style="margin-top:8px">${[...c.evidence].sort((x, y) => (y.pts || y.subPts || 0) - (x.pts || x.subPts || 0)).map((e) => html`<tr><td>${catName(e.cat, e.sub)}</td><td class="note">${e.source}: ${e.why}</td><td class="num">${e.pts || (e.subPts ? '+' + e.subPts : '')}</td></tr>`)}</table><p class="note">${CERTAINTY[c.certainty].help}</p>` : ''}</div>`;
 }
 function inspTags(p, inf) {
@@ -549,7 +560,7 @@ async function regFixGroups(keys, quiet = false) {
   S.rowsKey = ''; rerender();
   return { created, adopted: adopt.length, groups };
 }
-function revAutoPlay() { if (S.view !== 'organize' || S.regView !== 'review' || !S.dev.session) return; const q = regQueue(), v = q[Math.min(S.revI || 0, q.length - 1)]; if (v) playTest(faceOf(v), proposalApplied(v)); }
+function revAutoPlay() { if (S.view !== 'organize' || S.regView !== 'review' || !S.dev.session) return; const q = regQueue(), v = q[Math.min(S.revI || 0, q.length - 1)]; if (v) playTest(faceOf(v), proposalApplied(v), { mode: 'circuit' }); }
 function measuredMini(p) {
   const a = p.acoustic; if (!a) return html`<p class="note" style="margin-top:8px">Sin medición acústica.${S.dev.session && S.dev.audioId ? html` <a href="#" data-act="measureSel">Medir ahora</a>` : ''}</p>`;
   const d = a.desc; if (d.silent) return html`<p class="note" style="margin-top:8px">Medición sin señal.</p>`;
@@ -1002,7 +1013,8 @@ async function patPlay(loop) {
   const pt = S.pat, { events, ccs } = patternEvents(pt, { channel: destChannel(d), drumChannel: destChannel('drums'), lanes: recLanes() });
   let t0 = s.clock() + 60;
   if (synthIdx >= 0 && p && S.recPatch !== false) t0 = s.sendPatch(p.payload, synthIdx) + (S.dev.patchDelay ?? 80);
-  const go = (start) => { const r = s.playEvents(events, { tempo: pt.tempo, steps: pt.steps, swing: pt.swing, start, ccs }); if (S.patLooping) patTimer = setTimeout(() => go(r.loopEnd), Math.max(0, r.loopEnd - performance.now() - 120)); };
+  // v3.11: la vuelta siguiente la pide la cola del envío (sigue en su sitio con la pestaña oculta; Esc la cancela)
+  const go = (start) => { const r = s.playEvents(events, { tempo: pt.tempo, steps: pt.steps, swing: pt.swing, start, ccs }); if (S.patLooping) s.after(r.loopEnd, () => { if (S.patLooping && S.dev.session === s) go(r.loopEnd); }); };
   go(t0);
 }
 // Lista de comprobación antes de grabar (se puede ocultar).
@@ -1164,10 +1176,12 @@ function abPlay(v) {
   const root = lib.rootOf(v), prop = lib.changeState(v) === 'draft';
   const a = prop ? faceOf(v).payload : root.payload, b = prop ? proposalApplied(v) : v.payload;
   s.stopAll();
-  const tp = testPlan(faceOf(v)), opt = (t) => ({ tempo: tempoNow(), root: tp.root, start: t + (S.dev.patchDelay ?? 80) });
+  // v3.11: la frase de A para los dos (sin compensar la octava): así se oye lo que cambia. B espera en la cola del
+  // envío y se cancela con Esc (antes seguía sonando).
+  const tp = testPlan(faceOf(v), 'auto', 'circuit', a), opt = (t) => ({ tempo: tempoNow(), root: tp.root, start: t + (S.dev.patchDelay ?? 80) });
   toast(prop ? 'A: como está → B: con la propuesta' : 'A: original → B: tu versión', 4000);
   const ra = s.playPhrase(tp.ph, S.dev.synth, opt(s.sendPatch(a, S.dev.synth)));
-  setTimeout(() => { s.playPhrase(tp.ph, S.dev.synth, opt(s.sendPatch(b, S.dev.synth))); }, Math.max(0, ra.end - performance.now()));
+  s.playPhrase(tp.ph, S.dev.synth, opt(s.sendPatch(b, S.dev.synth, ra.end)));
 }
 function renderFull() { return { patterns: viewPatterns, songs: viewSongs, changes: viewChanges, audition: viewAudition, organize: viewOrganize, analyze: viewAnalyze, macros: viewMacroStudio, analyzeOld: viewMap, audit: viewAudit, banks: viewBanks, device: viewDevice, data: viewData }[S.view](); }
 
@@ -1382,7 +1396,7 @@ function orgDups() {
   ${fams.length ? html`<div class="box"><table class="t"><tr><th>Se conserva</th><th>Duplicados</th><th></th></tr>${fams.map(({ f, dups }) => html`<tr><td><a href="#" data-act="pick" data-id="${f.head}">${lib.byId(f.head)?.name}</a> <span class="note">${lib.byId(f.head)?.folderPath || ''}</span></td><td>${dups.map((d, i) => html`${i ? ', ' : ''}<a href="#" data-act="pick" data-id="${d.id}">${lib.byId(d.id)?.name}</a> <span class="note">${lib.byId(d.id)?.folderPath || ''}</span>`)}</td><td>${dups.map((d) => lib.byId(d.id)?.meta.review === 'discard' ? 'descartado' : '').filter(Boolean).length ? 'descartados' : ''}</td></tr>`)}</table></div>` : html`<div class="empty"><h3>Sin duplicados</h3></div>`}`;
 }
 function orgDisk() {
-  const o = S.plan, scope = planScope(lib, filteredPatches(), o.scope);
+  const o = S.plan, scope = planScope(lib, filteredPatches(), planScopeKey(), planSelection());
   const plan = diskPlan(lib, scope, o), tree = new Map();
   for (const e of plan.entries) if (e.action === 'write') { const k = e.dir.join(' / '); (tree.get(k) || tree.set(k, []).get(k)).push(e.file); }
   const sel = (k, opts) => html`<select class="field" data-act="planSet" data-k="${k}">${opts.map(([v, l]) => html`<option value="${v}" ${o[k] === v ? 'selected' : ''}>${l}</option>`)}</select>`;
@@ -1391,7 +1405,7 @@ function orgDisk() {
     <label class="lab">Nombre de archivo${sel('naming', [['{cat} - {name}', 'Categoría - Nombre'], ['{name}', 'Nombre'], ['{n} {name}', 'Número Nombre']])}</label>
     <label class="lab">Duplicados${sel('duplicates', [['folder', 'Aparte en _Duplicados'], ['skip', 'No copiarlos']])}</label>
     <label class="lab">Parecidos de una familia${sel('variants', [['family', 'Juntas en una subcarpeta'], ['flat', 'Sin subcarpeta']])}</label>
-    <label class="lab">Qué incluir${sel('scope', [['all', 'Toda la biblioteca'], ['filter', 'El filtro actual de la biblioteca']])}</label></div><p class="note">Los patches en estado «Descartar» nunca se copian. Las carpetas y subcarpetas se editan en <a href="#" data-act="orgTab" data-t="folders">Carpetas y subcarpetas</a>.</p>
+    <label class="lab">Qué incluir${sel('scope', [['all', 'Toda la biblioteca'], ['filter', 'El filtro actual de la biblioteca'], ['sel', `La selección (${S.multi.size})`]])}</label></div>${o.scope === 'sel' && !S.multi.size ? html`<p class="note" style="color:var(--warn)">No hay nada seleccionado: se usa toda la biblioteca. Selecciona patches en la Biblioteca (Mayús o Ctrl + clic).</p>` : ''}<p class="note">Los patches en estado «Descartar» nunca se copian. Las carpetas y subcarpetas se editan en <a href="#" data-act="orgTab" data-t="folders">Carpetas y subcarpetas</a>.</p>
   ${(() => { const W = plan.entries.filter((e) => e.action === 'write'), rep = W.filter((e) => e.replaces).length, mids = W.filter((e) => planMid(e)).length, why = {}; plan.entries.filter((e) => e.action === 'skip').forEach((e) => { const r = e.reason.startsWith('sustituido') ? 'originales sustituidos por su versión corregida' : e.reason.startsWith('variante en borrador') ? 'variantes en borrador' : e.reason.startsWith('duplicado') ? 'duplicados' : e.reason; why[r] = (why[r] || 0) + 1; });
     return html`<div class="statgrid" style="margin-top:4px"><div class="stat"><strong>${plan.writes}</strong><span>patches a escribir</span></div><div class="stat g"><strong>${rep}</strong><span>en su versión corregida</span></div><div class="stat"><strong>${mids}</strong><span>con patrón .mid</span></div><div class="stat"><strong>${plan.folders}</strong><span>carpetas</span></div><div class="stat"><strong>${plan.skipped}</strong><span>no se escriben</span></div></div>
     <p class="note">Se escribe la <b>versión vigente</b> de cada patch: el original si no lo has cambiado, o su versión editada (con el mismo nombre y en el mismo sitio).${Object.keys(why).length ? html` No se escriben: ${Object.entries(why).map(([r, n]) => `${n} ${r}`).join(' · ')}.` : ''}${plan.entries.some((e) => e.reason?.startsWith('variante en borrador')) ? html` <a href="#" data-act="view" data-v="changes">Revisar los borradores</a>.` : ''}</p>`; })()}
@@ -1474,7 +1488,7 @@ function viewAudition() {
       ${p.acoustic && !p.acoustic.desc.silent ? html`<div class="mfeat" style="margin-top:8px">${p.acoustic.features.map((f) => html`<span class="badge" title="${f.basis}">${f.label}</span>`)}</div>` : ''}</div>
     <div class="row2"><button class="btn big play ${S.playing ? 'on' : ''}" data-act="audPlay" ${live ? '' : 'disabled'}>${raw(IC.play)}Escuchar <span class="kbd">ESPACIO</span></button><button class="btn big" data-act="audStop" ${live ? '' : 'disabled'}>${raw(IC.stop)}<span class="kbd">ESC</span></button><button class="btn big" data-act="measureSel" ${live && S.dev.audioId ? '' : 'disabled'} title="${S.dev.audioId ? '' : 'Configura una entrada de audio en Equipo'}">${raw(IC.mic)}Medir <span class="kbd">M</span></button>
       <select class="sel" data-act="phrase" style="max-width:none" aria-label="Frase de prueba"><option value="auto" ${S.phrase === 'auto' ? 'selected' : ''}>Automática (${tp.src === 'att' ? 'patrón adjunto: ' : ''}${tp.label})</option>${Object.entries({ ...PHRASES, ...S.customPhrases }).map(([k, f]) => html`<option value="${k}" ${S.phrase === k ? 'selected' : ''}>${f.custom ? '● ' : ''}${f.label}</option>`)}${(lib.settings.patterns || []).length ? html`<optgroup label="Tus patrones">${lib.settings.patterns.filter((x) => x.kind !== 'drum').map((x) => html`<option value="pat:${x.id}" ${S.phrase === 'pat:' + x.id ? 'selected' : ''}>▦ ${x.name}</option>`)}</optgroup>` : ''}</select>
-      <label class="note"><input type="checkbox" class="chk" data-act="opt" data-k="autoPlay" ${S.autoPlay ? 'checked' : ''}> auto-escuchar</label><label class="note"><input type="checkbox" class="chk" data-act="opt" data-k="autoNext" ${S.autoNext ? 'checked' : ''}> avanzar al decidir</label></div>
+      <label class="note"><input type="checkbox" class="chk" data-act="opt" data-k="autoPlay" ${S.autoPlay ? 'checked' : ''}> auto-escuchar</label><label class="note" title="La frase vuelve a empezar hasta que pulses Esc o pases a otro patch"><input type="checkbox" class="chk" data-act="opt" data-k="loopPhrase" ${S.loopPhrase ? 'checked' : ''}> repetir</label><label class="note"><input type="checkbox" class="chk" data-act="opt" data-k="autoNext" ${S.autoNext ? 'checked' : ''}> avanzar al decidir</label></div>
     <div class="box">${testBox(p, 'aud')}</div>
     <div class="box"><h3>Macros en el equipo <small>mantiene una nota y barre 0→127→0 · Mayús+1…8</small></h3><div class="sweeps">${inf.macros.knobs.map((k) => html`<button class="btn" data-act="sweep" data-k="${k.index}" ${live ? '' : 'disabled'}>M${k.index + 1}<small>${k.activeCount ? k.slots.find((s) => s.state === 'active').info.label : 'sin efecto'}</small></button>`)}</div></div>
     <div class="box"><h3>Decidir <small>tecla = categoría y siguiente · Intro = aceptar la propuesta (o confirmar la tuya) · 1–5 valoración · F favorito · Supr eliminar · ← → navegar · ? todos los atajos</small></h3>
@@ -1485,11 +1499,12 @@ function viewAudition() {
   </div></div>`;
 }
 // Toca el sonido con su frase de prueba (testPlan, igual en toda la herramienta). payload: otra carga (p. ej. «▶ corregido»).
+// v3.11: con «Repetir», la frase vuelve a empezar hasta Esc o hasta pasar a otro patch.
 async function audPlay(p = cur(), payload = null) {
   const s = S.dev.session; if (!s || !p) return;
-  const r = playTest(p, payload); if (!r) return;
-  S.playing = true; $('[data-act="audPlay"]')?.classList.add('on');
-  clearTimeout(S.playTimer); S.playTimer = setTimeout(() => { S.playing = false; $('[data-act="audPlay"]')?.classList.remove('on'); }, r.end - performance.now());
+  const r = playTest(p, payload, { loop: !!S.loopPhrase }); if (!r) return;
+  S.playing = true; S.looping = r.loop ? lib.rootOf(p).id : null; $('[data-act="audPlay"]')?.classList.add('on');
+  clearTimeout(S.playTimer); if (!r.loop) S.playTimer = setTimeout(() => { S.playing = false; $('[data-act="audPlay"]')?.classList.remove('on'); }, Math.max(0, r.end - performance.now()));
   lib.logAudition(p.id);
 }
 // Eliminar sin preguntar: va a la papelera y el aviso ofrece deshacer. En Escucha pasa al siguiente.
@@ -1706,7 +1721,8 @@ function openSession() {
   S.dev.session?.dispose?.(); S.dev.session = null;
   const out = S.dev.access?.outputs.get(S.dev.outId), inp = S.dev.access?.inputs.get(S.dev.inId);
   if (!out) return;
-  const s = new CircuitSession(out, inp || null, undefined, S.dev.channels);
+  // v3.11: envío justo a tiempo (ver core/midi.js): parar o pasar al siguiente patch corta de verdad lo que quedaba.
+  const s = new CircuitSession(out, inp || null, undefined, S.dev.channels, { jit: true, hidden: () => document.hidden });
   s.onMacro = (synth) => { if (S.view === 'device' && synth === S.dev.synth) { const box = $('#liveMacros'); if (box) box.innerHTML = s.macroPos[synth].map((v, i) => `<div class="btn" style="cursor:default">M${i + 1}<small>${v ?? '—'}</small></div>`).join(''); } };
   S.dev.session = s;
   clearInterval(S.clockTimer); S.clockTimer = setInterval(() => { const el = $('#clockBpm'); if (el) { const t = s.clockTempo(); el.textContent = t ? t + ' BPM' : 'no llega (activa Clock Tx en Setup View o pon el equipo en marcha)'; } }, 1000);
@@ -1739,7 +1755,7 @@ async function measure(p) {
   try {
     const { x, sr } = await record(3400, (t0) => { const t = s.sendPatch(p.payload, S.dev.synth); s.note(S.dev.synth, note, 100, Math.max(t + (S.dev.patchDelay ?? 80), t0 + 250), 1500); });
     const desc = analyzeRecording(x, sr, { noteOn: 0.25, noteOff: 1.75, playedNote: note });
-    await lib.setAcoustic(p.id, desc, { note, tempo: S.dev.tempo, input: S.dev.audioId, synth: S.dev.synth });
+    await lib.setAcoustic(p.id, desc, { note, tempo: S.dev.tempo, input: S.dev.audioId, synth: S.dev.synth, fp: p.fp?.synth }); // fp: de qué sonido es (3.11)
     rerender(); toast(desc.silent ? 'No llegó señal: revisa la entrada de audio' : 'Medición guardada');
   } catch (e) { toast('Error al medir: ' + e.message, 6000); }
 }
@@ -1939,8 +1955,9 @@ const A = {
   midiConnect: () => connectMidi(false),
   listenSel: () => { const p = cur(); if (!S.dev.session) { toast('Conecta el equipo en «Equipo»'); return; } audPlay(p); },
   audPlay: () => audPlay(),
-  audStop: () => { S.dev.session?.stopAll(); S.playing = false; $('[data-act="audPlay"]')?.classList.remove('on'); },
-  sweep: (el) => { const p = S.view === 'audition' ? lib.byId(S.queue[S.qi]) : cur(), s = S.dev.session; if (!s || !p) return; s.stopAll(); const k = +el.dataset.k; const t = s.sendPatch(p.payload, S.dev.synth); s.macroSweep(S.dev.synth, k, { note: (lib.info(p).cls.category === 'bass' ? 36 : 48) + S.dev.root, restore: p.payload[204 + 17 * k], start: t + (S.dev.patchDelay ?? 80) }); toast(`Barrido M${k + 1}`, 1500); },
+  audStop: () => { S.dev.session?.stopAll(); S.playing = false; S.looping = null; clearTimeout(S.playTimer); $('[data-act="audPlay"]')?.classList.remove('on'); },
+  // v3.11: el barrido usa la versión que suena (antes, en Escucha, el original) y la tónica de su frase de prueba
+  sweep: (el) => { const p = cur(), s = S.dev.session; if (!s || !p) return; s.stopAll(); S.looping = null; const k = +el.dataset.k, note = Math.max(0, Math.min(127, testPlan(p, 'auto').tonic)); const t = s.sendPatch(p.payload, S.dev.synth); s.macroSweep(S.dev.synth, k, { note, restore: p.payload[204 + 17 * k], start: t + (S.dev.patchDelay ?? 80) }); toast(`Barrido M${k + 1}`, 1500); },
   qsrc: () => {}, phrase: () => {},
   qgo: (el) => { S.qi = +el.dataset.i; rerender(); if (S.autoPlay) audPlay(); },
   qstep: (el) => { S.qi = Math.max(0, Math.min(S.queue.length - 1, S.qi + +el.dataset.d)); rerender(); if (S.autoPlay) audPlay(); },
@@ -1952,7 +1969,7 @@ const A = {
   audSub: async (el) => { const p = cur(); if (!p) return; const c = el.dataset.c, sb = el.dataset.s || null; const on = p.meta.category === c && p.meta.subtype === sb && sb; await lib.setSubfolder([p.id], c, on ? null : sb); rerender(); },
   audReview: (el) => audDecide((p) => lib.updateMeta([p.id], { review: el.dataset.r }, REVIEW[el.dataset.r])),
   audFav: async () => { const p = cur(); if (!p) return; await lib.updateMeta([p.id], { fav: !p.meta.fav }, 'Favorito'); rerender(); },
-  measureSel: () => { const p = S.view === 'audition' ? lib.byId(S.queue[S.qi]) : cur(); if (p) measure(p); },
+  measureSel: () => { const p = cur(); if (p) measure(p); }, // v3.11: la versión que suena (antes, en Escucha, el original)
   clearMeasure: async () => { await lib.clearAcoustic(S.sel); rerender(); },
   queueSel: () => { S.qsrc = 'selection'; buildQueue('selection'); S.qi = 0; S.view = 'audition'; rerender(); },
   queueOne: () => { S.multi = new Set([S.sel]); A.queueSel(); },
@@ -1968,6 +1985,7 @@ const A = {
   qset: (el) => { const k = el.dataset.k, v = el.dataset.v; S.q[k] = S.q[k] === v ? '' : v; rerender(); },
   toggleEvidence: () => { S.showEv = !S.showEv; rerender(); },
   orgTab: (el) => { S.orgTab = el.dataset.t; rerender(); },
+  goDisk: () => { S.view = 'organize'; S.orgTab = 'disk'; rerender(); },
   reanRun: async () => { S.reanBusy = '0 %'; rerender(); S.rean = await lib.reanalyze({ progress: (i, n) => { S.reanBusy = Math.round((i / n) * 100) + ' %'; const b = $('[data-act="reanRun"]'); if (b) b.textContent = 'Analizando… ' + S.reanBusy; } }); S.reanBusy = null; S.rowsKey = ''; rerender(); },
   reanTab: (el) => { S.reanTab = el.dataset.t; rerender(); },
   reanApply: async () => {
@@ -2006,7 +2024,8 @@ const A = {
   regKeep: async (el) => { await lib.updateMeta([el.dataset.id], { regKeep: true }, 'Octava: está bien como está'); rerender(); },
   regUnkeep: async (el) => { const ids = lib.faces().filter((p) => p.meta.regKeep && regKeyOf(p) === el.dataset.g).map((p) => p.id); if (ids.length) await lib.updateMeta(ids, { regKeep: false }, 'Octava: volver a analizar'); rerender(); },
   regTuneChk: (el) => { S.regTune = el.checked; rerender(); },
-  revPlay: (el) => { const q = regQueue(), v = q[Math.min(S.revI || 0, q.length - 1)]; if (!v) return; if (el.dataset.w === 'o') audPlay(faceOf(v)); else playTest(faceOf(v), proposalApplied(v)); },
+  // v3.11: original y corregido con la misma frase, sin colocar la octava (si no, la corrección no se oiría)
+  revPlay: (el) => { const q = regQueue(), v = q[Math.min(S.revI || 0, q.length - 1)]; if (!v) return; playTest(faceOf(v), el.dataset.w === 'o' ? null : proposalApplied(v), { mode: 'circuit' }); },
   revOk: async () => { const v = regQueue()[Math.min(S.revI || 0, regQueue().length - 1)]; if (!v) return; await lib.adoptVariants([v.id], true); rerender(); revAutoPlay(); },
   revDrop: async () => { const v = regQueue()[Math.min(S.revI || 0, regQueue().length - 1)]; if (!v) return; await lib.deletePatches([v.id]); S.rowsKey = ''; rerender(); revAutoPlay(); },
   revKeep: async () => { const v = regQueue()[Math.min(S.revI || 0, regQueue().length - 1)]; if (!v) return; await lib.updateMeta([lib.rootOf(v).id], { regKeep: true }, 'Octava: está bien como está'); await lib.deletePatches([v.id], true); S.rowsKey = ''; rerender(); revAutoPlay(); },
@@ -2144,9 +2163,12 @@ const A = {
   },
   autoNext: () => { const p = cur(); if (!p) return; const r = lib.rootOf(p); S.autoSeed[r.id] = (S.autoSeed[r.id] || 0) + 1; rerender(); if (S.dev.session && S.autoListen !== false) audPlay(p); },
   phOct: (el) => shiftPhrase(cur(), +el.dataset.d),
+  // v3.11: cómo se coloca la octava de la frase (para toda la herramienta) y arreglar el patch que se aparta
+  phMode: async (el) => { const m = el.dataset.m === 'circuit' ? 'circuit' : 'fit'; await lib.setSetting('phraseMode', m); rerender(); toast(m === 'fit' ? 'En su registro: cada patch suena donde los de su grupo' : 'Como en el Circuit: la frase de su grupo; un patch fuera de octava suena fuera', 3500); if (S.dev.session && S.playing) audPlay(cur()); },
+  phFix: (el) => quickOctave(lib.byId(el.dataset.id) || cur(), +el.dataset.n),
   autoAttach: async () => { const p = cur(); if (!p || patternOf(p)) return; const r = await autoAttach(p); toast(`Patrón adjuntado a «${p.name}». Lo tienes en Patrones para editarlo.`); rerender(); return r; },
   autoDetach: async () => { const p = cur(); if (!p?.meta.patternId) return; await lib.updateMeta([p.id], { patternId: null }, `Patrón quitado de ${p.name}`); rerender(); },
-  autoOpen: () => { const p = cur(); if (!p) return; const pt = autoPat(p); S.patMode = 'synth'; S.pat = { ...pt }; S.patOpts = { ...DEFAULTS, style: pt.style, root: pt.root, scale: pt.scale, steps: pt.steps, tempo: pt.tempo, seed: autoSeedOf(p) }; S.patId = null; S.view = 'patterns'; rerender(); },
+  autoOpen: () => { const p = cur(); if (!p) return; const pt = heardAutoPat(p); S.patMode = 'synth'; S.pat = { ...pt }; S.patOpts = { ...DEFAULTS, style: pt.style, root: pt.root, scale: pt.scale, steps: pt.steps, tempo: pt.tempo, seed: autoSeedOf(p) }; S.patId = null; S.view = 'patterns'; rerender(); },
   bulkAutoAttach: async () => { const ids = [...S.multi].filter((id) => !patternOf(lib.byId(id))); if (!ids.length) return toast('Todos los seleccionados ya tienen patrón.'); if (!(await confirmBox('Adjuntar patrones generados', `Se adjunta a ${ids.length} patch(es) el patrón que la herramienta genera para cada uno (según su subcarpeta o categoría). Se puede quitar uno a uno.`, 'Adjuntar'))) return; for (const id of ids) await autoAttach(lib.byId(id)); toast(`${ids.length} patrones adjuntados`); rerender(); },
   addTag: async (el) => { const p = cur(), t = el.dataset.t, tags = p.meta.tags || []; await lib.updateMeta([p.id], { tags: tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t] }, 'Etiquetas'); rerender(); },
   normalizeModal: async () => {
@@ -2198,7 +2220,7 @@ const A = {
     if (!ph) { toast('No llegaron notas (activa Note Tx en Setup View)'); rerender(); return; }
     S.customPhrases['custom' + Date.now()] = ph; await saveSettings(); toast(`Frase guardada: ${ph.notes.length} notas`); rerender();
   },
-  phraseTry: (el) => { const s = S.dev.session; if (s) s.playPhrase(S.customPhrases[el.dataset.k], S.dev.synth, { tempo: tempoNow() }); },
+  phraseTry: (el) => { const s = S.dev.session; if (s) { s.stopAll(); s.playPhrase(S.customPhrases[el.dataset.k], S.dev.synth, { tempo: tempoNow() }); } },
   phraseDel: async (el) => { delete S.customPhrases[el.dataset.k]; await saveSettings(); rerender(); },
   saveLiveMacros: async () => {
     const p = cur(), pos = S.dev.session?.macroPos[S.dev.synth] || [];
@@ -2219,7 +2241,18 @@ const A = {
 };
 // Patrón adjunto al patch de una entrada del plan → .mid con el mismo nombre que su .syx
 function planMid(e) { const p = lib.byId(e.id), pt = p && patternOf(p); return pt ? { file: e.file.replace(/\.syx$/i, '.mid'), bytes: patternToMidi(pt, { channel: S.dev.channels?.[S.dev.synth] ?? 0, name: p.name }) } : null; }
-function currentPlan() { const o = S.plan; return diskPlan(lib, planScope(lib, filteredPatches(), o.scope), o); }
+function currentPlan() { const o = S.plan; return diskPlan(lib, planScope(lib, filteredPatches(), planScopeKey(), planSelection()), o); }
+// v3.11 (como en la Rhythm 2.9): también solo la selección. Sin selección, toda la biblioteca.
+const planSelection = () => [...new Set([...S.multi].map((id) => faceOf(lib.byId(id))).filter(Boolean))];
+const planScopeKey = () => (S.plan.scope === 'sel' && !S.multi.size ? 'all' : S.plan.scope);
+// v3.11 (como «Se guarda en» de la Rhythm 2.6): la carpeta y el archivo que le dará «Ordenar en disco» con sus opciones de ahora.
+function diskPathOf(p) {
+  const f = p && faceOf(p); if (!f) return null;
+  if (f.meta.review === 'discard') return { skip: 'descartado: no se copia' };
+  const e = diskPlan(lib, [f], S.plan).entries[0];
+  if (!e || e.action !== 'write') return { skip: e?.reason || '' };
+  return { dir: e.dir.join(' / '), file: S.plan.naming.includes('{n}') ? e.file.replace(/^\d{4}/, '####') : e.file, prop: !f.meta.category };
+}
 // Primer cambio sobre un sonido: se crea su versión (la que suena y se exporta) y los cambios se suman en ella.
 async function ensureVariant(p) {
   const root = lib.rootOf(p), cv = lib.currentVersion(root);
@@ -2280,7 +2313,7 @@ function bindGlobal() {
     const el = e.target;
     if (el.dataset.q) { S.q[el.dataset.q] = el.value; if (el.dataset.q === 'category') S.q.subtype = ''; rerender(); return; }
     const act = el.dataset.act; if (!act) return; const p = cur();
-    if (act === 'opt') { S[el.dataset.k] = el.checked; saveSettings(); return; }
+    if (act === 'opt') { S[el.dataset.k] = el.checked; if (el.dataset.k === 'loopPhrase' && !el.checked && S.looping) A.audStop(); saveSettings(); return; }
     if (act === 'qsrc') { buildQueue(el.value); S.qi = 0; saveSettings(); rerender(); return; }
     if (act === 'phrase') { S.phrase = el.value; rerender(); return; }
     if (act === 'chgOrigin') { S.chgOrigin = el.value; rerender(); return; }
@@ -2351,10 +2384,11 @@ function bindGlobal() {
     if (e.altKey && /^Digit[1-9]$/.test(e.code) && ['audition', 'library'].includes(S.view)) { const t = quickTags()[+e.code.slice(5) - 1], id = S.view === 'audition' ? S.queue[S.qi] : S.sel, p = id && lib.byId(id); if (t && p) { e.preventDefault(); const on = (p.meta.tags || []).includes(t); lib.addTags([p.id], [t], on).then(() => { toast(`${on ? 'Quitada' : 'Etiqueta'}: ${t}`, 1400); rerender(); }); } return; }
     if (S.view === 'organize' && S.orgTab === 'register' && S.regView && S.regView !== 'plan' && e.key === 'Escape') { e.preventDefault(); A.regView({ dataset: { v: 'plan' } }); return; }
     if ((e.key === '<' || e.key === '>') && ['audition', 'library'].includes(S.view) && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); shiftPhrase(cur(), e.key === '>' ? 12 : -12); return; }
+    // v3.11: Esc para lo que suena en cualquier sección (la frase, un barrido, un A/B, un patrón en bucle)
+    if (e.key === 'Escape' && S.dev.session) { A.audStop(); if (S.patLooping) patStopNow(); return; }
     if (S.view === 'audition') {
       const k = e.key.toLowerCase();
       if (e.code === 'Space') { e.preventDefault(); audPlay(); return; }
-      if (e.key === 'Escape') { A.audStop(); return; }
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); A.qstep({ dataset: { d: e.key === 'ArrowRight' ? 1 : -1 } }); return; }
       if (e.key === 'Enter') { e.preventDefault(); A.audAccept(); return; }
       if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); if (e.shiftKey) A.audReview({ dataset: { r: 'discard' } }); else A.audDelete(); return; }
@@ -2388,6 +2422,8 @@ function bindGlobal() {
     if (items.some((x) => x.isDirectory)) { const files = []; for (const it of items) await walk(it, '', files); doImport(files); } else doImport([...e.dataTransfer.files]);
   });
   window.addEventListener('resize', () => { renderRows(); if (S.view === 'analyze') drawMap(); });
+  // v3.11: al ocultar la pestaña el navegador frena los temporizadores; el envío pasa a una ventana más larga al momento
+  document.addEventListener('visibilitychange', () => S.dev.session?.pump());
 }
 async function walk(entry, path, out) {
   if (entry.isFile) { const f = await new Promise((res, rej) => entry.file(res, rej)); f._path = path ? path + '/' + f.name : ''; out.push(f); return; }
@@ -2395,4 +2431,4 @@ async function walk(entry, path, out) {
   do { batch = await new Promise((res) => reader.readEntries(res, () => res([]))); for (const e of batch) await walk(e, path ? path + '/' + entry.name : entry.name, out); } while (batch.length);
 }
 window.addEventListener('DOMContentLoaded', () => { init().catch((e) => { document.body.innerHTML = '<pre style="color:#fff;padding:20px">Error al iniciar: ' + esc(e.message) + '</pre>'; }); });
-window.__ctpl = { origin: __ORIGIN__, get lib() { return lib; }, S, A, planMid, get songTl() { return sgTl(); } };
+window.__ctpl = { origin: __ORIGIN__, get lib() { return lib; }, S, A, planMid, get songTl() { return sgTl(); }, testPlan: (id, sel, mode) => { const p = lib.byId(id); return p && testPlan(p, sel, mode); }, currentPlan, diskPathOf: (id) => diskPathOf(lib.byId(id)) };

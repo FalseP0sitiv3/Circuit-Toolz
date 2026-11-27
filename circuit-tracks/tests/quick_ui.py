@@ -62,7 +62,7 @@ with sync_playwright() as p:
     pg.keyboard.press('ArrowRight'); pg.wait_for_timeout(300)
     b2 = pid(); pg.keyboard.press('v'); pg.wait_for_timeout(400)
     ok('y en el siguiente con otra V', b2 != a and 'Wobble' in tags(b2))
-    ok('El botón dice «Ya las tiene»', ('already has them' if EN else 'ya las tiene') in pg.locator('[data-act="clipPaste"]').inner_text().lower())
+    ok('El botón dice «Ya lo tiene»', ('already has it' if EN else 'ya lo tiene') in pg.locator('[data-act="clipPaste"]').inner_text().lower())
     J(f"window.__ctpl.lib.addTags(['{b2}'], ['Dark', 'Acid'])"); pg.wait_for_timeout(200)
     pg.keyboard.press('Shift+V'); pg.wait_for_timeout(400)
     ok('Mayús V copia las etiquetas del patch', sorted(J('window.__ctpl.lib.settings.tagClip')) == ['Acid', 'Dark', 'Wobble'])

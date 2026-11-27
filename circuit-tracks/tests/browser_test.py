@@ -53,7 +53,7 @@ with sync_playwright() as p:
     sent = pg.evaluate("window.__midiSent"); ok('Espacio: envía patch a RAM y toca la frase', any(a[0] == 0xF0 and len(a) == 350 and a[6] == 0 for a in sent) and any((a[0] & 0xF0) == 0x90 for a in sent))
     first = pg.evaluate("window.__ctpl.S.queue[window.__ctpl.S.qi]"); pg.keyboard.press('b'); pg.wait_for_timeout(300)
     ok('Tecla B: categoría Bass, escuchado y avanza', pg.evaluate(f"(()=>{{const p=window.__ctpl.lib.byId('{first}');return p.meta.category==='bass'&&p.meta.review==='listened'}})()") and pg.evaluate("window.__ctpl.S.qi") == 1)
-    pg.evaluate("window.__midiSent.length=0"); pg.keyboard.press('Shift+Digit5'); pg.wait_for_timeout(200)
+    pg.evaluate("window.__midiSent.length=0"); pg.keyboard.press('Shift+Digit5'); pg.wait_for_timeout(3000)  # v3.11: el barrido sale justo a tiempo (2,4 s)
     ok('Mayús+5: barrido de la macro 5 (CC 84)', pg.evaluate("window.__midiSent.filter(a=>a[0]===0xB0&&a[1]===84).length") > 40)
     pg.keyboard.press('4'); pg.wait_for_timeout(100); ok('Tecla 4: valoración', pg.evaluate("window.__ctpl.lib.byId(window.__ctpl.S.queue[window.__ctpl.S.qi]).meta.rating") == 4)
     pg.screenshot(path=SHOTS + '/03_audition.png')
@@ -174,6 +174,7 @@ with sync_playwright() as p:
     pg.screenshot(path=SHOTS + '/17_patterns.png', full_page=True)
     # --- 2.5: enviar / grabar en el Circuit ---
     pg.click('button[data-act="patDest"][data-v="synth2"]'); pg.wait_for_timeout(150)
+    pg.evaluate("window.__ctpl.A.audStop()"); pg.wait_for_timeout(100)  # v3.11: lo que sonaba sale a su ritmo; se para antes de mirar la grabación
     pg.evaluate("window.__ctpl.S.pat.tempo=240; window.__midiSent.length=0")
     pg.click('button[data-act="patRec"]'); pg.wait_for_selector('.modal ol.steps'); pg.click('.modal .btn.primary'); pg.wait_for_timeout(2900)
     rec = pg.evaluate("window.__midiSent.filter(a=>a.length<=3).map(a=>[...a])")
@@ -186,6 +187,7 @@ with sync_playwright() as p:
     h0 = pg.evaluate("window.__ctpl.S.pat.notes.length"); pg.locator('.pgrid.drums .pg-row.dr').nth(3).locator('.pg-c').nth(2).click(); pg.wait_for_timeout(150)
     ok('Batería: rejilla editable', pg.evaluate("window.__ctpl.S.pat.notes.length") != h0)
     pg.click('label.dchk:nth-of-type(4) input'); pg.click('button[data-act="recSteps"][data-v="32"]'); pg.wait_for_timeout(150)
+    pg.evaluate("window.__ctpl.A.audStop()"); pg.wait_for_timeout(100)  # v3.11: lo que sonaba sale a su ritmo; se para antes de mirar la grabación
     pg.evaluate("window.__ctpl.S.pat.tempo=240; window.__midiSent.length=0")
     pg.click('button[data-act="patRec"]'); pg.wait_for_selector('.modal ol.steps'); pg.click('.modal .btn.primary'); pg.wait_for_timeout(4600)
     rec = pg.evaluate("window.__midiSent.filter(a=>a.length<=3).map(a=>[...a])"); dch = pg.evaluate("window.__ctpl.S.dev.chDrum")

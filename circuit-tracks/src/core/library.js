@@ -9,7 +9,7 @@ import { auditMacros } from './macros.js';
 import { buildFamilies, vectorize, pca2, affinity } from './families.js';
 import { measuredFeatures } from './acoustic.js';
 
-export const APP_VERSION = '3.10.1';
+export const APP_VERSION = '3.11.0';
 export const STORES = ['files', 'patches', 'collections', 'banks', 'rules', 'history', 'settings'];
 const MAX_SYX = 2 * 1024 * 1024;
 
@@ -117,7 +117,7 @@ export class Library {
       if (cv.id === root.id) {
         // el sonido no tiene versión: esta pasa a serlo, como «original + lo que proponía»
         const want = new Uint8Array(root.payload); for (const [o, x] of this.proposalDiff(v)) want[o] = x;
-        if (v.parentId !== root.id || !this.sameSound(want, v.payload)) { v.payload = want; v.fp = fingerprints(want); v.name = readName(want).name || v.name; v.parentId = root.id; v.diff = null; await this.store.putMany('patches', [v]); this._adopt = null; this._chain = null; this._idx = null; }
+        if (v.parentId !== root.id || !this.sameSound(want, v.payload)) { this.stampAcoustic(v); v.payload = want; v.fp = fingerprints(want); v.name = readName(want).name || v.name; v.parentId = root.id; v.diff = null; await this.store.putMany('patches', [v]); this._adopt = null; this._chain = null; this._idx = null; }
         last = await this.updateMeta([v.id], { adopted: true }, `Versión de «${root.name}»: ${v.originText || 'cambios'}`, { op: 'adopt' });
       } else {
         const edits = this.proposalDiff(v).filter(([o, val]) => cv.payload[o] !== val);
@@ -393,7 +393,7 @@ export class Library {
       const p = this.byId(h.ids[0]); if (!p) throw new Error('La variante ya no existe');
       const pl = new Uint8Array(p.payload); for (const [o, v] of Object.entries(h.before.bytes)) pl[+o] = v;
       if (p.diff) { const d = new Map(p.diff.map(([o, x]) => [+o, x])); for (const o of Object.keys(h.before.bytes)) d.set(+o, pl[+o]); p.diff = [...d].sort((a, b) => a[0] - b[0]); }
-      p.payload = pl; p.fp = fingerprints(pl); p.modifiedAt = now(); await this.store.putMany('patches', [p]);
+      this.stampAcoustic(p); p.payload = pl; p.fp = fingerprints(pl); p.modifiedAt = now(); await this.store.putMany('patches', [p]);
     }
     else {
       const list = h.ids.map((id) => this.byId(id)).filter(Boolean);
@@ -548,6 +548,7 @@ export class Library {
     if (nameSuffix) pl.set(encodeName((readName(pl).name + nameSuffix).slice(0, 16)), 0);
     const v = { ...structuredClone({ ...parent, payload: undefined, ops: undefined, diff: undefined, copyOf: undefined }), id: uid(), kind: 'variant', parentId, rootId: parent.rootId || parent.id, fileId: null, payload: pl, fp: fingerprints(pl), name: readName(pl).name || parent.name, importedAt: now(), modifiedAt: now(), variantOp: op, variantNote: description, alsoFoundIn: [] };
     v.meta = { ...structuredClone(parent.meta), adopted: !!opts.adopted }; delete v.meta.quickOct;
+    if (v.acoustic?.protocol && !v.acoustic.protocol.fp && parent.fp?.synth) v.acoustic.protocol = { ...v.acoustic.protocol, fp: parent.fp.synth }; // la medición es del sonido de origen (3.11)
     v.origin = op; v.originText = description; v.ops = [description]; v.createdAt = now();
     // una propuesta recuerda qué cambia respecto a aquello de lo que salió (para sumarla después a la versión)
     if (!opts.adopted) { v.diff = []; for (let i = 0; i < 340; i++) if (parent.payload[i] !== pl[i]) v.diff.push([i, pl[i]]); }
@@ -555,6 +556,9 @@ export class Library {
     await this.log('variant', [v.id], null, { parentId, op }, `Variante creada: ${description}`, true);
     this.emit(); return v;
   }
+  // v3.11: una medición es de un sonido concreto (protocol.fp = huella de su sonido, sin el nombre). Las de antes no la
+  // llevaban: antes de cambiar la carga se les pone la de ahora, así no pasan por medición de algo que ya suena distinto.
+  stampAcoustic(p) { if (p?.acoustic?.protocol && !p.acoustic.protocol.fp && p.fp?.synth) p.acoustic.protocol = { ...p.acoustic.protocol, fp: p.fp.synth }; }
   async renameVariant(id, name) {
     const p = this.byId(id); if (!p || p.kind !== 'variant') throw new Error('Solo se renombran variantes (el original queda intacto)');
     const pl = new Uint8Array(p.payload); pl.set(encodeName(name), 0); p.payload = pl; p.fp = fingerprints(pl); p.name = readName(pl).name; p.modifiedAt = now();
@@ -565,7 +569,7 @@ export class Library {
     const pl = new Uint8Array(p.payload), before = {};
     for (const [o, v] of edits) { if (o < 0 || o > 339) throw new Error('Offset inválido'); const nv = Math.max(0, Math.min(127, v | 0)); if (pl[o] !== nv) { before[o] = pl[o]; pl[o] = nv; } }
     if (!Object.keys(before).length) return;
-    p.payload = pl; p.fp = fingerprints(pl); p.modifiedAt = now();
+    this.stampAcoustic(p); p.payload = pl; p.fp = fingerprints(pl); p.modifiedAt = now();
     if (p.diff) { const d = new Map(p.diff.map(([o, x]) => [+o, x])); for (const o of Object.keys(before)) d.set(+o, pl[+o]); p.diff = [...d].sort((a, b) => a[0] - b[0]); }
     await this.store.putMany('patches', [p]);
     // Cambios seguidos sobre el mismo patch (p. ej. arrastrar un control) se agrupan en una sola entrada.

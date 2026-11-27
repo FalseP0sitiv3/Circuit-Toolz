@@ -14,13 +14,13 @@ Each tool is a single HTML file that you open in Chrome or Edge.
 | [**Circuit Rhythm** · Sample Library / Pack Builder](#circuit-rhythm--sample-library--pack-builder) | [English](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library_EN.html) · [Español](circuit-rhythm/dist/Circuit_Rhythm_Sample_Library.html) |
 | [**Circuit Tracks** · Patch Library / Editor](#circuit-tracks--patch-library--editor) | [English](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html) · [Español](circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html) |
 
-<sub>Rhythm 2.9 · Tracks 3.10 · [Changelog](CHANGELOG.md)</sub>
+<sub>Rhythm 2.9 · Tracks 3.11 · [Changelog](CHANGELOG.md)</sub>
 
 ## Highlights
 
 | Circuit Rhythm | Circuit Tracks |
 |---|---|
-| **Every sample explained.** A category with the reason: what the name, the folder and the sound say. | **Every patch played on your unit.** A test phrase that suits the sound, sent only to the unit's RAM. |
+| **Every sample explained.** A category with the reason: what the name, the folder and the sound say. | **Every patch played on your unit.** A test phrase that suits the sound, in its group's register, sent only to the unit's RAM. |
 | **One key per sample.** Listen, press a key, and the next one plays. | **The anatomy of a patch.** Its signal flow, and a plain-language recipe read from the bytes. |
 | **A break becomes a kit.** Hits cut from loops, repeated bars removed, slices kept as separate samples. | **Sound Lab.** Mutate a patch, cross two of them, or morph from A to B live on the unit. |
 | **Mono that repairs.** Stereo samples that cancel are fixed for the Rhythm; your file stays in stereo. | **One sound, one version.** Your edits add up in a single version, and the original is always kept. |
@@ -101,7 +101,8 @@ Hundreds of patches, random names, no idea how they sound. This tool reads them,
 <img src="media/tracks-packs.jpg" width="49%" alt="Packs of 128 sorted into the four pages of Patch View">
 </p>
 
-- **Audition**: every patch is sent to the unit's RAM and played with a test phrase that suits it (bassline, acid, chords, arpeggio…). You see which notes are played and how they sound with the patch's own transposition; < / Shift < move the phrase an octave, Alt ↓ / Alt ↑ move the patch. One key per category, or pick folder and subfolder right there.
+- **Audition**: every patch is sent to the unit's RAM and played with a test phrase that suits it (bassline, acid, chords, arpeggio…). Each patch sounds in its group's register, and you're told when one sits an octave away from the rest, with a one-click fix. Esc or the next patch cuts the phrase at once. < / Shift < move the phrase an octave, Alt ↓ / Alt ↑ move the patch. One key per category, or pick folder and subfolder right there.
+- Copy a patch's folder and tags and paste them on the next ones (Shift V / V). Each patch shows the exact folder and file name *Sort on disk* will give it.
 - Explainable classification from the name, the folder, the synth settings and, optionally, a measurement through your audio interface. Folders, subfolders and quick tags.
 - Families of duplicates and variants, collection analysis and map. Packs of 128 sorted into the four pages of Patch View, exported as numbered .syx + CSV for Components.
 
@@ -188,13 +189,13 @@ Independent project, not affiliated with Novation or Focusrite. Novation, Circui
 
 **Circuit Tracks · Patch Library / Editor**
 
-- **Cada patch, en tu equipo:** lo escuchas en la Tracks (solo en la RAM) con una frase de prueba adecuada, viendo qué notas suenan, y decides con una tecla.
+- **Cada patch, en tu equipo:** lo escuchas en la Tracks (solo en la RAM) con una frase de prueba adecuada y en el registro de su grupo, viendo qué notas suenan, y decides con una tecla. Te avisa del que está una octava fuera y lo arregla con un clic.
 - **La anatomía del patch:** el recorrido de la señal y una receta en lenguaje claro sacada de los bytes; macros en directo con plantillas.
 - **Laboratorio de sonido:** mutar, cruzar dos patches o mezclar de A a B en directo.
 - **Un sonido, una versión:** lo que editas se suma en ella y el original siempre se guarda; nada toca la memoria del equipo.
 - **Patrones y canciones** grabados en el secuenciador con la herramienta como reloj maestro, y packs de 128 para Components.
 
-**Versiones:** Rhythm 2.9 · Tracks 3.10 · [cambios](CHANGELOG.md) (en inglés).
+**Versiones:** Rhythm 2.9 · Tracks 3.11 · [cambios](CHANGELOG.md) (en inglés).
 
 **Colabora:** invítame a un café en [Ko-fi](https://ko-fi.com/falsepositive), cuenta errores o ideas en [Issues](../../issues) (con la versión, tu equipo, firmware y navegador) o compártelo con otros usuarios de Circuit.
 

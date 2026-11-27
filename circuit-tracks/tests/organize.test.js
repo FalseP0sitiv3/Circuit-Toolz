@@ -237,3 +237,58 @@ test('Biblioteca nueva: borra patches y conserva lo elegido', async () => {
   await lib2.importInputs([{ name: 'Bass A.syx', path: 'Bajos', bytes: syx(initPayload('Bass A')) }]);
   assert.equal(lib2.patches.length, 1);
 });
+
+test('v3.11 · Dónde suena cada sonido, lo habitual de su grupo y dónde se toca la frase', async () => {
+  const { soundOffset, offsetNorms, normFor, placePhrase, planScope } = await import('../src/core/organize.js');
+  // parámetros: octava de teclado × 12 + semitonos del oscilador que manda
+  assert.equal(soundOffset({ payload: initPayload('A') }).semis, 0);
+  assert.equal(soundOffset({ payload: initPayload('B', { 35: 63 }) }).semis, -12);
+  assert.equal(soundOffset({ payload: initPayload('B', { 35: 63 }) }, undefined, { ignoreKbd: true }).semis, 0, 'si la octava de teclado no cuenta');
+  // medición: manda si es de ese sonido (110 Hz tocando Do2 = MIDI 48 → La1 = 45 → −3 st)
+  const pl = initPayload('M'), rec = { payload: pl, fp: fingerprints(pl), acoustic: { desc: { f0: 110, pitchClarity: 0.9 }, protocol: { note: 48, fp: fingerprints(pl).synth } } };
+  assert.deepEqual([soundOffset(rec).semis, soundOffset(rec).source], [-3, 'medido']);
+  const other = initPayload('M', { 42: 52 }); // otro sonido con la medición del primero
+  assert.equal(soundOffset({ ...rec, payload: other, fp: fingerprints(other) }).source, 'parámetros', 'medición de otro sonido: no cuenta');
+  assert.equal(soundOffset(rec, other).source, 'parámetros', 'otra carga (una propuesta, el B de un A/B): por parámetros');
+  // lo habitual: moda por categoría y subcarpeta; el objetivo de «Octava y tono» manda
+  const it = [...Array(5)].map(() => ({ cat: 'bass', sub: 'sub', semis: -12 })).concat([{ cat: 'bass', sub: 'acid', semis: 0 }, { cat: 'bass', sub: 'acid', semis: 0 }, { cat: 'lead', semis: 0 }]);
+  const nm = offsetNorms(it);
+  assert.deepEqual([normFor(nm, 'bass', 'sub').norm, normFor(nm, 'bass', 'sub').source], [-12, 'coleccion']);
+  assert.equal(normFor(nm, 'bass', 'acid').norm, -12, 'con pocos en la subcarpeta, lo de la categoría');
+  assert.equal(normFor(nm, 'lead').source, 'pocos', 'con menos de 3, sin referencia');
+  assert.deepEqual(normFor(offsetNorms(it, { targets: { bass: { target: '-24' } } }), 'bass', 'sub'), { norm: -24, n: 7, source: 'objetivo', key: 'bass' });
+  assert.equal(normFor(offsetNorms(it, { targets: { bass: { target: 'skip' } } }), 'bass', 'sub').source, 'coleccion', '«No corregir» no es un objetivo');
+  // colocar la frase: solo octavas enteras
+  assert.deepEqual(placePhrase(36, -24, -12, 'fit'), { played: 48, comp: 12, dev: -1, mode: 'fit' });
+  assert.deepEqual(placePhrase(36, -24, -12, 'circuit'), { played: 36, comp: 0, dev: -1, mode: 'circuit' });
+  assert.equal(placePhrase(36, -7, 0).dev, -1, '7 semitonos o más ya es otra octava');
+  assert.equal(placePhrase(36, -5, 0).dev, 0, 'una cuarta no lo es');
+  assert.equal(placePhrase(36, 24, 0).comp, -24);
+  assert.equal(placePhrase(36, 12, null).dev, 0, 'sin referencia no se mueve');
+  // ordenar en disco: también la selección
+  const lib = new Library(new MemoryStore()); await lib.load();
+  await lib.importInputs(['A', 'B', 'C'].map((n) => ({ name: n + '.syx', path: '', bytes: syx(initPayload(n, { 64: n.charCodeAt(0) })) })));
+  assert.equal(planScope(lib, [], 'sel', [lib.patches[1]]).length, 1);
+  assert.equal(planScope(lib, [], 'sel', []).length, 3, 'sin selección, toda la biblioteca');
+});
+
+test('v3.11 · Una medición vale para el sonido medido, no para su versión editada', async () => {
+  const { soundOffset } = await import('../src/core/organize.js');
+  const lib = new Library(new MemoryStore()); await lib.load();
+  await lib.importInputs([{ name: 'Bass.syx', path: '', bytes: syx(initPayload('Bass')) }]);
+  const o = lib.patches[0];
+  await lib.setAcoustic(o.id, { f0: 65.41, pitchClarity: 0.95 }, { note: 48 }); // medición de antes (sin huella): Do1 tocando Do2
+  assert.deepEqual([soundOffset(lib.byId(o.id)).semis, soundOffset(lib.byId(o.id)).source], [-12, 'medido']);
+  const pl = new Uint8Array(o.payload); pl[42] = 76; // +12 en el oscilador
+  const v = await lib.editSound(o, pl, 'register', 'Octava +1');
+  assert.equal(soundOffset(v).source, 'parámetros', 'la versión hereda la medición, pero es de otro sonido');
+  assert.equal(lib.byId(v.id).acoustic.protocol.fp, o.fp.synth, 'queda marcada con el sonido medido');
+  await lib.renameVariant(v.id, 'Bass Up');
+  const pl2 = new Uint8Array(lib.byId(v.id).payload); pl2[43] = 70;
+  await lib.editVariantBytes(v.id, [[43, 70]]);
+  assert.equal(soundOffset(lib.byId(v.id)).source, 'parámetros');
+  await lib.setAcoustic(v.id, { f0: 130.81, pitchClarity: 0.95 }, { note: 48, fp: lib.byId(v.id).fp.synth });
+  assert.equal(soundOffset(lib.byId(v.id)).semis, 0, 'medida de nuevo: vale');
+  await lib.renameVariant(v.id, 'Bass Up 2');
+  assert.equal(soundOffset(lib.byId(v.id)).source, 'medido', 'renombrar no cambia el sonido');
+});

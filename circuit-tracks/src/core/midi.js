@@ -3,40 +3,115 @@
 //  · Synth 1 canal 1, Synth 2 canal 2 · macros CC 80–87 · patch por Program Change 0–63.
 //  · SysEx: ≥ 20 ms entre mensajes · respuestas solo por USB · PGM → esperar ~10 ms → Dump Request.
 // Las salidas/entradas se inyectan (MIDIOutput/MIDIInput o simulacros) para poder probarlo sin hardware.
+//
+// v3.11 · envío «justo a tiempo» (opts.jit). Web MIDI deja programar mensajes con send(data, timestamp), pero lo
+// programado no se puede cancelar: MIDIOutput.clear() no existe en Chrome ni en Edge. Si se programa una frase
+// entera de golpe y se pasa al patch siguiente, sus notas siguen saliendo sobre el nuevo. Con jit, los mensajes
+// esperan en una cola (this.q) y solo se entregan a la salida los que tocan en los próximos `ahead` ms
+// (con la pestaña oculta, `hiddenAhead`, porque el navegador frena los temporizadores). stopAll() vacía la cola,
+// apaga las notas que ya salieron y ejecuta lo que debe pasar aunque se pare (p. ej. devolver una macro a su sitio).
+// Sin jit (las pruebas antiguas y la grabación de patrones) todo sale al momento con su marca de tiempo.
 import { buildReplaceCurrent, buildDumpRequest, parseMessage } from './sysex.js';
 import { MIDI_MAP } from './params.js';
 
 export class CircuitSession {
   // channels: canales MIDI (0-15) de Synth 1 y Synth 2. Por defecto 1 y 2, pero se cambian en Setup View del equipo.
-  constructor(output, input, clock = () => performance.now(), channels = MIDI_MAP.synthChannels) {
+  // opts: { jit, ahead (ms), hiddenAhead (ms), hidden: () => bool, timer: (fn, ms) => void | null (sin temporizador: pump() a mano) }
+  constructor(output, input, clock = () => performance.now(), channels = MIDI_MAP.synthChannels, opts = {}) {
     this.out = output; this.in = input; this.clock = clock; this.channels = [...channels];
-    this.nextSysex = 0; this.waiters = []; this.log = [];
+    this.nextSysex = 0; this.lastSysex = -Infinity; this.waiters = []; this.log = [];
+    this.jit = !!opts.jit; this.ahead = opts.ahead ?? 120; this.hiddenAhead = opts.hiddenAhead ?? 1600; this.hidden = opts.hidden || (() => false);
+    this.timer = opts.timer === undefined ? (fn, ms) => setTimeout(fn, ms) : opts.timer;
+    this.q = []; this.sounding = new Map(); this.sentUntil = -Infinity; this.pumping = false;
     this.ticks = []; this.running = false; this.macroPos = [new Array(8).fill(null), new Array(8).fill(null)]; this.capture = null;
     if (input) {
       this.listener = (e) => this.onMessage(e.data, e.timeStamp || this.clock());
       if (input.addEventListener) input.addEventListener('midimessage', this.listener); else input.onmidimessage = this.listener;
     }
   }
-  dispose() { if (this.in?.removeEventListener) this.in.removeEventListener('midimessage', this.listener); this.stopAll(); }
+  dispose() { if (this.in?.removeEventListener) this.in.removeEventListener('midimessage', this.listener); this.stopAll(); this.disposed = true; }
   get name() { return this.out?.name || 'salida MIDI'; }
 
   // --- envío con planificación por timestamp (Web MIDI admite send(data, timestamp)) ---
-  raw(bytes, at) { this.out.send(bytes, at); this.log.push({ at: at ?? this.clock(), bytes: Array.from(bytes) }); if (this.log.length > 500) this.log.shift(); }
-  sysex(bytes) {
-    const t = Math.max(this.clock(), this.nextSysex);
-    this.raw(bytes, t); this.nextSysex = t + MIDI_MAP.sysexGapMs + 5;
+  // raw: a la salida ya, con su marca de tiempo. Lleva la cuenta de las notas encendidas para poder apagarlas.
+  raw(bytes, at) {
+    this.out.send(bytes, at);
+    const t = at ?? this.clock(), st = bytes[0], type = st & 0xF0;
+    this.sentUntil = Math.max(this.sentUntil, t);
+    if (st === 0xF0) this.lastSysex = Math.max(this.lastSysex, t);
+    if (type === 0x90 || type === 0x80) {
+      const k = (st & 0x0F) * 128 + bytes[1], n = this.sounding.get(k);
+      if (type === 0x90 && bytes[2] > 0) this.sounding.set(k, { n: (n?.n || 0) + 1, at: Math.max(t, n?.at ?? t) });
+      else if (n) { if (n.n > 1) n.n--; else this.sounding.delete(k); }
+    }
+    this.log.push({ at: t, bytes: Array.from(bytes) }); if (this.log.length > 500) this.log.shift();
+  }
+  // put: lo que toca dentro de la ventana sale ya; lo demás espera en la cola. final: se ejecuta aunque se pare.
+  put(bytes, at, final = false) {
+    if (!this.jit || at === undefined || at <= this.clock() + this.horizon()) { this.raw(bytes, at); return; }
+    this.enqueue({ at, bytes, final });
+  }
+  // Ejecuta fn cuando llegue el instante at (antes de la ventana). Se cancela con stopAll.
+  after(at, fn) { if (!this.jit) return; this.enqueue({ at, fn }); }
+  enqueue(item) {
+    const q = this.q; let i = q.length; while (i > 0 && q[i - 1].at > item.at) i--;
+    q.splice(i, 0, item); this.schedulePump();
+  }
+  horizon() { return this.hidden() ? this.hiddenAhead : this.ahead; }
+  get busy() { return this.q.length > 0; }
+  schedulePump() {
+    if (this.pumping || !this.timer || !this.q.length || this.disposed) return;
+    this.pumping = true;
+    this.timer(() => { this.pumping = false; this.pump(); }, 25);
+  }
+  // Entrega a la salida lo que toca dentro de la ventana (y ejecuta las funciones que ya tocan).
+  pump() {
+    const lim = this.clock() + this.horizon();
+    while (this.q.length && this.q[0].at <= lim) {
+      const x = this.q.shift();
+      if (x.fn) x.fn(); else this.raw(x.bytes, x.at);
+    }
+    this.schedulePump();
+  }
+  // Todo lo pendiente, ya (pruebas).
+  flush() { while (this.q.length) { const x = this.q.shift(); if (x.fn) x.fn(); else this.raw(x.bytes, x.at); } }
+  // Vacía la cola (o solo lo de ciertos canales) y apaga lo que ya salió. Nada de lo cancelado llega al equipo.
+  silence(chs = null) {
+    const inCh = (b) => b && b[0] < 0xF0 && (!chs || chs.includes(b[0] & 0x0F));
+    const keep = [], fin = [];
+    for (const x of this.q) {
+      if (chs && !(x.bytes && inCh(x.bytes))) { keep.push(x); continue; } // otros canales, reloj, funciones: siguen
+      if (x.final && x.bytes) fin.push(x);
+    }
+    this.q = keep;
+    const t = Math.max(this.clock(), this.sentUntil + 1); // nunca antes de lo que ya salió
+    for (const [k, v] of [...this.sounding]) {
+      const ch = Math.floor(k / 128); if (chs && !chs.includes(ch)) continue;
+      const off = [0x80 | ch, k % 128, 0], at = Math.max(t, v.at + 1);
+      this.out.send(off, at); this.sounding.delete(k); this.log.push({ at, bytes: off });
+    }
+    for (const x of fin) this.raw(x.bytes, t);
+    for (const ch of chs || this.channels) this.raw([0xB0 | ch, 123, 0], t);
+    // los SysEx cancelados ya no retrasan el siguiente patch
+    if (!chs) this.nextSysex = Math.max(this.clock(), this.lastSysex + MIDI_MAP.sysexGapMs + 5);
+  }
+  // notBefore: no antes de ese instante (p. ej. el patch B de un A/B, que espera a que acabe A).
+  sysex(bytes, notBefore = 0) {
+    const t = Math.max(this.clock(), this.nextSysex, notBefore);
+    if (notBefore) this.put(bytes, t); else this.raw(bytes, t);
+    this.nextSysex = t + MIDI_MAP.sysexGapMs + 5;
     return t;
   }
   // Sustituye el patch en RAM (no escribe en flash). Devuelve el instante en que se envía.
-  sendPatch(payload, synth = 0) { return this.sysex(buildReplaceCurrent(payload, synth, 0x64)); }
+  sendPatch(payload, synth = 0, notBefore = 0) { return this.sysex(buildReplaceCurrent(payload, synth, 0x64), notBefore); }
   note(synth, note, vel, at, dur) {
     const ch = this.channels[synth];
-    this.raw([0x90 | ch, note & 127, vel & 127], at); this.raw([0x80 | ch, note & 127, 0], at + dur);
+    this.put([0x90 | ch, note & 127, vel & 127], at); this.put([0x80 | ch, note & 127, 0], (at ?? this.clock()) + dur);
   }
-  cc(synth, num, value, at) { this.raw([0xB0 | this.channels[synth], num, Math.max(0, Math.min(127, value | 0))], at); }
+  cc(synth, num, value, at, final = false) { this.put([0xB0 | this.channels[synth], num, Math.max(0, Math.min(127, value | 0))], at, final); }
   stopAll() {
     try { this.out?.clear?.(); } catch { /* algunas implementaciones no tienen clear */ }
-    for (const ch of this.channels) { this.raw([0xB0 | ch, 123, 0]); }
+    this.silence();
   }
 
   // --- grabar un patrón en el secuenciador del Circuit Tracks (la herramienta hace de reloj maestro) ---
@@ -67,11 +142,11 @@ export class CircuitSession {
   playEvents(events, { tempo = 120, steps = 16, swing = 0, start, ccs = [] } = {}) {
     const step = 60000 / tempo / 4, t0 = start ?? this.clock() + 60, at = (t) => t0 + (t + (Number.isInteger(t) && t % 2 === 1 ? swing : 0)) * step;
     const sorted = [...events].sort((a, b) => a.t - b.t);
-    sorted.forEach((e, i) => { const on = at(e.t); let off = on + Math.max(15, e.d * step - 3); const nx = sorted.slice(i + 1).find((x) => x.n === e.n && x.ch === e.ch); if (nx) off = Math.min(off, at(nx.t) - 1); this.raw([0x90 | e.ch, e.n & 127, Math.max(1, Math.min(127, e.v ?? 100))], on); this.raw([0x80 | e.ch, e.n & 127, 0], Math.max(on + 5, off)); });
-    for (const c of ccs) this.raw([0xB0 | c.ch, c.num, c.v], at(c.t));
+    sorted.forEach((e, i) => { const on = at(e.t); let off = on + Math.max(15, e.d * step - 3); const nx = sorted.slice(i + 1).find((x) => x.n === e.n && x.ch === e.ch); if (nx) off = Math.min(off, at(nx.t) - 1); this.put([0x90 | e.ch, e.n & 127, Math.max(1, Math.min(127, e.v ?? 100))], on); this.put([0x80 | e.ch, e.n & 127, 0], Math.max(on + 5, off)); });
+    for (const c of ccs) this.put([0xB0 | c.ch, c.num, c.v], at(c.t));
     return { start: t0, end: t0 + steps * step, loopEnd: t0 + steps * step };
   }
-  stopChannels(chs) { try { this.out?.clear?.(); } catch { /* sin clear */ } for (const ch of chs) this.raw([0xB0 | ch, 123, 0]); }
+  stopChannels(chs) { try { this.out?.clear?.(); } catch { /* sin clear */ } this.silence(chs); }
 
   // --- recepción ---
   onMessage(data, at = this.clock()) {
@@ -136,7 +211,8 @@ export class CircuitSession {
 
   // --- audición ---
   // Reproduce una frase: [{t, n, d, v}] en pasos de semicorchea; tempo en BPM.
-  playPhrase(phrase, synth = 0, { tempo = 124, root = 0, start } = {}) {
+  // loop (con jit): vuelve a empezar al acabar sus pasos, hasta stopAll (Esc, otro patch…).
+  playPhrase(phrase, synth = 0, { tempo = 124, root = 0, start, loop = false } = {}) {
     const step = 60000 / tempo / 4, t0 = start ?? this.clock() + 30;
     let end = t0;
     const sw = phrase.swing || 0, at = (t) => t0 + (t + (Math.floor(t) % 2 === 1 && Number.isInteger(t) ? sw : 0)) * step;
@@ -148,7 +224,9 @@ export class CircuitSession {
     });
     for (const c of phrase.cc || []) this.cc(synth, c.num, c.v, at(c.t));
     if (phrase.steps) end = Math.max(end, t0 + phrase.steps * step);
-    return { start: t0, end: end + (phrase.tail || 600), loopEnd: phrase.steps ? t0 + phrase.steps * step : null };
+    const loopEnd = phrase.steps ? t0 + phrase.steps * step : null;
+    if (loop && this.jit && loopEnd) { this.after(loopEnd, () => this.playPhrase(phrase, synth, { tempo, root, start: loopEnd, loop })); return { start: t0, end: Infinity, loopEnd, loop: true }; }
+    return { start: t0, end: end + (phrase.tail || 600), loopEnd };
   }
   // Mantiene una nota y barre la macro k de 0 a 127 y vuelve; restaura la posición guardada al final.
   macroSweep(synth, knob, { note = 48, ms = 2400, restore = 0, start } = {}) {
@@ -156,7 +234,7 @@ export class CircuitSession {
     this.cc(synth, cc, 0, t0 - 5);
     this.note(synth, note, 100, t0, ms + 200);
     for (let i = 0; i <= steps; i++) { const x = i / steps, v = x < 0.5 ? x * 2 * 127 : (1 - x) * 2 * 127; this.cc(synth, cc, v, t0 + x * ms); }
-    this.cc(synth, cc, restore, t0 + ms + 300);
+    this.cc(synth, cc, restore, t0 + ms + 300, true); // si se para antes, la macro vuelve a su sitio igualmente
     return { start: t0, end: t0 + ms + 600 };
   }
 }

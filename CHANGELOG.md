@@ -34,6 +34,15 @@ What changed in each version. The current builds are in each tool's `dist/` fold
 
 ## Circuit Tracks · Patch Library / Editor
 
+### 3.11 · 27 Nov 2026
+
+![Circuit Tools · What's new · Tracks, version 3.11](media/tracks-whats-new-3.11.jpg)
+
+- **Every patch in its register.** The test phrase moves by whole octaves so each patch sounds where the rest of its group does (or, if you prefer, plays the group's phrase as on the Circuit). When a patch sits an octave away from its group, the tool says so and fixes it with one click.
+- **The phrase stops when you move on.** Esc, the next patch, the second half of an A/B, a macro sweep, a looping pattern or a song: whatever was still queued no longer reaches the unit. New *loop* option while you listen.
+- **Copy the folder with the tags.** Shift V copies a patch's folder and tags, V pastes them; each part can be switched off. Each patch shows where *Sort on disk* will save it, and *Sort on disk* can work on just the selection.
+- Measurements belong to the sound that was measured: after an octave fix, the old one no longer counts.
+
 ### 3.10 · 22 Nov 2026
 
 - **One sound, one version.** What you edit adds up in a single version per sound; the original is always kept, and bulk fixes the tool isn't sure about wait as proposals.

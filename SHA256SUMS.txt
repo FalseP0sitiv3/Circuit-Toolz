@@ -1,9 +1,9 @@
-# Circuit Tools · 2026-11-23
+# Circuit Tools · 2026-11-27
 # circuit-rhythm/dist/Circuit_Rhythm_Sample_Library.html · v2.9.0 · huella 4f0e79bd53ea49a2
 # circuit-rhythm/dist/Circuit_Rhythm_Sample_Library_EN.html · v2.9.0 · huella 4f0e79bd53ea49a2
-# circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html · v3.10.1 · huella ef085ae0de12b632
-# circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html · v3.10.1 · huella ef085ae0de12b632
+# circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html · v3.11.0 · huella 0c5eab10129392bd
+# circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html · v3.11.0 · huella 0c5eab10129392bd
 fb9b8ff5bde16a74e2af060515b591dce73e01cffceca9534c704e408f9e8fc0  circuit-rhythm/dist/Circuit_Rhythm_Sample_Library.html
 39e1eb0ce0ca406426ceef13713f057cbe359c419f04b90440757af34b55da37  circuit-rhythm/dist/Circuit_Rhythm_Sample_Library_EN.html
-9933a39655b51e1ea646c02f14ff15f5d8cc5928b1796cd1f4a4661dd59acbb8  circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html
-e7492a0c3bea469205ef9245f7a422c474971485e28aba6d37eb395c0c10137a  circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html
+833814159b362d02efb3608e4692077476ca371ac426e53e57183de33473bb12  circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor.html
+474b1302e7cf64ec5516546aa1540884173547819c04ca6904352a868f209c50  circuit-tracks/dist/Circuit_Tracks_Patch_Library_Editor_EN.html

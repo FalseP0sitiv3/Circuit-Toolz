@@ -139,3 +139,43 @@ test('Papelera · eliminar se deshace con su sitio en el pack y la colección; v
   await assert.rejects(() => lib.undo(lib.history.filter((h) => h.op === 'delete').at(-1).id));
   const bk = JSON.stringify(lib.history.map((h) => h.op === 'delete' && h.before ? { ...h, before: null } : h)); assert.ok(!bk.includes('"payload"'), 'nada de audio en la copia');
 });
+
+test('MIDI · envío justo a tiempo: parar o pasar al siguiente corta de verdad (v3.11)', () => {
+  let t = 0; const sent = [];
+  const out = { send: (d, at) => sent.push({ d: Array.from(d), at: at ?? t }) }; // sin clear(), como Chrome y Edge
+  const s = new CircuitSession(out, null, () => t, [0, 1], { jit: true, ahead: 120, timer: null });
+  const ons = () => sent.filter((x) => (x.d[0] & 0xF0) === 0x90 && x.d[2] > 0);
+  const r = s.playPhrase(PHRASES.bass, 0, { tempo: 120, start: 0 }); // 16 pasos de 125 ms
+  assert.ok(r.end > 1500);
+  assert.equal(ons().length, 1, 'solo sale lo que toca en la ventana');
+  assert.ok(s.busy, 'el resto espera en la cola');
+  t = 400; s.pump(); assert.equal(ons().length, 3, 'van saliendo con el reloj: pasos 0, 2 y 3 (hasta 400 + 120 ms)');
+  s.stopAll();
+  assert.equal(s.busy, false, 'parar vacía la cola');
+  t = 3000; s.pump(); assert.equal(ons().length, 3, 'tras parar no sale ninguna nota más');
+  assert.equal(s.sounding.size, 0, 'y no queda ninguna encendida');
+  const offs = sent.filter((x) => (x.d[0] & 0xF0) === 0x80 || x.d[0] === 0xB0);
+  assert.ok(offs.some((x) => x.d[0] === 0xB0 && x.d[1] === 123), 'All Notes Off');
+  // la nota apagada al parar nunca sale antes que su note-on (que puede llevar marca de tiempo futura)
+  const lastOn = ons().at(-1), off = sent.findLast((x) => x.d[0] === 0x80 && x.d[1] === lastOn.d[1]);
+  assert.ok(off.at > lastOn.at);
+  // macro: si se para a mitad del barrido, vuelve a su sitio igualmente
+  t = 5000; s.macroSweep(1, 2, { start: 5000, restore: 40 }); t = 5600; s.pump(); s.stopAll();
+  const m3 = sent.filter((x) => x.d[0] === 0xB1 && x.d[1] === 82);
+  assert.equal(m3.at(-1).d[2], 40, 'restaura la posición al parar');
+  // A/B: el patch B espera a que acabe A y se cancela al parar; no retrasa el siguiente envío
+  t = 8000; const a = s.sendPatch(new Uint8Array(340), 0), b = s.sendPatch(new Uint8Array(340), 0, t + 3000);
+  assert.equal(b, t + 3000); assert.equal(sent.filter((x) => x.d[0] === 0xF0).length, 1);
+  s.stopAll(); t = 8100; const c = s.sendPatch(new Uint8Array(340), 0);
+  assert.ok(c - a >= 20 && c < t + 100, 'el siguiente patch sale al momento'); t = 12000; s.pump();
+  assert.equal(sent.filter((x) => x.d[0] === 0xF0).length, 2, 'el patch B cancelado no llega');
+  // repetir: la frase vuelve a empezar hasta parar
+  t = 20000; const n0 = ons().length, rl = s.playPhrase({ steps: 4, notes: [{ t: 0, n: 0, d: 1 }], base: 48 }, 0, { tempo: 120, start: 20000, loop: true });
+  assert.equal(rl.end, Infinity);
+  for (t = 20000; t <= 22000; t += 50) s.pump();
+  assert.equal(ons().length - n0, 5, 'una vez cada 4 pasos (500 ms) durante 2 s');
+  s.stopAll(); for (; t <= 24000; t += 50) s.pump(); assert.equal(ons().length - n0, 5);
+  // sin jit: todo sale al momento, como antes
+  const s2 = new CircuitSession(out, null, () => t); const k = sent.length; s2.playPhrase(PHRASES.bass, 0, { start: t });
+  assert.equal(sent.length - k, PHRASES.bass.notes.length * 2);
+});
